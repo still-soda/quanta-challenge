@@ -5,7 +5,7 @@ import useAuthStore from '~/stores/auth-store';
 export default defineNuxtPlugin(() => {
    const authStore = useAuthStore();
 
-   const trpcClient = createTRPCClient<AppRouter>({
+   const trpc = createTRPCClient<AppRouter>({
       links: [
          httpBatchLink({
             url: '/api/trpc',
@@ -41,7 +41,7 @@ export default defineNuxtPlugin(() => {
 
    return {
       provide: {
-         trpcClient,
+         trpc,
       },
    };
 });

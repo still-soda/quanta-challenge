@@ -40,7 +40,13 @@ const emailRegisterProcedure = publicProcedure
             },
          },
       });
-      return generateTokens({ userId });
+      return {
+         tokens: generateTokens({ userId }),
+         user: {
+            name: username,
+            id: userId,
+         },
+      };
    });
 
 export const registerRouter = router({
