@@ -8,7 +8,7 @@ const SALT_ROUNDS = 10;
  * @returns 哈希加密后的密码
  * @description 使用 bcrypt 库对密码进行哈希加密，使用默认的盐轮数（10）。
  */
-export const encodePassword = async (password: string) => {
+export const hashPassword = async (password: string) => {
    const hash = await bcrypt.hash(password, SALT_ROUNDS);
    return hash;
 };

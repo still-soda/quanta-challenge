@@ -1,17 +1,15 @@
 import z from 'zod';
-import { publicProcedure } from '../../../trpc';
-import { comparePassword } from '~~/server/utils/use-password';
-import prisma from '../../../../../lib/prisma';
+import prisma from '~~/lib/prisma';
+import { publicProcedure, router } from '~~/server/trpc/trpc';
+import { generateTokens } from '~~/server/utils/jwt';
 
-export const emailLoginProcedure = publicProcedure
-   .input(
-      z.object({
-         email: z.email(),
-         password: z
-            .string()
-            .min(6, 'Password must be at least 6 characters long'),
-      })
-   )
+const emailLoginInputSchema = z.object({
+   email: z.email(),
+   password: z.string().min(6, 'Password must be at least 6 characters long'),
+});
+
+const emailLoginProcedure = publicProcedure
+   .input(emailLoginInputSchema)
    .query(async ({ input }) => {
       const { email, password } = input;
 
@@ -28,8 +26,12 @@ export const emailLoginProcedure = publicProcedure
 
       const user = await prisma.user.findUniqueOrThrow({
          where: { id: authRecord.userId },
-         omit: { lastLogin: true, createdAt: true, updatedAt: true },
          include: { avatar: true },
       });
-      return { user };
+      const tokens = generateTokens({ userId: user.id });
+      return { user, tokens };
    });
+
+export const loginRouter = router({
+   email: emailLoginProcedure,
+});

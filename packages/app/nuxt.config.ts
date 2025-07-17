@@ -10,7 +10,7 @@ export default defineNuxtConfig({
       plugins: [tailwindcss()],
    },
 
-   modules: ['@prisma/nuxt', 'shadcn-nuxt'],
+   modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt'],
 
    nitro: {
       externals: {
@@ -20,5 +20,14 @@ export default defineNuxtConfig({
 
    build: {
       transpile: ['trpc-nuxt', 'applicationinsights'],
+   },
+
+   runtimeConfig: {
+      secret: {
+         accessToken:
+            process.env.ACCESS_TOKEN_SECRET || 'default_access_token_secret',
+         refreshToken:
+            process.env.REFRESH_TOKEN_SECRET || 'default_refresh_token_secret',
+      },
    },
 });

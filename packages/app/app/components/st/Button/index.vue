@@ -4,10 +4,13 @@ const props = defineProps<{
    theme?: 'primary' | 'secondary' | 'danger' | 'success';
    bordered?: boolean;
    loading?: boolean;
+   type?: 'button' | 'submit';
+   text?: string;
 }>();
 
 const size = computed(() => props.size || 'default');
 const theme = computed(() => props.theme || 'primary');
+const type = computed(() => props.type || 'button');
 
 const textColorClass = computed(() => {
    if (!props.bordered) {
@@ -50,7 +53,10 @@ const borderedClass = computed(() => {
 </script>
 
 <template>
-   <button
+   <component
+      :is="type === 'button' ? 'button' : 'input'"
+      :value="text"
+      type="submit"
       class="flex items-center justify-center font-bold hover:cursor-pointer hover:opacity-80 transition-all"
       :class="[
          textColorClass,
@@ -63,15 +69,15 @@ const borderedClass = computed(() => {
             'bg-secondary': theme === 'secondary',
             'bg-error': theme === 'danger',
             'bg-success': theme === 'success',
-            'opacity-50 cursor-not-allowed': loading,
+            '!opacity-50 !cursor-wait': loading,
          },
       ]">
       <StIcon
-         v-if="loading"
+         v-if="props.loading"
          name="LoadingFour"
          class="mr-2 animate-spin text-lg" />
       <slot></slot>
-   </button>
+   </component>
 </template>
 
 <style scoped></style>
