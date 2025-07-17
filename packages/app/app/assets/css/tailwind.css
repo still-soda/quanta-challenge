@@ -1,0 +1,23 @@
+@import url('../fonts/YaHei/result.css');
+@import 'tailwindcss';
+
+@theme {
+   --color-primary: #fa7c0e;
+   --color-secondary: #a6fb1d;
+   --color-background: #111111;
+   --color-accent-100: #e5e5e5;
+   --color-accent-200: #cacaca;
+   --color-accent-300: #9d9d9d;
+   --color-accent-400: #6d6d6d;
+   --color-accent-500: #434343;
+   --color-accent-600: #272727;
+   --color-accent-700: #111111;
+   --color-error: #fa2f32;
+   --color-success: #14e87e;
+   --color-warning: #ffbe31;
+
+   --font-family-sans: 'Microsoft YaHei', sans-serif;
+   --font-family-serif: 'Microsoft YaHei', serif;
+   --font-family-mono: 'Microsoft YaHei', monospace;
+   --font-size-base: 16px;
+}
