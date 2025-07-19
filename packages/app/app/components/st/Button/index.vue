@@ -6,6 +6,7 @@ const props = defineProps<{
    loading?: boolean;
    type?: 'button' | 'submit';
    text?: string;
+   disabled?: boolean;
 }>();
 
 const size = computed(() => props.size || 'default');
@@ -56,6 +57,7 @@ const borderedClass = computed(() => {
    <component
       :is="type === 'button' ? 'button' : 'input'"
       :value="text"
+      :disabled="props.disabled || props.loading"
       type="submit"
       class="flex items-center justify-center font-bold hover:cursor-pointer hover:opacity-80 transition-all"
       :class="[
@@ -70,6 +72,7 @@ const borderedClass = computed(() => {
             'bg-error': theme === 'danger',
             'bg-success': theme === 'success',
             '!opacity-50 !cursor-wait': loading,
+            '!opacity-50 !cursor-not-allowed': disabled,
          },
       ]">
       <StIcon

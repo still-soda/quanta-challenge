@@ -36,6 +36,7 @@ const emailRegisterProcedure = publicProcedure
             user: {
                create: {
                   name: username,
+                  email: email,
                },
             },
          },
@@ -45,6 +46,7 @@ const emailRegisterProcedure = publicProcedure
          user: {
             name: username,
             id: userId,
+            email,
          },
       };
    });

@@ -29,5 +29,10 @@ export default defineNuxtConfig({
          refreshToken:
             process.env.REFRESH_TOKEN_SECRET || 'default_refresh_token_secret',
       },
+      redis: {
+         host: process.env.REDIS_HOST || 'localhost',
+         port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
+         password: process.env.REDIS_PASSWORD || '',
+      },
    },
 });

@@ -13,6 +13,10 @@ export const useRegister = () => {
    const authStore = useAuthStore();
    const { $trpc } = useNuxtApp();
 
+   const { getCallback, on } = useStatusCallbacks<'success' | 'error'>();
+   const onRegisterSuccess = (callback: Function) => on('success', callback);
+   const onRegisterError = (callback: Function) => on('error', callback);
+
    const loading = ref(false);
    const handleRegister = async () => {
       if (!form.value) return;
@@ -30,23 +34,33 @@ export const useRegister = () => {
             password: formdata.password,
             confirmPassword: formdata.confirmPassword,
          });
-         authStore.accessToken = result.tokens.accessToken;
-         authStore.refreshToken = result.tokens.refreshToken;
+         authStore.setTokens({
+            accessToken: result.tokens.accessToken,
+            refreshToken: result.tokens.refreshToken,
+         });
          authStore.user = {
             name: result.user.name,
             id: result.user.id,
+            email: result.user.email,
             createdAt: new Date(),
             updatedAt: new Date(),
             lastLogin: new Date(),
             imageId: null,
          };
-         alert('Registration successful');
+         getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         console.error('Registration failed:', error);
+         getCallback('error').forEach((cb) => cb());
       } finally {
          loading.value = false;
       }
    };
 
-   return { formdata, formKey, loading, handleRegister };
+   return {
+      formdata,
+      formKey,
+      loading,
+      handleRegister,
+      onRegisterSuccess,
+      onRegisterError,
+   };
 };

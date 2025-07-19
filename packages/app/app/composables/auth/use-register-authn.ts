@@ -1,12 +1,12 @@
 import type { StForm } from '#components';
 import useAuthStore from '~/stores/auth-store';
+import * as clientAuthn from '@simplewebauthn/browser';
 
-export const useEmailLogin = () => {
+export const useRegisterAuthn = () => {
    const formdata = reactive({
       email: '',
-      password: '',
    });
-   const formKey = 'form';
+   const formKey = 'webauthnForm';
    const form = useTemplateRef<InstanceType<typeof StForm>>(formKey);
    const loading = ref(false);
 
@@ -14,10 +14,10 @@ export const useEmailLogin = () => {
    const authStore = useAuthStore();
 
    const { getCallback, on } = useStatusCallbacks<'success' | 'error'>();
-   const onLoginSuccess = (callback: Function) => on('success', callback);
-   const onLoginError = (callback: Function) => on('error', callback);
+   const onRegisterSuccess = (callback: Function) => on('success', callback);
+   const onRegisterError = (callback: Function) => on('error', callback);
 
-   const handleLogin = async () => {
+   const handleRegister = async () => {
       if (!form.value) return;
       const isValid = form.value.validate();
       if (!isValid) {
@@ -27,23 +27,18 @@ export const useEmailLogin = () => {
 
       try {
          loading.value = true;
-         const result = await $trpc.auth.login.email.query({
+         const option = await $trpc.auth.authn.register.mutate({
             email: formdata.email,
-            password: formdata.password,
          });
-         authStore.setTokens({
-            accessToken: result.tokens.accessToken,
-            refreshToken: result.tokens.refreshToken,
+         const accessResponse = await clientAuthn.startRegistration({
+            optionsJSON: option,
          });
-         authStore.user = {
-            ...result.user,
-            lastLogin: new Date(result.user.lastLogin),
-            createdAt: new Date(result.user.createdAt),
-            updatedAt: new Date(result.user.updatedAt),
-         };
+         const tokens = await $trpc.auth.authn.verifyRegistration.mutate(
+            accessResponse as any
+         );
+         authStore.setTokens(tokens);
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         console.error('Login failed:', error);
          getCallback('error').forEach((cb) => cb());
       } finally {
          loading.value = false;
@@ -54,8 +49,8 @@ export const useEmailLogin = () => {
       formdata,
       formKey,
       loading,
-      handleLogin,
-      onLoginSuccess,
-      onLoginError,
+      handleRegister,
+      onRegisterError,
+      onRegisterSuccess,
    };
 };

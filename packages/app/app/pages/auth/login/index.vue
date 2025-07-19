@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { useLogin } from '~/composables/auth/use-login';
-import type { IRule } from '../../components/st/Form/type';
+import { useEmailLogin } from '~/composables/auth/use-login';
+import type { IRule } from '../../../components/st/Form/type';
+import * as clientAuthn from '@simplewebauthn/browser';
 import z from 'zod';
 
-const { formdata, formKey, loading, handleLogin } = useLogin();
+const { formdata, formKey, loading, handleLogin, onLoginSuccess } =
+   useEmailLogin();
+const supportWebAuthn = ref(false);
+
+onBeforeMount(() => {
+   supportWebAuthn.value = clientAuthn.browserSupportsWebAuthn();
+});
+
+onLoginSuccess(() => {
+   navigateTo('/app');
+});
 
 const rules: IRule[] = [
    {
@@ -41,6 +52,7 @@ const rules: IRule[] = [
             class="flex flex-col gap-4 w-full">
             <StFormItem name="email" error-message="请输入有效的邮箱地址">
                <StInput
+                  autocomplete="webauthn"
                   v-model:value="formdata.email"
                   outer-class="bg-accent-700"
                   placeholder="请输入邮箱">
@@ -64,13 +76,24 @@ const rules: IRule[] = [
             </StFormItem>
             <StButton :loading @click.prevent="handleLogin">登录</StButton>
          </StForm>
-         <StDevider>或者</StDevider>
-         <StButton class="!bg-accent-600 !text-accent-200 w-full">
-            <div class="flex items-center gap-2">
-               <IconQQ />
-               使用 QQ 登录
-            </div>
-         </StButton>
+         <StDevider>或使用</StDevider>
+         <div class="flex gap-4 w-full text-sm">
+            <StButton
+               v-if="supportWebAuthn"
+               @click.self="navigateTo('/auth/login/authn')"
+               class="!bg-accent-600 !text-accent-200 w-full">
+               <NuxtLink to="/auth/login/authn" class="flex gap-2 items-center">
+                  <StIcon name="Fingerprint" class="text-xl text-[#9D9D9D]" />
+                  生物认证
+               </NuxtLink>
+            </StButton>
+            <StButton class="!bg-accent-600 !text-accent-200 w-full">
+               <div class="flex gap-2 items-center">
+                  <IconQQ />
+                  QQ 登录
+               </div>
+            </StButton>
+         </div>
       </div>
    </div>
 </template>

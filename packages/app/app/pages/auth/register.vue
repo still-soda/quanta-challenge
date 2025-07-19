@@ -28,7 +28,10 @@ const rules: IRule[] = [
    },
 ];
 
-const getStatus = (prop: keyof typeof formdata, idx: number) => {
+const getStatus = (
+   prop: keyof typeof formdata,
+   idx: number
+): 'success' | 'error' | 'default' => {
    if (!formdata[prop] || !rules[idx]?.validator) return 'default';
    return rules[idx].validator(formdata[prop]) ? 'success' : 'error';
 };
