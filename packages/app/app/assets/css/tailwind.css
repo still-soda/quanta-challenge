@@ -1,4 +1,6 @@
-@import url('../fonts/YaHei/result.css');
+@import url('../fonts/YaHei-Regular/result.css');
+@import url('../fonts/YaHei-Light/result.css');
+@import url('../fonts/YaHei-Bold/result.css');
 @import 'tailwindcss';
 
 @theme {
