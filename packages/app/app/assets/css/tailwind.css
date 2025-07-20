@@ -1,6 +1,10 @@
 @import url('../fonts/YaHei-Regular/result.css');
 @import url('../fonts/YaHei-Light/result.css');
 @import url('../fonts/YaHei-Bold/result.css');
+@import url('../fonts/Manrope-Regular/result.css');
+@import url('../fonts/Manrope-Light/result.css');
+@import url('../fonts/Manrope-Bold/result.css');
+
 @import 'tailwindcss';
 
 @theme {
@@ -21,6 +25,7 @@
    --font-family-sans: 'Microsoft YaHei', sans-serif;
    --font-family-serif: 'Microsoft YaHei', serif;
    --font-family-mono: 'Microsoft YaHei', monospace;
+   --font-family-manrope: 'Manrope', sans-serif;
    --font-size-base: 16px;
 
    --radius-r5: 1.25rem;
