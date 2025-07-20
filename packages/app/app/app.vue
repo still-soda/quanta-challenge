@@ -7,7 +7,7 @@ onMounted(initTokens);
 
 <template>
    <div
-      class="w-screen h-screen bg-background text-white font-family-sans text-base">
+      class="w-screen h-screen bg-background text-white font-family-sans text-base min-w-[1280px]">
       <NuxtPage />
    </div>
 </template>
