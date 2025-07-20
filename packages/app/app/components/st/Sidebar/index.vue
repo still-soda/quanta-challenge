@@ -15,19 +15,19 @@ import Logo from '~/components/icon/Logo.vue';
             align="center"
             justify="center"
             class="h-full">
-            <StSidebarNavigationButton to="#">
+            <StSidebarNavigationButton to="/app/dashboard">
                <StIcon name="DashboardTwo" />
             </StSidebarNavigationButton>
             <StSidebarNavigationButton to="#">
                <StIcon name="Ranking" />
             </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="#">
+            <StSidebarNavigationButton to="/app/problems">
                <StIcon name="TableReport" />
             </StSidebarNavigationButton>
             <StSidebarNavigationButton to="#">
                <StIcon name="Trophy" />
             </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="#">
+            <StSidebarNavigationButton to="/app/settings">
                <StIcon name="SettingTwo" />
             </StSidebarNavigationButton>
          </StSpace>

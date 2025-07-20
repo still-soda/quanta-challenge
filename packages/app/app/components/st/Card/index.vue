@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
    <div
-      class="p-4 rounded-[1.25rem] bg-accent-600 gap-[1.25rem] w-full h-full relative">
+      class="p-4 rounded-[1.25rem] bg-accent-600 w-full h-full relative flex flex-col">
       <slot name="header">
          <StSpace justify="between" align="center" class="h-[1.75rem]">
             <slot name="header-left">

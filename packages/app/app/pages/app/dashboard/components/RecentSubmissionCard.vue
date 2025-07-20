@@ -17,7 +17,7 @@ import MoreOptions from './MoreOptions.vue';
             </template>
          </StSkeleton>
 
-         <StSkeleton class="h-[6rem]" loading>
+         <StSkeleton class="h-full" loading>
             <template #loading>
                <StSpace gap="1rem" class="h-full">
                   <StSkeletonItem class="h-full w-full" />

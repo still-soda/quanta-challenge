@@ -41,7 +41,7 @@ export const useWebAuthnLogin = () => {
          authStore.setTokens(tokens);
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         console.error('Authentication failed:', error);
+         getCallback('error').forEach((cb) => cb(error));
       } finally {
          loading.value = false;
       }

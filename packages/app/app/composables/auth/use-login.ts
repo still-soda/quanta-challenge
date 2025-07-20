@@ -43,7 +43,6 @@ export const useEmailLogin = () => {
          };
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         console.error('Login failed:', error);
          getCallback('error').forEach((cb) => cb());
       } finally {
          loading.value = false;

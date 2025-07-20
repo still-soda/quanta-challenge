@@ -22,8 +22,4 @@ import MoreOptions from './MoreOptions.vue';
    </StCard>
 </template>
 
-<style lang="css" scoped>
-.bottom-mask {
-   background: linear-gradient(180deg, rgba(39, 39, 39, 0) 0%, #272727 94.71%);
-}
-</style>
+<style scoped src="./style.css" />

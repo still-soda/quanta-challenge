@@ -4,11 +4,14 @@ import {
    MoreOptions,
    RecentLearningCard,
    RecentSubmissionCard,
+   SubmissionStatusCard,
 } from './components';
+import BadgesCard from './components/BadgesCard.vue';
+import RankingCard from './components/RankingCard.vue';
 </script>
 
 <template>
-   <StSpace direction="vertical" align="center" gap="1.5rem" class="h-full">
+   <StSpace direction="vertical" align="center" gap="0" class="h-full">
       <StHeader>
          <template #left>
             <StSpace gap="0.75rem" align="center">
@@ -39,24 +42,10 @@ import {
          </StSpace>
 
          <StSpace direction="vertical" gap="1.5rem" class="w-full h-full">
-            <StCard
-               icon="Fire"
-               title="提交情况"
-               class="w-full !h-[18.0625rem] mt-4"></StCard>
+            <SubmissionStatusCard />
             <StSpace gap="1.5rem" class="w-full h-full">
-               <StCard icon="Ranking" title="我的排名" class="w-full h-full">
-                  <template #header-right>
-                     <MoreOptions />
-                  </template>
-               </StCard>
-               <StCard
-                  icon="FiveStarBadge"
-                  title="徽章墙"
-                  class="w-full h-full">
-                  <template #header-right>
-                     <MoreOptions />
-                  </template>
-               </StCard>
+               <RankingCard />
+               <BadgesCard />
             </StSpace>
          </StSpace>
       </StSpace>
