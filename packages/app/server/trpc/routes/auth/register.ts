@@ -1,8 +1,8 @@
 import z from 'zod';
 import { publicProcedure, router } from '../../trpc';
-import prisma from '~~/lib/prisma';
 import { hashPassword } from '~~/server/utils/password';
 import { generateTokens } from '~~/server/utils/jwt';
+import prisma from '@challenge/database';
 
 const emailReisterInputSchema = z
    .object({

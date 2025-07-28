@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import MoreOptions from './MoreOptions.vue';
+</script>
 
 <template>
    <StCard

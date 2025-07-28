@@ -10,6 +10,18 @@ export default defineNuxtConfig({
       plugins: [tailwindcss()],
    },
 
+   app: {
+      pageTransition: {
+         name: 'page',
+         mode: 'out-in',
+      },
+   },
+
+   prisma: {
+      prismaSchemaPath: '../database/prisma/schema.prisma',
+      prismaRoot: '../database/prisma',
+   },
+
    modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt'],
 
    nitro: {

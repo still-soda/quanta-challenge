@@ -14,6 +14,7 @@
       "cn:add": "bunx --bun shadcn-vue@latest add"
    },
    "dependencies": {
+      "@challenge/database": "workspace:^",
       "@icon-park/vue-next": "^1.4.2",
       "@pinia/nuxt": "^0.11.1",
       "@prisma/client": "^6.12.0",

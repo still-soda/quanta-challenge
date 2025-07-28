@@ -1,5 +1,3 @@
-<script setup lang="ts"></script>
-
 <template>
    <div class="w-full relative flex items-center justify-center h-fit">
       <div class="h-[1px] bg-accent-400 w-full"></div>

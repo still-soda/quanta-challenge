@@ -11,3 +11,22 @@ onMounted(initTokens);
       <NuxtPage />
    </div>
 </template>
+
+<style lang="css">
+.page-enter-active,
+.page-leave-active {
+   transition: all 0.2s ease-in-out;
+}
+
+.page-enter-from,
+.page-leave-to {
+   opacity: 0;
+   transform: translateY(1rem);
+}
+
+.page-enter-to,
+.page-leave-from {
+   opacity: 1;
+   transform: translateY(0);
+}
+</style>

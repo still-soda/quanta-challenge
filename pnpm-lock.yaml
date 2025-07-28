@@ -14,10 +14,13 @@ importers:
     devDependencies:
       '@types/bun':
         specifier: latest
-        version: 1.2.18(@types/react@19.1.8)
+        version: 1.2.19(@types/react@19.1.8)
 
   packages/app:
     dependencies:
+      '@challenge/database':
+        specifier: workspace:^
+        version: link:../database
       '@icon-park/vue-next':
         specifier: ^1.4.2
         version: 1.4.2(vue@3.5.17(typescript@5.8.3))
@@ -112,6 +115,8 @@ importers:
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
+
+  packages/database: {}
 
   packages/judge:
     dependencies:
@@ -1894,8 +1899,8 @@ packages:
   '@types/bcrypt@5.0.2':
     resolution: {integrity: sha512-6atioO8Y75fNcbmj0G7UjI9lXN2pQ/IGJ2FWT4a/btd0Lk9lQalHLKhkgKVZ3r+spnmWUKfbMi1GEe9wyHQfNQ==}
 
-  '@types/bun@1.2.18':
-    resolution: {integrity: sha512-Xf6RaWVheyemaThV0kUfaAUvCNokFr+bH8Jxp+tTZfx7dAPA8z9ePnP9S9+Vspzuxxx9JRAXhnyccRj3GyCMdQ==}
+  '@types/bun@1.2.19':
+    resolution: {integrity: sha512-d9ZCmrH3CJ2uYKXQIUuZ/pUnTqIvLDS0SK7pFmbx8ma+ziH/FRMoAq5bYpRG7y+w1gl+HgyNZbtqgMq4W4e2Lg==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -2358,8 +2363,8 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
-  bun-types@1.2.18:
-    resolution: {integrity: sha512-04+Eha5NP7Z0A9YgDAzMk5PHR16ZuLVa83b26kH5+cp1qZW4F6FmAURngE7INf4tKOvCE69vYvDEwoNl1tGiWw==}
+  bun-types@1.2.19:
+    resolution: {integrity: sha512-uAOTaZSPuYsWIXRpj7o56Let0g/wjihKCkeRqUBhlLVM/Bt+Fj9xTo+LhC1OV1XDaGkz4hNC80et5xgy+9KTHQ==}
     peerDependencies:
       '@types/react': ^19
 
@@ -7173,9 +7178,9 @@ snapshots:
     dependencies:
       '@types/node': 24.0.14
 
-  '@types/bun@1.2.18(@types/react@19.1.8)':
+  '@types/bun@1.2.19(@types/react@19.1.8)':
     dependencies:
-      bun-types: 1.2.18(@types/react@19.1.8)
+      bun-types: 1.2.19(@types/react@19.1.8)
     transitivePeerDependencies:
       - '@types/react'
 
@@ -7774,7 +7779,7 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bun-types@1.2.18(@types/react@19.1.8):
+  bun-types@1.2.19(@types/react@19.1.8):
     dependencies:
       '@types/node': 24.0.14
       '@types/react': 19.1.8

@@ -1,5 +1,5 @@
+import prisma from '@challenge/database';
 import z from 'zod';
-import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '~~/server/trpc/trpc';
 import { generateTokens } from '~~/server/utils/jwt';
 

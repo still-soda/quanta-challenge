@@ -7,11 +7,11 @@ export const createContext = async (event: H3Event) => {
       return { event };
    }
 
-   let user: ITokenPayload | null = null;
+   let user: ITokenPayload | null;
    try {
       user = verifyToken(token);
    } catch (error) {
-      // do nothing, user will be null
+      user = null;
    }
    return { event, user };
 };

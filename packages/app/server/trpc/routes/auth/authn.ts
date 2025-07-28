@@ -1,4 +1,4 @@
-import prisma from '~~/lib/prisma';
+import prisma from '@challenge/database';
 import { protectedProcedure } from '../../protected-trpc';
 import { publicProcedure, router } from '../../trpc';
 import z from 'zod';
@@ -14,7 +14,7 @@ const registerAuthnProcedure = protectedProcedure
       const { userId } = ctx.user;
       const { email } = input;
 
-      const user = await prisma.user.findFirstOrThrow({
+      const user = await prisma.user.findUniqueOrThrow({
          where: {
             id: userId,
          },
