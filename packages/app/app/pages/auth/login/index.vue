@@ -28,6 +28,10 @@ const rules: IRule[] = [
       validator: (value: string) => value.length >= 6,
    },
 ];
+
+const gotoWebAuthnLogin = () => {
+   navigateTo('/auth/login/authn');
+};
 </script>
 
 <template>
@@ -80,7 +84,7 @@ const rules: IRule[] = [
          <div class="flex gap-4 w-full text-sm">
             <StButton
                v-if="supportWebAuthn"
-               @click.self="navigateTo('/auth/login/authn')"
+               @click.self="gotoWebAuthnLogin"
                class="!bg-accent-600 !text-accent-200 w-full">
                <NuxtLink to="/auth/login/authn" class="flex gap-2 items-center">
                   <StIcon name="Fingerprint" class="text-xl text-[#9D9D9D]" />

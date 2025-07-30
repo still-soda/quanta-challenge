@@ -19,18 +19,35 @@ export default defineNuxtPlugin(() => {
                let res = await fetch(url, options);
 
                if (res.status === 401) {
-                  const refreshRes = await $fetch<{
-                     accessToken: string;
-                     refreshToken: string;
-                  }>('/api/refresh');
-                  authStore.accessToken = refreshRes.accessToken;
-                  authStore.refreshToken = refreshRes.refreshToken;
+                  try {
+                     if (!authStore.refreshToken) {
+                        throw new Error('No refresh token available');
+                     }
 
-                  options!.headers = {
-                     ...options!.headers,
-                     Authorization: `Bearer ${refreshRes.accessToken}`,
-                  };
-                  res = await fetch(url, options);
+                     const refreshRes = await $fetch<{
+                        accessToken: string;
+                        refreshToken: string;
+                     }>('/api/refresh', {
+                        headers: { refreshToken: authStore.refreshToken },
+                     });
+                     authStore.accessToken = refreshRes.accessToken;
+                     authStore.refreshToken = refreshRes.refreshToken;
+
+                     options!.headers = {
+                        ...options!.headers,
+                        Authorization: `Bearer ${refreshRes.accessToken}`,
+                     };
+                     res = await fetch(url, options);
+                  } catch {
+                     navigateTo('/auth/login');
+                     return new Response(
+                        JSON.stringify({ error: 'Unauthorized' }),
+                        {
+                           status: 200,
+                           headers: { 'Content-Type': 'application/json' },
+                        }
+                     );
+                  }
                }
 
                return res;

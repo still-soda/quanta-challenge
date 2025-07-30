@@ -9,25 +9,32 @@ const props = defineProps<{
 
 const visible = ref(false);
 
-const value = defineModel<string>('value');
+const value = defineModel<string | number>('value');
 const borderClass = computed(() => {
    return props.status === 'error'
-      ? 'border border-error'
+      ? '!border !border-error'
       : props.status === 'success'
-      ? 'border border-success'
+      ? '!border !border-success'
       : '';
 });
+
+const increaseValue = () => {
+   value.value = isNaN(Number(value.value)) ? 0 : Number(value.value) + 1;
+};
+const decreaseValue = () => {
+   value.value = isNaN(Number(value.value)) ? 0 : Number(value.value) - 1;
+};
 </script>
 
 <template>
    <div
-      class="text-accent-300 flex items-center gap-3 py-4 px-6 rounded-lg caret-primary selection:bg-secondary/60 transition-colors"
+      class="relative text-accent-300 flex items-center gap-3 py-4 px-6 rounded-lg caret-primary selection:bg-secondary/60 transition-colors"
       :class="[outerClass, borderClass]">
       <slot name="prefix"></slot>
       <input
          v-model="value"
-         v-bind="$attrs"
          :type="password ? (visible ? 'text' : 'password') : ''"
+         v-bind="$attrs"
          class="bg-transparent border-none outline-none placeholder:text-accent-300 text-white flex-1" />
       <slot name="suffix"></slot>
       <div
@@ -37,5 +44,26 @@ const borderClass = computed(() => {
          <StIcon v-if="visible" name="PreviewClose" />
          <StIcon v-else name="PreviewOpen" />
       </div>
+      <div
+         v-if="$attrs.type === 'number'"
+         class="text-accent-300 flex flex-col items-center absolute right-2.5">
+         <div
+            @click.prevent="increaseValue"
+            class="hover:cursor-pointer hover:bg-accent-600 px-1 rounded-sm transition-colors">
+            <StIcon name="Up" />
+         </div>
+         <div
+            @click.prevent="decreaseValue"
+            class="hover:cursor-pointer hover:bg-accent-600 px-1 rounded-sm transition-colors">
+            <StIcon name="Down" />
+         </div>
+      </div>
    </div>
 </template>
+
+<style scoped>
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+   -webkit-appearance: none;
+}
+</style>

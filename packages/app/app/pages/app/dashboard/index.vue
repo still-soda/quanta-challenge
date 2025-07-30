@@ -17,7 +17,7 @@ import {
             align="start"
             gap="1.5rem"
             class="w-full h-full">
-            <h1 class="text-[2.5rem] font-bold">早上好，没有气的汽水</h1>
+            <h1 class="st-font-hero-bold">早上好，没有气的汽水</h1>
             <StSpace gap="1.5rem" class="mt-4 w-full">
                <RecentSubmissionCard />
                <RecentLearningCard />

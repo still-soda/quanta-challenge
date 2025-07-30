@@ -108,13 +108,9 @@ const authenticateAuthnProcedure = publicProcedure
    .mutation(async ({ input }) => {
       const { email } = input;
 
-      const user = await prisma.user.findFirstOrThrow({
-         where: {
-            email,
-         },
-         include: {
-            WebAuthnCredential: true,
-         },
+      const user = await prisma.user.findUniqueOrThrow({
+         where: { email },
+         include: { WebAuthnCredential: true },
       });
 
       if (user.WebAuthnCredential.length === 0) {
@@ -153,7 +149,6 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
    .mutation(async ({ input }) => {
       const redis = useRedis();
       const { accessResponse, email } = input;
-      console.log('Verify: webauthn:authenticate:' + email);
       const optionsJSON = await redis.get('webauthn:authenticate:' + email);
       if (!optionsJSON) {
          throw new Error('No authentication options found');
@@ -186,7 +181,12 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
          throw new Error('WebAuthn authentication verification failed');
       }
 
-      return generateTokens({ userId: accessResponse.id });
+      const user = await prisma.user.findUniqueOrThrow({
+         where: { email },
+         select: { id: true },
+      });
+
+      return generateTokens({ userId: user.id });
    });
 
 export const authnRouter = router({

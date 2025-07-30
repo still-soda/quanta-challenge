@@ -13,7 +13,7 @@ const {
 } = useWebAuthnLogin();
 
 onAuthenticateSuccess(() => {
-   alert('Authentication Success');
+   navigateTo('/app/dashboard');
 });
 onAuthenticateError(() => {
    alert('Authentication Failed');
@@ -26,6 +26,10 @@ const rules: IRule[] = [
       validator: (value: string) => z.email().safeParse(value).success,
    },
 ];
+
+const gotoPasswordLogin = () => {
+   navigateTo('/auth/login');
+};
 </script>
 
 <template>
@@ -66,7 +70,7 @@ const rules: IRule[] = [
          <StDevider>或使用</StDevider>
          <div class="flex gap-4 w-full text-sm">
             <StButton
-               @click.self="navigateTo('/auth/login')"
+               @click.self="gotoPasswordLogin"
                class="!bg-accent-600 !text-accent-200 w-full">
                <NuxtLink to="/auth/login" class="flex gap-2 items-center">
                   <StIcon name="Key" class="text-xl text-[#9D9D9D]" />

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
       const tokens = renewTokens(refreshToken);
       setResponseStatus(event, 200);
       return tokens;
-   } catch (error) {
+   } catch (error: any) {
       setResponseStatus(event, 401);
       return { error: 'Invalid refresh token' };
    }

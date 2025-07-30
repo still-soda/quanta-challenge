@@ -22,12 +22,13 @@ export default defineNuxtConfig({
       prismaRoot: '../database/prisma',
    },
 
-   modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt'],
+   modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt', '@vueuse/nuxt'],
 
    nitro: {
       externals: {
          external: ['@prisma/client', '.prisma/client'],
       },
+      devProxy: { host: '127.0.0.1' },
    },
 
    build: {

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import Logo from '~/components/icon/Logo.vue';
+import useAuthStore from '~/stores/auth-store';
+
+const authStore = useAuthStore();
+const role = computed(() => authStore.user?.role ?? 'USER');
 </script>
 
 <template>
@@ -23,6 +27,9 @@ import Logo from '~/components/icon/Logo.vue';
             </StSidebarNavigationButton>
             <StSidebarNavigationButton to="/app/problems">
                <StIcon name="TableReport" />
+            </StSidebarNavigationButton>
+            <StSidebarNavigationButton v-if="role !== 'USER'" to="/app/publish">
+               <StIcon name="UploadTwo" />
             </StSidebarNavigationButton>
             <StSidebarNavigationButton to="#">
                <StIcon name="Trophy" />

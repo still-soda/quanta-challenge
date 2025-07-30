@@ -9,6 +9,8 @@ const props = defineProps<{
    name: string;
    errorMessage?: string;
    successMessage?: string;
+   label?: string;
+   required?: boolean;
 }>();
 
 const assignMethod = inject<(options: IAssignFormItemOptions) => void>(
@@ -28,6 +30,13 @@ onMounted(() => {
 
 <template>
    <div class="flex flex-col gap-2 w-full">
+      <div v-if="props.label" class="w-full flex justify-between">
+         <div class="st-font-body-bold mb-1">
+            <span v-if="props.required" class="text-error">*</span>
+            {{ props.label }}
+         </div>
+         <slot name="header-right"></slot>
+      </div>
       <slot v-bind="$attrs" :status="status"></slot>
       <div
          v-if="errorMessage && status === 'error'"

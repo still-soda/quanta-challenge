@@ -3,6 +3,7 @@
 @import url('../fonts/YaHei-Bold/result.css');
 @import url('../fonts/Manrope-Regular/result.css');
 @import url('../fonts/Manrope-Light/result.css');
+@import url('../fonts/FiraCode-Regular/result.css');
 @import url('../fonts/Manrope-Bold/result.css');
 
 @import 'tailwindcss';
@@ -26,6 +27,8 @@
    --font-family-serif: 'Microsoft YaHei', serif;
    --font-family-mono: 'Microsoft YaHei', monospace;
    --font-family-manrope: 'Manrope', sans-serif;
+   --font-family-fira-code: 'FiraCode Nerd Font Mono', 'Microsoft YaHei',
+      monospace;
    --font-size-base: 16px;
 
    --radius-r5: 1.25rem;
@@ -50,5 +53,53 @@
 }
 
 body {
-   @apply bg-background;
+   @apply bg-background font-family-sans;
+}
+
+@layer components {
+   .hljs {
+      font-variant-ligatures: none;
+      font-family: 'FiraCode Nerd Font Mono', 'Microsoft YaHei', monospace;
+      background: transparent !important;
+   }
+
+   .st-font-hero-bold {
+      @apply text-[2.5rem] font-bold font-family-sans;
+   }
+
+   .st-font-hero-normal {
+      @apply text-[2.5rem] font-normal font-family-sans;
+   }
+
+   .st-font-secondary-bold {
+      @apply text-[2rem] font-bold font-family-sans;
+   }
+
+   .st-font-secondary-normal {
+      @apply text-[2rem] font-normal font-family-sans;
+   }
+
+   .st-font-third-bold {
+      @apply text-[1.5rem] font-bold font-family-sans;
+   }
+
+   .st-font-third-normal {
+      @apply text-[1.5rem] font-normal font-family-sans;
+   }
+
+   .st-font-body-bold {
+      @apply text-base font-bold font-family-sans;
+   }
+
+   .st-font-body-normal {
+      @apply text-base font-normal font-family-sans;
+   }
+
+   .st-font-caption {
+      @apply text-sm font-normal font-family-sans;
+   }
+
+   .st-font-tooltip {
+      @apply text-[0.625rem] font-normal font-family-sans;
+   }
 }

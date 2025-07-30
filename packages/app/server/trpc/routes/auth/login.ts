@@ -2,6 +2,7 @@ import prisma from '@challenge/database';
 import z from 'zod';
 import { publicProcedure, router } from '~~/server/trpc/trpc';
 import { generateTokens } from '~~/server/utils/jwt';
+import { protectedProcedure } from '../../protected-trpc';
 
 const emailLoginInputSchema = z.object({
    email: z.email(),
@@ -32,6 +33,22 @@ const emailLoginProcedure = publicProcedure
       return { user, tokens };
    });
 
+const getUserByAccessToken = protectedProcedure.query(async ({ ctx }) => {
+   if (!ctx.user) {
+      throw new Error('Unauthorized');
+   }
+   const user = await prisma.user.findUniqueOrThrow({
+      where: { id: ctx.user.userId },
+      include: { avatar: true },
+   });
+   prisma.user.update({
+      where: { id: ctx.user.userId },
+      data: { lastLogin: new Date() },
+   });
+   return user;
+});
+
 export const loginRouter = router({
    email: emailLoginProcedure,
+   getUser: getUserByAccessToken,
 });

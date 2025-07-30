@@ -2,7 +2,7 @@
 import useAuthStore from './stores/auth-store';
 
 const { initTokens } = useAuthStore();
-onMounted(initTokens);
+onBeforeMount(initTokens);
 </script>
 
 <template>

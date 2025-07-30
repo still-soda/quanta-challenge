@@ -1,5 +1,7 @@
 import type { User } from '@prisma/client';
+import type { TRPCClient } from '@trpc/client';
 import { defineStore } from 'pinia';
+import type { AppRouter } from '~~/server/trpc/routes';
 
 const useAuthStore = defineStore('auth', () => {
    const user = ref<User | null>(null);
@@ -9,6 +11,19 @@ const useAuthStore = defineStore('auth', () => {
    const initTokens = () => {
       refreshToken.value = localStorage.getItem('refreshToken');
       accessToken.value = localStorage.getItem('accessToken');
+   };
+
+   const fetchUserInfo = async (trpc: TRPCClient<AppRouter>) => {
+      const result = await trpc.auth.login.getUser.query();
+      if (result) {
+         user.value = transformObjectFields(
+            result,
+            ['createdAt', 'updatedAt', 'lastLogin'],
+            (value: any) => new Date(value)
+         );
+         return true;
+      }
+      return false;
    };
 
    const setTokens = (tokens: {
@@ -27,6 +42,7 @@ const useAuthStore = defineStore('auth', () => {
       accessToken,
       setTokens,
       initTokens,
+      fetchUserInfo,
    };
 });
 

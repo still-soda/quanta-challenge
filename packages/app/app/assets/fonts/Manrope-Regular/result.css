@@ -22,4 +22,102 @@ Windows en TypographicFamilyName Manrope
 Windows en TypographicSubfamilyName Regular
  */
 
-@font-face{font-family:"Manrope";src:local("Manrope"),url("./e5567774c19050cee245b4d222ab3065.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+1EC8,U+1ECA,U+2011,U+201A,U+201F-2022,U+2030,U+2033,U+2039-203A,U+2044,U+2060,U+2070,U+2074-2079,U+2080-2089,U+20A3,U+20A9-20AB,U+20B1,U+20B4,U+20BA,U+20BF,U+2116,U+2122,U+2191-2193,U+2202,U+2205,U+220F,U+2211-2212,U+2215,U+221A,U+221E,U+222B,U+2248,U+2260,U+2264-2265,U+25CA,U+E001-E003,U+E008-E009,U+FB01-FB02;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./a7b39a0879eaccf6f5fd2397bdeda68f.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+2014,U+2018,U+2026;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./5206355944ea9190e4531fb3fe4d375e.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+403,U+405,U+407-408,U+40C-40F,U+414,U+418-419,U+41B-41D,U+41F,U+426-429,U+42B,U+42F,U+432,U+437,U+446,U+449,U+453,U+455,U+458,U+45C,U+45F,U+4BB;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./6237ec3573d271e0f4be1d7faf260402.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+37E,U+384-385,U+387,U+389-38A,U+395,U+397,U+39C-39E,U+3A0-3A1,U+3A3,U+3A8,U+3AA,U+3B2;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./3f71dfd6ecec5476788f412cd691610f.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+2BC,U+2C6-2C7,U+2D8-2DD;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./a7b456fc6df1100d3086509d901bc955.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+192;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./f5f6a36cc6f35bdf1cbf4761e902ed0c.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+111,U+118,U+124,U+126,U+128,U+12A,U+12E,U+130,U+135,U+13A-13C,U+143-148,U+14A-14B,U+154,U+15A;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./db8c975fa538af1ff4b2243b26268acc.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+A0-A1,U+A3,U+A6-BF,U+CC-CF,U+D1,U+D7,U+F1,U+F7;}@font-face{font-family:"Manrope";src:local("Manrope"),url("./8e97934e3fb51c57bd8fbc94c669c7a6.woff2")format("woff2");font-style:normal;font-display:swap;font-weight:400;unicode-range:U+0,U+D,U+20-7E,U+A2,U+A4-A5,U+C0-CB,U+D0,U+D2-D6,U+D8-F0,U+F2-F6,U+F8-110,U+112-113,U+116-117,U+119-123,U+125,U+127,U+129,U+12B,U+12F,U+131,U+134,U+136-137,U+139,U+13D-13E,U+141-142,U+14C-14D,U+150-153,U+155-159,U+15B-17E,U+1A0-1A1,U+1AF-1B0,U+218-21B,U+259,U+374-375,U+386,U+388,U+38C,U+38E-394,U+396,U+398-39B,U+39F,U+3A4-3A7,U+3A9,U+3AB-3B1,U+3B3-3CE,U+400-402,U+404,U+406,U+409-40B,U+410-413,U+415-417,U+41A,U+41E,U+420-425,U+42A,U+42C-42E,U+430-431,U+433-436,U+438-445,U+447-448,U+44A-452,U+454,U+456-457,U+459-45B,U+45D-45E,U+490-491,U+4AE-4AF,U+4BA,U+4E8-4E9,U+1E80-1E85,U+1E9E,U+1EA0-1EC7,U+1EC9,U+1ECB-1EF9,U+2013,U+2019,U+201C-201E,U+20AC,U+20AE,U+20B9,U+20BD,U+2190,U+21B5,U+E007;}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./e5567774c19050cee245b4d222ab3065.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+1EC8, U+1ECA, U+2011, U+201A, U+201F-2022, U+2030, U+2033,
+      U+2039-203A, U+2044, U+2060, U+2070, U+2074-2079, U+2080-2089, U+20A3,
+      U+20A9-20AB, U+20B1, U+20B4, U+20BA, U+20BF, U+2116, U+2122, U+2191-2193,
+      U+2202, U+2205, U+220F, U+2211-2212, U+2215, U+221A, U+221E, U+222B,
+      U+2248, U+2260, U+2264-2265, U+25CA, U+E001-E003, U+E008-E009, U+FB01-FB02;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./a7b39a0879eaccf6f5fd2397bdeda68f.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+2014, U+2018, U+2026;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./5206355944ea9190e4531fb3fe4d375e.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+403, U+405, U+407-408, U+40C-40F, U+414, U+418-419,
+      U+41B-41D, U+41F, U+426-429, U+42B, U+42F, U+432, U+437, U+446, U+449,
+      U+453, U+455, U+458, U+45C, U+45F, U+4BB;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./6237ec3573d271e0f4be1d7faf260402.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+37E, U+384-385, U+387, U+389-38A, U+395, U+397, U+39C-39E,
+      U+3A0-3A1, U+3A3, U+3A8, U+3AA, U+3B2;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./3f71dfd6ecec5476788f412cd691610f.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+2BC, U+2C6-2C7, U+2D8-2DD;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./a7b456fc6df1100d3086509d901bc955.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+192;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./f5f6a36cc6f35bdf1cbf4761e902ed0c.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+111, U+118, U+124, U+126, U+128, U+12A, U+12E, U+130, U+135,
+      U+13A-13C, U+143-148, U+14A-14B, U+154, U+15A;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./db8c975fa538af1ff4b2243b26268acc.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+A0-A1, U+A3, U+A6-BF, U+CC-CF, U+D1, U+D7, U+F1, U+F7;
+}
+@font-face {
+   font-family: 'Manrope';
+   src: local('Manrope'),
+      url('./8e97934e3fb51c57bd8fbc94c669c7a6.woff2') format('woff2');
+   font-style: normal;
+   font-display: swap;
+   font-weight: 400;
+   unicode-range: U+0, U+D, U+20-7E, U+A2, U+A4-A5, U+C0-CB, U+D0, U+D2-D6,
+      U+D8-F0, U+F2-F6, U+F8-110, U+112-113, U+116-117, U+119-123, U+125, U+127,
+      U+129, U+12B, U+12F, U+131, U+134, U+136-137, U+139, U+13D-13E, U+141-142,
+      U+14C-14D, U+150-153, U+155-159, U+15B-17E, U+1A0-1A1, U+1AF-1B0,
+      U+218-21B, U+259, U+374-375, U+386, U+388, U+38C, U+38E-394, U+396,
+      U+398-39B, U+39F, U+3A4-3A7, U+3A9, U+3AB-3B1, U+3B3-3CE, U+400-402, U+404,
+      U+406, U+409-40B, U+410-413, U+415-417, U+41A, U+41E, U+420-425, U+42A,
+      U+42C-42E, U+430-431, U+433-436, U+438-445, U+447-448, U+44A-452, U+454,
+      U+456-457, U+459-45B, U+45D-45E, U+490-491, U+4AE-4AF, U+4BA, U+4E8-4E9,
+      U+1E80-1E85, U+1E9E, U+1EA0-1EC7, U+1EC9, U+1ECB-1EF9, U+2013, U+2019,
+      U+201C-201E, U+20AC, U+20AE, U+20B9, U+20BD, U+2190, U+21B5, U+E007;
+}

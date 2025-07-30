@@ -10,6 +10,7 @@ datasource db {
 // 用户表
 model User {
   id        String   @id @default(cuid())
+  role      UserRole @default(USER)
   email     String?  @unique
   name      String?
   imageId   String?
@@ -25,8 +26,30 @@ model User {
   FileSystem         FileSystem[]
   VirtualFile        VirtualFile[]
   Project            Project[]
+  RoleTransition     RoleTransition[]
 
   @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+// 角色变更记录表
+model RoleTransition {
+  id             Int          @id @default(autoincrement())
+  userId         String
+  fromRole       UserRole
+  toRole         UserRole
+  changeByType   ChangeByType
+  changeByUserId String?
+  createdAt      DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("role_transitions")
 }
 
 // 认证提供商枚举
@@ -88,9 +111,8 @@ model Image {
 model Problem {
   pid          Int        @id @default(autoincrement())
   title        String
-  description  String
   detail       String
-  tags         String[]
+  tags         Tag[]
   difficulty   Difficulty
   totalScore   Int
   status       Status
@@ -199,8 +221,9 @@ model Tag {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  creator User   @relation(fields: [creatorId], references: [id])
-  image   Image? @relation(fields: [imageId], references: [id])
+  creator User      @relation(fields: [creatorId], references: [id])
+  image   Image?    @relation(fields: [imageId], references: [id])
+  Problem Problem[]
 
   @@map("tags")
 }
