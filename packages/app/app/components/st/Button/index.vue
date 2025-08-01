@@ -58,7 +58,7 @@ const borderedClass = computed(() => {
       :is="type === 'button' ? 'button' : 'input'"
       :value="text"
       :disabled="props.disabled || props.loading"
-      type="submit"
+      :type="type === 'button' ? 'button' : 'submit'"
       class="flex items-center justify-center font-bold hover:cursor-pointer hover:opacity-80 transition-all"
       :class="[
          textColorClass,

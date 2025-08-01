@@ -57,10 +57,8 @@ body {
 }
 
 @layer components {
-   .hljs {
-      font-variant-ligatures: none;
-      font-family: 'FiraCode Nerd Font Mono', 'Microsoft YaHei', monospace;
-      background: transparent !important;
+   .monaco-editor {
+      outline: none !important;
    }
 
    .st-font-hero-bold {

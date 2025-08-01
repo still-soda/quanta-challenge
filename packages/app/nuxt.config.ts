@@ -8,6 +8,9 @@ export default defineNuxtConfig({
    css: ['~/assets/css/tailwind.css'],
    vite: {
       plugins: [tailwindcss()],
+      ssr: {
+         noExternal: ['@prisma/client'], // 如果你确实要用 SSR 引入
+      },
    },
 
    app: {
@@ -17,10 +20,7 @@ export default defineNuxtConfig({
       },
    },
 
-   prisma: {
-      prismaSchemaPath: '../database/prisma/schema.prisma',
-      prismaRoot: '../database/prisma',
-   },
+   prisma: {},
 
    modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt', '@vueuse/nuxt'],
 

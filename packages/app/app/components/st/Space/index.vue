@@ -5,6 +5,12 @@ const props = defineProps<{
    justify?: 'start' | 'center' | 'end' | 'between' | 'around';
    gap?: string;
    wrap?: boolean;
+   fillX?: boolean;
+   fillY?: boolean;
+   fill?: boolean;
+   center?: boolean;
+   noShrink?: boolean;
+   noWrap?: boolean;
 }>();
 
 const direction = computed(() => {
@@ -41,6 +47,12 @@ const wrap = computed(() => {
          'justify-around': justify === 'around',
          'flex-wrap': wrap,
          'flex-nowrap': !wrap,
+         'w-full': props.fillX,
+         'h-full': props.fillY,
+         'w-full h-full': props.fill,
+         '!items-center !justify-center': props.center,
+         'shrink-0': props.noShrink,
+         'flex-nowrap whitespace-nowrap': props.noWrap,
       }">
       <slot></slot>
    </div>

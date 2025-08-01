@@ -16,7 +16,15 @@ const init = async () => {
    try {
       highlighter.value = await createHighlighter({
          themes: ['github-dark'],
-         langs: ['typescript', 'javascript', 'vue', 'html', 'css'],
+         langs: [
+            'typescript',
+            'javascript',
+            'vue',
+            'html',
+            'css',
+            'yaml',
+            'json',
+         ],
       });
       hasReady.value = true;
    } catch (error) {
@@ -44,7 +52,7 @@ onUnmounted(() => {
    highlighter.value = void 0;
 });
 
-const debouncedRehighlight = useDebounceFn(rehighlightCode, 300);
+const debouncedRehighlight = useDebounceFn(rehighlightCode, 50);
 watch(
    () => props.code,
    () => debouncedRehighlight(),
@@ -59,7 +67,12 @@ watch(
 </template>
 
 <style lang="css" scoped>
-.code >>> .shiki {
+.code :deep(.shiki) {
    background: transparent !important;
+}
+
+.code * {
+   font-family: 'FiraCode Nerd Font Mono', 'monospace' !important;
+   font-variant-ligatures: none !important;
 }
 </style>

@@ -1,0 +1,189 @@
+.markdown-body {
+   --bg: transparent;
+   --text: #f5f5f5;
+   --text-muted: #cccccc;
+   --border: #444444;
+   --link: #fa7c0e;
+   --link-hover: #ff8e2b;
+   --code-bg: #1a1a1a;
+   --code-color: #a6fb1d;
+   --pre-bg: transparent;
+   --quote-bg: #1a1a1a;
+   --quote-border: #555;
+   --table-header-bg: transparent;
+
+   background-color: var(--bg);
+   color: var(--text);
+   font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif;
+   font-size: 16px;
+   line-height: 1.75;
+   margin: 0 auto;
+}
+
+.markdown-body h1 {
+   font-size: 2rem !important;
+   font-weight: bold;
+   border-bottom: 2px solid var(--border);
+   padding-bottom: 0.4rem;
+   margin: 0 0 0.75rem;
+}
+
+.markdown-body h2 {
+   font-size: 1.75rem;
+   font-weight: bold;
+   border-bottom: 1px solid var(--border);
+   padding-bottom: 0.3rem;
+   margin: 1.2rem 0 0.6rem;
+}
+
+.markdown-body h3 {
+   font-size: 1.5rem;
+   font-weight: bold;
+   margin: 1rem 0 0.5rem;
+}
+
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+   font-size: 1.2rem;
+   font-weight: 600;
+   margin: 0.8rem 0 0.4rem;
+}
+
+.markdown-body p {
+   margin: 1rem 0;
+   color: var(--text-muted);
+}
+
+.markdown-body a {
+   color: var(--link);
+   text-decoration: underline;
+   transition: color 0.2s ease;
+}
+
+.markdown-body a:hover {
+   color: var(--link-hover);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+   margin: 1rem 0;
+   padding-left: 2rem;
+}
+
+.markdown-body ol {
+   counter-reset: li;
+}
+
+.markdown-body ol li {
+   list-style: none;
+}
+
+.markdown-body li {
+   margin: 0.5rem 0;
+}
+
+.markdown-body ul li::before {
+   content: '•';
+   color: var(--link);
+   font-weight: bold;
+   display: inline-block;
+   width: 1rem;
+   margin-left: -1.5rem;
+}
+
+.markdown-body ol li::before {
+   content: counter(li) '.';
+   font-family: 'Manrope', sans-serif;
+   counter-increment: li;
+   color: var(--link);
+   font-weight: bold;
+   display: inline-block;
+   width: 1.5rem;
+   margin-left: -1.5rem;
+}
+
+.markdown-body blockquote {
+   border-left: 4px solid var(--quote-border);
+   padding-left: 1rem;
+   margin: 1rem 0;
+   color: var(--text-muted);
+   font-style: italic;
+   background: var(--quote-bg);
+}
+
+.markdown-body code {
+   background-color: var(--code-bg);
+   color: var(--code-color);
+   padding: 0.2rem 0.4rem;
+   border-radius: 4px;
+   font-family: 'FiraCode Nerd Font Mono', 'Microsoft YaHei', monospace;
+   font-size: 0.95rem;
+}
+
+.markdown-body pre {
+   background-color: var(--pre-bg);
+   color: var(--text-muted);
+   padding: 1rem;
+   overflow-x: auto;
+   border-radius: 6px;
+   margin: 1rem 0;
+   font-family: 'JetBrains Mono', monospace;
+   font-size: 0.9rem;
+   border: 1px solid var(--border);
+}
+
+.markdown-body pre code {
+   background: none;
+   padding: 0;
+   color: inherit;
+   font-size: inherit;
+}
+
+.markdown-body table {
+   border-collapse: collapse;
+   width: 100%;
+   margin: 1.5rem 0;
+   border: 1px solid var(--border);
+}
+
+.markdown-body th,
+.markdown-body td {
+   border: 1px solid var(--border);
+   padding: 0.6rem 1rem;
+   text-align: left;
+}
+
+.markdown-body th {
+   background-color: var(--table-header-bg);
+   color: var(--text);
+   font-weight: 600;
+}
+
+.markdown-body img {
+   max-width: 100%;
+   border-radius: 8px;
+   margin: 1rem 0;
+}
+
+.markdown-body hr {
+   border: none;
+   border-top: 1px solid var(--border);
+   margin: 2rem 0;
+}
+
+.markdown-body input[type='checkbox'] {
+   accent-color: var(--link);
+   margin-right: 0.5rem;
+   transform: scale(1.2);
+}
+
+.markdown-body strong {
+   color: var(--text);
+   font-weight: bold;
+}
+
+.markdown-body em {
+   color: var(--text-muted);
+   font-style: italic;
+}

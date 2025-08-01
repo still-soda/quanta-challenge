@@ -1,0 +1,307 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户表
+model User {
+  id        String   @id @default(cuid())
+  role      UserRole @default(USER)
+  email     String?  @unique
+  name      String?
+  imageId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime @default(now())
+
+  avatar             Image?               @relation(fields: [imageId], references: [id])
+  auths              Auth[]
+  WebAuthnCredential WebAuthnCredential[]
+  StatusTransitions  StatusTransitions[]
+  Tag                Tag[]
+  FileSystem         FileSystem[]
+  VirtualFile        VirtualFile[]
+  Project            Project[]
+  RoleTransition     RoleTransition[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+// 角色变更记录表
+model RoleTransition {
+  id             Int          @id @default(autoincrement())
+  userId         String
+  fromRole       UserRole
+  toRole         UserRole
+  changeByType   ChangeByType
+  changeByUserId String?
+  createdAt      DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("role_transitions")
+}
+
+// 认证提供商枚举
+enum AuthProvider {
+  QQ
+  EMAIL
+}
+
+// 认证表
+model Auth {
+  id           String       @id @default(cuid())
+  userId       String
+  provider     AuthProvider
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  email        String?
+  password     String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+  @@map("auths")
+}
+
+// WebAuthn 凭证表
+model WebAuthnCredential {
+  id        String   @id @default(cuid())
+  userId    String
+  publicKey String
+  counter   Int      @default(0)
+  lastUsed  DateTime @default(now())
+  transport String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, publicKey])
+  @@map("webauthn_credentials")
+}
+
+// 图片表
+model Image {
+  id                  String                @id @default(cuid())
+  url                 String
+  createdAt           DateTime              @default(now())
+  User                User[]
+  Tag                 Tag[]
+  ShadowFile          ShadowFile[]
+  ProblemDefaultCover ProblemDefaultCover[]
+
+  @@map("images")
+}
+
+// 问题表
+model Problem {
+  pid          Int        @id @default(autoincrement())
+  title        String
+  detail       String
+  tags         Tag[]
+  difficulty   Difficulty
+  totalScore   Int
+  status       Status
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  hasProject   Boolean?   @default(false)
+  coverImageId String?
+
+  AuditRecord         AuditRecord[]
+  StatusTransitions   StatusTransitions[]
+  JudgeFile           JudgeFile[]
+  ShadowFile          ShadowFile[]
+  Project             Project[]
+  ProblemDefaultCover ProblemDefaultCover[]
+
+  @@map("problems")
+}
+
+model ProblemDefaultCover {
+  id        Int      @id @default(autoincrement())
+  problemId Int
+  imageId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  problem Problem @relation(fields: [problemId], references: [pid])
+  image   Image   @relation(fields: [imageId], references: [id])
+
+  @@map("problem_default_covers")
+}
+
+enum Difficulty {
+  easy
+  medium
+  hard
+  very_hard
+}
+
+enum Status {
+  draft
+  invalid
+  ready
+  published
+}
+
+// 审核记录表
+model AuditRecord {
+  rid       Int      @id @default(autoincrement())
+  problemId Int
+  result    Result
+  reason    String?
+  score     Int      @default(0)
+  timeCost  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  problem Problem @relation(fields: [problemId], references: [pid])
+
+  @@map("audit_records")
+}
+
+enum Result {
+  failed
+  passed
+}
+
+// 状态变更记录表
+model StatusTransitions {
+  id             Int          @id @default(autoincrement())
+  problemId      Int
+  fromStatus     Status
+  toStatus       Status
+  changeByType   ChangeByType
+  changeByUserId String?
+  createdAt      DateTime     @default(now())
+
+  problem Problem @relation(fields: [problemId], references: [pid])
+  user    User?   @relation(fields: [changeByUserId], references: [id])
+
+  @@map("status_transitions")
+}
+
+enum ChangeByType {
+  user
+  system
+}
+
+// 判题文件表
+model JudgeFile {
+  id          Int    @id @default(autoincrement())
+  judgeScript String
+  problemId   Int
+
+  problem Problem @relation(fields: [problemId], references: [pid])
+
+  @@map("judge_files")
+}
+
+// 标签表
+model Tag {
+  tid         Int      @id @default(autoincrement())
+  name        String
+  description String?
+  creatorId   String
+  imageId     String?
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator User      @relation(fields: [creatorId], references: [id])
+  image   Image?    @relation(fields: [imageId], references: [id])
+  Problem Problem[]
+
+  @@map("tags")
+}
+
+// 文件系统表
+model FileSystem {
+  fsid      String   @id @default(uuid())
+  ownerId   String
+  projectId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner   User     @relation(fields: [ownerId], references: [id])
+  project Project? @relation(fields: [projectId], references: [pid])
+
+  @@map("file_systems")
+}
+
+// 项目表
+model Project {
+  pid       String   @id @default(uuid())
+  name      String
+  ownerId   String
+  problemId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner      User         @relation(fields: [ownerId], references: [id])
+  problem    Problem      @relation(fields: [problemId], references: [pid])
+  FileSystem FileSystem[]
+
+  @@index([ownerId, problemId])
+  @@map("projects")
+}
+
+// 虚拟文件表
+model VirtualFile {
+  vid       String   @id @default(uuid())
+  path      String
+  content   String?
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@index([ownerId])
+  @@map("virtual_files")
+}
+
+// 文件系统状态表
+model FileSystemState {
+  sid       String   @id @default(uuid())
+  fsJson    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("file_system_states")
+}
+
+// 影子文件表
+model ShadowFile {
+  sfid      String         @id @default(uuid())
+  type      ShadowFileType
+  problemId Int
+  imageId   String?
+  text      String?
+  jsonb     Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  problem Problem @relation(fields: [problemId], references: [pid])
+  image   Image?  @relation(fields: [imageId], references: [id])
+
+  @@map("shadow_files")
+}
+
+enum ShadowFileType {
+  image
+  text
+}
