@@ -7,7 +7,7 @@ export default defineNuxtConfig({
 
    css: ['~/assets/css/tailwind.css'],
    vite: {
-      plugins: [tailwindcss()],
+      plugins: [tailwindcss() as any],
       ssr: {
          noExternal: ['@prisma/client'], // 如果你确实要用 SSR 引入
       },
@@ -20,7 +20,9 @@ export default defineNuxtConfig({
       },
    },
 
-   prisma: {},
+   prisma: {
+      installStudio: false,
+   },
 
    modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt', '@vueuse/nuxt'],
 
@@ -29,6 +31,7 @@ export default defineNuxtConfig({
          external: ['@prisma/client', '.prisma/client'],
       },
       devProxy: { host: '127.0.0.1' },
+      preset: 'node-server',
    },
 
    build: {
