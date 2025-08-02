@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { SlideRadioGroupOption } from './type';
+import type { ISlideRadioGroupOption } from './type';
 
 const props = defineProps<{
-   option: SlideRadioGroupOption;
+   option: ISlideRadioGroupOption;
    selected?: boolean;
 }>();
 

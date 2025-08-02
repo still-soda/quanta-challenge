@@ -4,7 +4,7 @@ import type { FormItemStatus } from '../Form/type';
 import { Teleport } from 'vue';
 import {
    TOGGLE_OPTION_INJECT_KEY,
-   type SelectOption,
+   type ISelectOption,
    type ToggleOption,
 } from './type';
 
@@ -15,8 +15,10 @@ const props = defineProps<{
    status?: FormItemStatus;
    placeholder?: string;
    attachToBody?: boolean;
-   options?: SelectOption[];
+   options?: ISelectOption[];
    multiple?: boolean;
+   loading?: boolean;
+   optionEmptyText?: string;
 }>();
 
 const selected = defineModel<string | string[]>('value', {
@@ -31,7 +33,10 @@ const borderClass = computed(() => {
       : '';
 });
 
-const opened = ref(false);
+const opened = defineModel<boolean>('opened', {
+   type: Boolean,
+   default: false,
+});
 const toggleSelect = () => {
    opened.value = !opened.value;
 };
@@ -81,6 +86,10 @@ const toggleOption: ToggleOption = (value) => {
       : (selected.value = [...selectedArray, value]);
 };
 provide(TOGGLE_OPTION_INJECT_KEY, toggleOption);
+
+const optionEmptyText = computed(() => {
+   return props.optionEmptyText ?? '暂无选项';
+});
 </script>
 
 <template>
@@ -130,7 +139,14 @@ provide(TOGGLE_OPTION_INJECT_KEY, toggleOption);
                   '!-mt-4': !upside,
                },
             ]">
-            <div v-if="props.options" class="flex flex-col gap-1 text-white">
+            <div
+               v-if="props.options && !props.loading"
+               class="flex flex-col gap-1 text-white">
+               <div
+                  class="w-fit mx-auto flex justify-center text-sm text-accent-300 h-10 items-center relative">
+                  <StIcon name="RobotOne" class="text-base absolute -left-5" />
+                  <span>{{ optionEmptyText }}</span>
+               </div>
                <StSelectOption
                   v-for="(item, key) in props.options"
                   :key="key"
@@ -141,6 +157,13 @@ provide(TOGGLE_OPTION_INJECT_KEY, toggleOption);
                      {{ item.label }}
                   </div>
                </StSelectOption>
+            </div>
+            <div
+               v-else-if="props.loading"
+               class="flex items-center justify-center h-10">
+               <StIcon
+                  name="LoadingFour"
+                  class="animate-spin text-primary text-base" />
             </div>
          </div>
       </Component>

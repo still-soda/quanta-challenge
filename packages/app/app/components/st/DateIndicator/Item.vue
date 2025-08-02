@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { DateIndicatorProps } from './type';
+import type { IDateIndicatorProps } from './type';
 
-defineProps<DateIndicatorProps>();
+defineProps<IDateIndicatorProps>();
 </script>
 
 <template>

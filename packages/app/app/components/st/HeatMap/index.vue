@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { monthText, type HeatMapProps } from './type';
+import { monthText, type IHeatMapProps } from './type';
 
-const props = defineProps<HeatMapProps>();
+const props = defineProps<IHeatMapProps>();
 
 const rows = computed(() => props.rows ?? 9);
 const items = computed(() => {

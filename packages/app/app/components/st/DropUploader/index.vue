@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import * as Icons from '@icon-park/vue-next';
-import { type Directory, walkFileList } from './walk-file-list';
+import { type IDirectory, walkFileList } from './walk-file-list';
 import { ignores } from './default-ignore';
 
 const props = defineProps<{
@@ -30,7 +30,7 @@ const onFileOrFolderSelected = (event: Event) => {
    }
 };
 
-const directory = defineModel<Directory>('directory', {
+const directory = defineModel<IDirectory>('directory', {
    default: () => ({}),
 });
 const onFolderSelected = async (event: Event) => {

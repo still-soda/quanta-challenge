@@ -1,7 +1,9 @@
+import { UserRole } from '@prisma/client';
 import jwt from 'jsonwebtoken';
 
 export interface ITokenPayload {
    userId: string;
+   role: UserRole;
 }
 
 /**

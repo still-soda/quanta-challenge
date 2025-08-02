@@ -42,7 +42,10 @@ const emailRegisterProcedure = publicProcedure
          },
       });
       return {
-         tokens: generateTokens({ userId }),
+         tokens: generateTokens({
+            userId,
+            role: 'USER',
+         }),
          user: {
             name: username,
             id: userId,

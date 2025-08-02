@@ -27,6 +27,7 @@ model User {
   VirtualFile        VirtualFile[]
   Project            Project[]
   RoleTransition     RoleTransition[]
+  UserImage          UserImage[]
 
   @@map("users")
 }
@@ -96,15 +97,33 @@ model WebAuthnCredential {
 
 // 图片表
 model Image {
-  id                  String                @id @default(cuid())
-  url                 String
-  createdAt           DateTime              @default(now())
+  id        String   @id @default(cuid())
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  refCount  Int      @default(0)
+
   User                User[]
   Tag                 Tag[]
   ShadowFile          ShadowFile[]
   ProblemDefaultCover ProblemDefaultCover[]
+  UserImage           UserImage[]
 
   @@map("images")
+}
+
+model UserImage {
+  id        String   @id @default(cuid())
+  userId    String
+  imageId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  image Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, imageId])
+  @@map("user_images")
 }
 
 // 问题表

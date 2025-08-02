@@ -145,7 +145,9 @@ declare namespace z {
  * Playwright 元素句柄接口
  */
 declare type ElementHandle = {
+   /** 获取元素文本内容 */
    textContent(): Promise<string | null>;
+   /** 获取元素属性 */
    getAttribute(name: string): Promise<string | null>;
    click(options?: ClickOptions): Promise<void>;
    fill(value: string, options?: FillOptions): Promise<void>;
@@ -153,6 +155,13 @@ declare type ElementHandle = {
    hover(options?: HoverOptions): Promise<void>;
    isVisible(): Promise<boolean>;
    isEnabled(): Promise<boolean>;
+   /** 获取包围盒*/
+   boundingBox(options?: { timeout?: number }): Promise<null | { 
+      x: number;
+      y: number;
+      width: number;
+      height: number; 
+   }>
 };
 
 /**
@@ -190,6 +199,13 @@ declare type Locator = {
    last(): Locator;
    /** 根据索引获取元素 */
    nth(index: number): Locator;
+   /** 获取包围盒*/
+   boundingBox(options?: { timeout?: number }): Promise<null | { 
+      x: number;
+      y: number;
+      width: number;
+      height: number; 
+   }>
 };
 
 declare type ClickOptions = {

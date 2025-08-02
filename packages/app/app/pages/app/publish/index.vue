@@ -1,47 +1,39 @@
 <script setup lang="ts">
-import type { SelectOption } from '~/components/st/Select/type';
+import type { ISelectOption } from '~/components/st/Select/type';
 import JudgeScript from './components/JudgeScript.vue';
 import ClosableTag from './components/ClosableTag.vue';
-import type { SlideRadioGroupOption } from '~/components/st/SlideRadioGroup/type';
+import type { ISlideRadioGroupOption } from '~/components/st/SlideRadioGroup/type';
 import UploadProject from './components/UploadProject.vue';
 import UploadImage from './components/UploadImage.vue';
 import MarkdownEditingDrawer from './components/MarkdownEditingDrawer.vue';
 
 const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
 
+const { $trpc } = useNuxtApp();
 const formdata = reactive({
    title: '',
-   description: '',
+   detail: '',
    score: undefined as number | undefined,
-   tags: [],
+   tags: [] as string[],
    difficulty: undefined as
       | 'easy'
       | 'medium'
       | 'hard'
-      | 'very-hard'
+      | 'very_hard'
       | undefined,
    answerTemplate: {} as Record<string, string>,
    referenceAnswer: {} as Record<string, string>,
 });
-const tagOptions: SelectOption[] = [
-   { label: '算法', value: 'algorithm', icon: 'Acceleration' },
-   { label: '数据结构', value: 'data-structure' },
-   { label: '动态规划', value: 'dynamic-programming' },
-   { label: '贪心算法', value: 'greedy' },
-   { label: '图论', value: 'graph-theory' },
-];
-const tagValueToLabel = (value: string) => {
-   const option = tagOptions.find((option) => option.value === value);
-   return option ? option.label : value;
-};
 
-const difficultyOptions: SlideRadioGroupOption[] = [
+// 题目难度选项
+const difficultyOptions: ISlideRadioGroupOption[] = [
    { label: '简单', value: 'easy', color: '#A6FB1D' },
    { label: '中等', value: 'medium', color: '#FFBE31' },
    { label: '困难', value: 'hard', color: '#FA7C0E' },
    { label: '非常困难', value: 'very-hard', color: '#FA2F32' },
 ];
 
+// 确保分数不小于0
 watch(
    () => formdata.score,
    (newScore) => {
@@ -49,19 +41,65 @@ watch(
    }
 );
 
+// 标签
+const tagOptions = ref<ISelectOption[]>([]);
+const tagValueToLabel = (value: string) => {
+   const option = tagOptions.value.find((option) => option.value === value);
+   return option ? option.label : value;
+};
 const handleRemoveTag = (tag: string) => {
    formdata.tags = formdata.tags.filter((t) => t !== tag);
 };
+const tagSelectOpened = ref(false);
+const fetchTagLoading = ref(false);
+const fetchTags = async () => {
+   const tags = await $trpc.public.tag.findAll.query();
+   return tags.map((tag) => ({
+      label: tag.name,
+      value: tag.tid,
+   })) satisfies ISelectOption[];
+};
+watch(tagSelectOpened, async (opened) => {
+   if (!opened || tagOptions.value.length > 0) return;
+   fetchTagLoading.value = true;
+   tagOptions.value = await atLeastTime(500, fetchTags());
+   console.log('tagOptions', tagOptions.value);
+   fetchTagLoading.value = false;
+});
 
-watch(formdata, () => console.log(formdata));
-
-const coverModeOptions: SlideRadioGroupOption[] = [
+// 封面
+const coverModeOptions: ISlideRadioGroupOption[] = [
    { label: '使用首屏截图', value: 'default', color: '#FA7C0E' },
    { label: '自定义封面', value: 'custom', color: '#FA7C0E' },
 ];
 const coverMode = ref<'default' | 'custom'>('default');
 
+// 编辑器
 const markdownEditing = ref(false);
+
+// 提交
+const submitLoading = ref(false);
+const handleSubmit = async () => {
+   submitLoading.value = true;
+   await $trpc.admin.problem.upload
+      .mutate({
+         title: formdata.title,
+         detail: formdata.detail,
+         totalScore: formdata.score ?? 0,
+         tagsId: formdata.tags,
+         difficulty: formdata.difficulty!,
+         judgeScript: '',
+         answerTemplateSnapshot: formdata.answerTemplate,
+         referenceAnswerSnapshot: formdata.referenceAnswer,
+         coverMode: coverMode.value,
+      })
+      .catch((error) => {
+         alert('发布题目失败:' + error);
+      })
+      .finally(() => {
+         submitLoading.value = false;
+      });
+};
 </script>
 
 <template>
@@ -86,7 +124,7 @@ const markdownEditing = ref(false);
                   <template #header-right>
                      <MarkdownEditingDrawer
                         v-model:opened="markdownEditing"
-                        v-model:markdown="formdata.description" />
+                        v-model:markdown="formdata.detail" />
                      <div
                         @click="markdownEditing = !markdownEditing"
                         :class="[
@@ -99,7 +137,7 @@ const markdownEditing = ref(false);
                   <StTextarea
                      rows="3"
                      placeholder="请输入题目描述"
-                     v-model:value="formdata.description"
+                     v-model:value="formdata.detail"
                      :outer-class />
                </StFormItem>
                <StFormItem name="score" label="题目总分" required>
@@ -115,9 +153,11 @@ const markdownEditing = ref(false);
                <StFormItem name="tags" label="题目标签" required>
                   <StSelect
                      v-model:value="formdata.tags"
+                     v-model:opened="tagSelectOpened"
                      attach-to-body
                      placeholder="请选择题目标签"
                      multiple
+                     :loading="fetchTagLoading"
                      :outer-class
                      :options="tagOptions">
                      <template #selected-preview="{ value }">
@@ -162,6 +202,8 @@ const markdownEditing = ref(false);
             <StSpace justify="between" align="center" class="px-2 mt-[2.13rem]">
                <div class="text-accent-300">已经自动保存</div>
                <StButton
+                  :loading="submitLoading"
+                  @click="handleSubmit"
                   class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                   <div class="flex gap-2 items-center">
                      <StIcon name="UploadTwo" class="text-[1.5rem]" />

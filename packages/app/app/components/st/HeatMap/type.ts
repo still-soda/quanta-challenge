@@ -1,11 +1,11 @@
-export interface HeatMapData {
+export interface IHeatMapData {
    data: string;
    submissions: number;
 }
 
-export interface HeatMapProps {
+export interface IHeatMapProps {
    currentYear: number;
-   data: Array<HeatMapData>;
+   data: Array<IHeatMapData>;
    rows?: number;
    loading?: boolean;
 }

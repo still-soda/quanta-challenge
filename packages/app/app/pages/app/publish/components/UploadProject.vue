@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { Directory } from '~/components/st/DropUploader/walk-file-list';
+import type { IDirectory } from '~/components/st/DropUploader/walk-file-list';
 import type { FileSystemItem } from '~/components/st/FileSystemTree/type';
 
 const props = defineProps<{
    placeholder?: string;
 }>();
 
-const directory = ref<Directory>();
+const directory = ref<IDirectory>();
 const fileSystemItems = ref<FileSystemItem[]>([]);
 const projectFs = defineModel<Record<string, string>>('projectFs');
 
@@ -16,8 +16,8 @@ const walkDirectory = () => {
       return;
    }
    const project: Record<string, string> = {};
-   const flatDirectory = (dir: Directory, root = ''): FileSystemItem[] => {
-      const isFolder = (value: any): value is Directory => {
+   const flatDirectory = (dir: IDirectory, root = ''): FileSystemItem[] => {
+      const isFolder = (value: any): value is IDirectory => {
          return typeof value !== 'string' && value !== null;
       };
       return Object.entries(dir).map(([key, value]) => {

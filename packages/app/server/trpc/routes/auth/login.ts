@@ -29,7 +29,10 @@ const emailLoginProcedure = publicProcedure
          where: { id: authRecord.userId },
          include: { avatar: true },
       });
-      const tokens = generateTokens({ userId: user.id });
+      const tokens = generateTokens({
+         userId: user.id,
+         role: user.role,
+      });
       return { user, tokens };
    });
 

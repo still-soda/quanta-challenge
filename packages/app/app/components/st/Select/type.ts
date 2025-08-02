@@ -1,6 +1,6 @@
 import * as Icons from '@icon-park/vue-next';
 
-export interface SelectOption {
+export interface ISelectOption {
    label: string;
    value: any;
    disabled?: boolean;

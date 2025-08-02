@@ -1,9 +1,9 @@
 export type File = string;
-export interface Directory {
-   [key: string]: File | Directory;
+export interface IDirectory {
+   [key: string]: File | IDirectory;
 }
 
-interface WalkFileListOptions {
+interface IWalkFileListOptions {
    exclude?: {
       directories?: string[];
       files?: string[];
@@ -22,9 +22,9 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export const walkFileList = async (
    fileList: FileList,
-   options?: WalkFileListOptions
+   options?: IWalkFileListOptions
 ) => {
-   const currentDirectory: Directory = {};
+   const currentDirectory: IDirectory = {};
    const excludeDirectories = options?.exclude?.directories || [];
    const excludeFiles = options?.exclude?.files || [];
 
@@ -45,7 +45,7 @@ export const walkFileList = async (
          if (!currentDir[part]) {
             currentDir[part] = {};
          }
-         currentDir = currentDir[part] as Directory;
+         currentDir = currentDir[part] as IDirectory;
       }
 
       currentDir[pathParts[pathParts.length - 1]!] = await (async () => {

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { DateIndicatorProps } from './type';
+import type { IDateIndicatorProps } from './type';
 
 const recent7days = computed(() => {
    const today = new Date();
-   const days = new Array<DateIndicatorProps>();
+   const days = new Array<IDateIndicatorProps>();
    for (let i = -3; i <= 3; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {
    TOGGLE_SLIDE_RADIO_INJECT_KEY,
-   type SlideRadioGroupOption,
+   type ISlideRadioGroupOption,
 } from './type';
 
 const props = defineProps<{
-   options: SlideRadioGroupOption[];
+   options: ISlideRadioGroupOption[];
 }>();
 
 const toggleSlideRadio = () => {};

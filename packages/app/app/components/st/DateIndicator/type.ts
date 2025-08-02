@@ -1,4 +1,4 @@
-export interface DateIndicatorProps {
+export interface IDateIndicatorProps {
    dateText: string;
    dateNumber: number | string;
    triggered?: boolean;

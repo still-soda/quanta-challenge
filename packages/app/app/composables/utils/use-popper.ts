@@ -6,7 +6,7 @@ import {
 
 type Modifier = Options['modifiers'][number];
 
-export interface UsePopperOptions {
+export interface IUsePopperOptions {
    containerKey?: string;
    popperKey?: string;
    fillWidth?: boolean;
@@ -25,7 +25,7 @@ const phases: Modifier['phase'][] = [
    'write',
 ];
 
-export const usePopper = (options?: UsePopperOptions) => {
+export const usePopper = (options?: IUsePopperOptions) => {
    // use-template ref keys
    const containerKey = options?.containerKey ?? 'popper-container';
    const popperKey = options?.popperKey ?? 'popper-instance';

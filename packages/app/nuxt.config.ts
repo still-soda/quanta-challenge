@@ -32,6 +32,12 @@ export default defineNuxtConfig({
       },
       devProxy: { host: '127.0.0.1' },
       preset: 'node-server',
+      storage: {
+         local: {
+            driver: 'fs',
+            base: './storage/local',
+         },
+      },
    },
 
    build: {

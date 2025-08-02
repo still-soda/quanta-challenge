@@ -1,6 +1,6 @@
 import type monaco from 'monaco-editor';
 
-export interface UseSimpleEditorOptions {
+export interface IUseSimpleEditorOptions {
    script: string;
    language?: string;
    options?: monaco.editor.IStandaloneEditorConstructionOptions;
@@ -39,7 +39,7 @@ const setEnvironment = () => {
    };
 };
 
-export const useSimpleEditor = (options: UseSimpleEditorOptions) => {
+export const useSimpleEditor = (options: IUseSimpleEditorOptions) => {
    let editor: monaco.editor.IStandaloneCodeEditor | null = null;
    const containerKey = 'container-key';
    const container = useTemplateRef<HTMLElement>(containerKey);
