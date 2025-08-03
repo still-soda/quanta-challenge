@@ -513,7 +513,7 @@ declare class System {
    constructor(fileRoot: string);
 
    /** 保存数据到文件系统 */
-   save(type: SaveType): Promise<string | undefined>;
+   saveOrCompare(type: SaveType): Promise<number>;
 
    /** 定义检查点 */
    defineCheckPoint(
@@ -545,7 +545,7 @@ declare class System {
  * 只包含安全的公共方法
  */
 declare const getExposeSystem: (sys: System) => {
-   save: (type: SaveType) => Promise<string | undefined>;
+   saveOrCompare(type: SaveType): Promise<number>;
    score: (totalScore: number, rating: () => number) => Promise<number>;
    defineCheckPoint: (
       name: string,

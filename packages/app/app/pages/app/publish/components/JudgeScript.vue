@@ -3,7 +3,7 @@ import ScriptEditingDrawer from './ScriptEditingDrawer.vue';
 
 const ready = ref(false);
 const isEditing = ref(false);
-const script = ref('');
+const script = defineModel<string>('script', { default: '' });
 </script>
 
 <template>

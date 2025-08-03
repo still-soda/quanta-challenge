@@ -12,7 +12,7 @@ const assignFormItem = (options: IAssignFormItemOptions) => {
 };
 provide(assignFormItemKey, assignFormItem);
 
-const formdata = defineModel<Record<string, string>>({
+const formdata = defineModel<Record<string, any>>({
    default: () => ({}),
 });
 const props = defineProps<{
@@ -32,13 +32,11 @@ const validate = () => {
       if (options) {
          const value = formdata.value[rule.name];
          if (rule.required && !value) {
-            console.error(`Field ${rule.name} is required`);
             options.setStatus('error');
             success = false;
             continue;
          }
          if (rule.validator && !rule.validator(value)) {
-            console.error(`Field ${rule.name} validation failed`);
             options.setStatus('error');
             success = false;
             continue;

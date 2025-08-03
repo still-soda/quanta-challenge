@@ -12,6 +12,7 @@ const AddTagSchema = z.object({
       .regex(hexRegex, 'Color must be a valid hex code')
       .default('#FA7C0C'),
    description: z.string().optional(),
+   imageId: z.string().optional(),
 });
 
 const addTagProcedure = protectedAdminProcedure
@@ -27,6 +28,52 @@ const addTagProcedure = protectedAdminProcedure
                   id: ctx.user.userId,
                },
             },
+            image: {
+               connect: {
+                  id: input.imageId,
+               },
+            },
+         },
+      });
+      await prisma.image.update({
+         where: { id: input.imageId },
+         data: {
+            refCount: {
+               increment: 1,
+            },
+         },
+      });
+      return tag;
+   });
+
+const EditTagSchema = AddTagSchema.partial().extend({
+   tid: z.number().int().nonnegative().min(1, 'Tag ID is required'),
+});
+
+const editTagProcedure = protectedAdminProcedure
+   .input(EditTagSchema)
+   .mutation(async ({ ctx, input }) => {
+      const tag = await prisma.tag.update({
+         where: { tid: input.tid },
+         data: {
+            ...input,
+         },
+      });
+      return tag;
+   });
+
+const DeleteTagSchema = z.object({
+   tid: z.number().int().nonnegative().min(1, 'Tag ID is required'),
+});
+
+const deleteTagProcedure = protectedAdminProcedure
+   .input(DeleteTagSchema)
+   .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const tag = await prisma.tag.delete({
+         where: {
+            tid: input.tid,
+            creatorId: userId,
          },
       });
       return tag;
@@ -34,4 +81,6 @@ const addTagProcedure = protectedAdminProcedure
 
 export const tagRouter = router({
    add: addTagProcedure,
+   edit: editTagProcedure,
+   delete: deleteTagProcedure,
 });

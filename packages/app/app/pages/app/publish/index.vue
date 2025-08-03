@@ -1,20 +1,23 @@
 <script setup lang="ts">
-import type { ISelectOption } from '~/components/st/Select/type';
 import JudgeScript from './components/JudgeScript.vue';
-import ClosableTag from './components/ClosableTag.vue';
 import type { ISlideRadioGroupOption } from '~/components/st/SlideRadioGroup/type';
 import UploadProject from './components/UploadProject.vue';
 import UploadImage from './components/UploadImage.vue';
 import MarkdownEditingDrawer from './components/MarkdownEditingDrawer.vue';
+import TagsPicker from './components/TagsPicker.vue';
+import type { IRule } from '~/components/st/Form/type';
+import { ignores } from '~/components/st/DropUploader/default-ignore';
+import type { StForm } from '#components';
 
 const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
 
 const { $trpc } = useNuxtApp();
-const formdata = reactive({
+const formdata = useLocalStorage('publishFormdata', {
    title: '',
    detail: '',
+   judgeScript: '',
    score: undefined as number | undefined,
-   tags: [] as string[],
+   tags: [] as number[],
    difficulty: undefined as
       | 'easy'
       | 'medium'
@@ -23,7 +26,10 @@ const formdata = reactive({
       | undefined,
    answerTemplate: {} as Record<string, string>,
    referenceAnswer: {} as Record<string, string>,
+   coverMode: 'default' as 'default' | 'custom',
+   coverImageId: undefined as string | undefined,
 });
+const draft = useDebounce(formdata, 200);
 
 // 题目难度选项
 const difficultyOptions: ISlideRadioGroupOption[] = [
@@ -35,64 +41,106 @@ const difficultyOptions: ISlideRadioGroupOption[] = [
 
 // 确保分数不小于0
 watch(
-   () => formdata.score,
+   () => draft.value.score,
    (newScore) => {
-      newScore !== undefined && newScore < 0 && (formdata.score = 0);
+      newScore !== undefined && newScore < 0 && (draft.value.score = 0);
    }
 );
-
-// 标签
-const tagOptions = ref<ISelectOption[]>([]);
-const tagValueToLabel = (value: string) => {
-   const option = tagOptions.value.find((option) => option.value === value);
-   return option ? option.label : value;
-};
-const handleRemoveTag = (tag: string) => {
-   formdata.tags = formdata.tags.filter((t) => t !== tag);
-};
-const tagSelectOpened = ref(false);
-const fetchTagLoading = ref(false);
-const fetchTags = async () => {
-   const tags = await $trpc.public.tag.findAll.query();
-   return tags.map((tag) => ({
-      label: tag.name,
-      value: tag.tid,
-   })) satisfies ISelectOption[];
-};
-watch(tagSelectOpened, async (opened) => {
-   if (!opened || tagOptions.value.length > 0) return;
-   fetchTagLoading.value = true;
-   tagOptions.value = await atLeastTime(500, fetchTags());
-   console.log('tagOptions', tagOptions.value);
-   fetchTagLoading.value = false;
-});
 
 // 封面
 const coverModeOptions: ISlideRadioGroupOption[] = [
    { label: '使用首屏截图', value: 'default', color: '#FA7C0E' },
    { label: '自定义封面', value: 'custom', color: '#FA7C0E' },
 ];
-const coverMode = ref<'default' | 'custom'>('default');
 
 // 编辑器
 const markdownEditing = ref(false);
 
+// rules
+const rules = ref<IRule[]>([
+   {
+      name: 'title',
+      required: true,
+      validator(value) {
+         return value && value.length > 15;
+      },
+   },
+   {
+      name: 'detail',
+      required: true,
+      validator(value) {
+         return value && value.length > 0;
+      },
+   },
+   {
+      name: 'score',
+      required: true,
+      validator(value) {
+         return value !== undefined && value >= 0;
+      },
+   },
+   {
+      name: 'tags',
+      required: true,
+      validator(value) {
+         return value.length > 0;
+      },
+   },
+   {
+      name: 'difficulty',
+      required: true,
+      validator(value) {
+         return value !== undefined;
+      },
+   },
+   {
+      name: 'answerTemplate',
+      required: true,
+      validator(value) {
+         return Object.keys(value).length > 0;
+      },
+   },
+   {
+      name: 'referenceAnswer',
+      required: draft.value.coverMode === 'default',
+      validator(value) {
+         return Object.keys(value).length > 0;
+      },
+   },
+   {
+      name: 'coverMode',
+      required: true,
+      validator(value) {
+         return value !== undefined;
+      },
+   },
+   {
+      name: 'coverImageId',
+      required: draft.value.coverMode === 'custom',
+      validator(value) {
+         return draft.value.coverMode === 'default' || value;
+      },
+   },
+]);
+const form = useTemplateRef<InstanceType<typeof StForm>>('form');
+
 // 提交
 const submitLoading = ref(false);
 const handleSubmit = async () => {
+   const upload = async () =>
+      await $trpc.admin.problem.upload.mutate({
+         title: draft.value.title,
+         detail: draft.value.detail,
+         totalScore: draft.value.score ?? 0,
+         tagIds: draft.value.tags,
+         difficulty: draft.value.difficulty!,
+         judgeScript: draft.value.judgeScript,
+         answerTemplateSnapshot: draft.value.answerTemplate,
+         referenceAnswerSnapshot: draft.value.referenceAnswer,
+         coverMode: draft.value.coverMode,
+      });
    submitLoading.value = true;
-   await $trpc.admin.problem.upload
-      .mutate({
-         title: formdata.title,
-         detail: formdata.detail,
-         totalScore: formdata.score ?? 0,
-         tagsId: formdata.tags,
-         difficulty: formdata.difficulty!,
-         judgeScript: '',
-         answerTemplateSnapshot: formdata.answerTemplate,
-         referenceAnswerSnapshot: formdata.referenceAnswer,
-         coverMode: coverMode.value,
-      })
+   await atLeastTime(500, upload())
       .catch((error) => {
          alert('发布题目失败:' + error);
       })
@@ -109,7 +157,11 @@ const handleSubmit = async () => {
          gap="1.5rem"
          class="w-[44rem] pb-[10rem] my-6">
          <h1 class="st-font-hero-bold">发布题目</h1>
-         <StForm class="w-full">
+         <StForm
+            ref="form"
+            v-model:model-value="formdata"
+            :rules="rules"
+            class="w-full">
             <StSpace
                direction="vertical"
                gap="1.75rem"
@@ -148,29 +200,10 @@ const handleSubmit = async () => {
                      :outer-class />
                </StFormItem>
                <StFormItem name="judgeScript" label="判题脚本" required>
-                  <JudgeScript />
+                  <JudgeScript v-model:script="formdata.judgeScript" />
                </StFormItem>
                <StFormItem name="tags" label="题目标签" required>
-                  <StSelect
-                     v-model:value="formdata.tags"
-                     v-model:opened="tagSelectOpened"
-                     attach-to-body
-                     placeholder="请选择题目标签"
-                     multiple
-                     :loading="fetchTagLoading"
-                     :outer-class
-                     :options="tagOptions">
-                     <template #selected-preview="{ value }">
-                        <div class="flex gap-2 flex-wrap w-full">
-                           <ClosableTag
-                              v-for="tag in value"
-                              :key="tag"
-                              :content="tagValueToLabel(tag)"
-                              @click.stop
-                              @close="handleRemoveTag(tag)" />
-                        </div>
-                     </template>
-                  </StSelect>
+                  <TagsPicker v-model:tags="formdata.tags" :outer-class />
                </StFormItem>
                <StFormItem name="difficulty" label="题目难度" required>
                   <StSlideRadioGroup
@@ -179,10 +212,11 @@ const handleSubmit = async () => {
                </StFormItem>
                <StFormItem name="cover" label="封面图片" required>
                   <StSlideRadioGroup
-                     v-model:value="coverMode"
+                     v-model:value="formdata.coverMode"
                      :options="coverModeOptions" />
                   <UploadImage
-                     v-show="coverMode === 'custom'"
+                     v-show="formdata.coverMode === 'custom'"
+                     v-model:image-id="formdata.coverImageId"
                      placeholder="请选择封面图片" />
                </StFormItem>
                <StFormItem name="answerTemplate" label="作答模板" required>
@@ -193,8 +227,11 @@ const handleSubmit = async () => {
                <StFormItem
                   name="referenceAnswer"
                   label="参考答案"
-                  :required="coverMode === 'default'">
+                  :required="formdata.coverMode === 'default'">
                   <UploadProject
+                     :ignore-directories="
+                        ignores.directories.filter((i) => i !== 'dist')
+                     "
                      placeholder="上传打包后的参考答案文件夹"
                      v-model:project-fs="formdata.referenceAnswer" />
                </StFormItem>

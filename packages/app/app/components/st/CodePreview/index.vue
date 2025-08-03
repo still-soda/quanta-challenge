@@ -27,6 +27,7 @@ const init = async () => {
          ],
       });
       hasReady.value = true;
+      rehighlightCode();
    } catch (error) {
       console.error('Failed to initialize highlighter:', error);
    }

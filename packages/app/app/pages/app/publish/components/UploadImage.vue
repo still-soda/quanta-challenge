@@ -1,28 +1,56 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { arrayBufferToBase64 } from '~/components/st/DropUploader/walk-file-list';
+import type { FormItemStatus } from '~/components/st/Form/type';
 
 const props = defineProps<{
    placeholder?: string;
+   imageMaxHeight?: string;
+   status?: FormItemStatus;
 }>();
 
-const imageUrl = ref('');
+const imageUrl = defineModel<string>('imageUrl', { default: '' });
+const imageId = defineModel<string>('imageId', { default: '' });
 const imageFile = ref<File | null>(null);
+const borderClass = computed(() => {
+   return props.status === 'error'
+      ? '!border !border-error'
+      : props.status === 'success'
+      ? '!border !border-success'
+      : '';
+});
 
-watch(imageFile, (newFile) => {
+const { $trpc } = useNuxtApp();
+const uploadImage = async () => {
+   if (!(imageFile.value instanceof File)) return;
+   const fileBase64 = arrayBufferToBase64(await imageFile.value.arrayBuffer());
+   await $trpc.admin.image.upload
+      .mutate({
+         fileBase64: fileBase64,
+         fileName: imageFile.value.name,
+      })
+      .then((res) => {
+         imageUrl.value = 'http://localhost:3000/api/' + res.url;
+         imageId.value = res.id;
+      })
+      .catch((error) => {
+         console.error('Image upload failed:', error);
+      });
+};
+
+const uploading = ref(false);
+watch(imageFile, async (newFile) => {
    if (newFile) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-         imageUrl.value = e.target?.result as string;
-      };
-      reader.readAsDataURL(newFile);
-   } else {
-      imageUrl.value = '';
+      uploading.value = true;
+      await atLeastTime(500, uploadImage());
+      uploading.value = false;
    }
 });
 
 const cleanup = () => {
    imageFile.value = null;
    imageUrl.value = '';
+   imageId.value = '';
 };
 </script>
 
@@ -30,7 +58,8 @@ const cleanup = () => {
    <div
       :class="[
          'border border-accent-300 rounded-lg overflow-hidden',
-         !imageUrl ? 'h-[10.6rem]' : 'h-[19rem]',
+         !imageUrl || uploading ? 'h-[10.6rem]' : 'h-[19rem]',
+         borderClass,
          [
             'bg-background',
             !imageUrl && 'hover:bg-accent-600/50 hover:cursor-pointer',
@@ -45,10 +74,11 @@ const cleanup = () => {
          type="file"
          accept="image/*"
          @update:files="imageFile = $event?.[0] || null" />
-      <StSpace v-else direction="vertical" center gap="0.75rem">
+      <StSpace v-else-if="!uploading" direction="vertical" center gap="0.75rem">
          <img
             :src="imageUrl"
-            class="max-h-[14rem] object-cover rounded-lg"
+            :style="{ maxHeight: props.imageMaxHeight || '14rem' }"
+            class="object-cover rounded-lg"
             alt="Uploaded Image" />
          <div class="relative flex flex-col">
             <div class="st-font-caption text-white">
@@ -61,6 +91,9 @@ const cleanup = () => {
                <StIcon name="DeleteFour" size="0.75rem" />
             </StSpace>
          </div>
+      </StSpace>
+      <StSpace v-else-if="uploading" fill center>
+         <StIcon name="LoadingFour" class="animate-spin text-primary" />
       </StSpace>
    </div>
 </template>

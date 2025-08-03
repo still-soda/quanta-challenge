@@ -2,10 +2,12 @@ export const wait = (ms: number): Promise<void> => {
    return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const atLeastTime = async (
+export const atLeastTime = async <T extends Promise<any>>(
    ms: number,
-   promise: Promise<any>
-): Promise<any> => {
-   const [result] = await Promise.all([promise, wait(ms)]);
-   return result;
+   promise: T
+) => {
+   return new Promise<Awaited<T>>(async (resolve) => {
+      const [result] = await Promise.all([promise, wait(ms)]);
+      resolve(result);
+   });
 };

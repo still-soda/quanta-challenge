@@ -21,8 +21,7 @@ const props = defineProps<{
    optionEmptyText?: string;
 }>();
 
-const selected = defineModel<string | string[]>('value', {
-   type: [String, Array],
+const selected = defineModel<any | any[]>('value', {
    default: '',
 });
 const borderClass = computed(() => {
@@ -43,6 +42,7 @@ const toggleSelect = () => {
 
 const {
    containerKey,
+   container,
    popperKey,
    onPopperUpdate,
    onFirstUpdate,
@@ -55,10 +55,12 @@ onPopperUpdate('write', ({ state }) => {
 onFirstUpdate((state) => {
    upside.value = state.placement?.startsWith('top') ?? false;
 });
+
 onMounted(() => {
-   setTimeout(() => {
+   const resizeObserver = new ResizeObserver(() => {
       popperInstance.value?.update();
-   }, 500);
+   });
+   resizeObserver.observe(container.value!);
 });
 
 const selectedSet = computed(() => {
@@ -142,11 +144,16 @@ const optionEmptyText = computed(() => {
             <div
                v-if="props.options && !props.loading"
                class="flex flex-col gap-1 text-white">
-               <div
-                  class="w-fit mx-auto flex justify-center text-sm text-accent-300 h-10 items-center relative">
-                  <StIcon name="RobotOne" class="text-base absolute -left-5" />
-                  <span>{{ optionEmptyText }}</span>
-               </div>
+               <slot v-if="!props.options.length" name="options-empty">
+                  <div
+                     class="w-fit mx-auto flex justify-center text-sm text-accent-300 h-10 items-center relative">
+                     <StIcon
+                        name="RobotOne"
+                        class="text-base absolute -left-5" />
+                     <span>{{ optionEmptyText }}</span>
+                  </div>
+               </slot>
+               <slot v-if="props.options.length" name="options-before"></slot>
                <StSelectOption
                   v-for="(item, key) in props.options"
                   :key="key"
@@ -154,9 +161,15 @@ const optionEmptyText = computed(() => {
                   :selected="selectedSet.has(item.value)">
                   <div class="flex gap-2 items-center">
                      <StIcon v-if="item.icon" :name="item.icon" />
+                     <img
+                        class="size-6 rounded-md overflow-hidden object-contain"
+                        v-else-if="item.imageUrl"
+                        :src="item.imageUrl"
+                        :alt="item.label" />
                      {{ item.label }}
                   </div>
                </StSelectOption>
+               <slot v-if="props.options.length" name="options-after"></slot>
             </div>
             <div
                v-else-if="props.loading"

@@ -29,6 +29,8 @@ watch(script, (value) => {
       debounceUpdate(value);
    }
 });
+
+update(script.value ?? '');
 </script>
 
 <template>
@@ -57,6 +59,7 @@ watch(script, (value) => {
          <!-- Bottom -->
          <StSpace justify="end" class="p-4 w-full">
             <StButton
+               @click="opened = false"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                <div class="flex gap-2 items-center">
                   <StIcon name="SaveOne" class="text-[1.5rem]" />

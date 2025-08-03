@@ -19,8 +19,12 @@ const opened = defineModel<boolean>('opened', {
       class="w-full h-full z-[100]">
       <div
          @click.self="opened = false"
+         @wheel.prevent
+         @touchmove.prevent
          :class="[
-            global ? 'w-screen h-screen' : 'w-full h-full',
+            global
+               ? 'w-screen h-screen absolute top-0 left-0'
+               : 'w-full h-full',
             { 'pointer-events-none': !opened },
             {
                'fixed top-0 left-0': global,

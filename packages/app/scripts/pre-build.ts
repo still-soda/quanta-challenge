@@ -17,7 +17,7 @@ const replaceToPath = path.join(
 const replacePrismaClientPath = async (filePath: string) => {
    const fs = await import('fs/promises');
    let content = await fs.readFile(filePath, 'utf-8');
-   content = content.replace(/\.prisma\/client/g, replaceToPath);
+   content = content.replace(/'\.prisma\/client/g, `'${replaceToPath}`);
    await fs.writeFile(filePath, content, 'utf-8');
    console.log(`✅ Patched: ${filePath}`);
 };

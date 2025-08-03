@@ -9,12 +9,11 @@ export class LocalStore implements IStore {
       fs.mkdir(this.storePath, { recursive: true });
    }
 
-   async save(file: File) {
+   async save(buffer: Buffer, name: string) {
       const fileId = crypto.randomUUID();
-      const extension = path.extname(file.name);
+      const extension = path.extname(name);
       const filePath = path.join(this.storePath, `${fileId}${extension}`);
-      const buffer = await file.arrayBuffer();
-      await fs.writeFile(filePath, Buffer.from(buffer));
+      await fs.writeFile(filePath, buffer);
       return fileId;
    }
 

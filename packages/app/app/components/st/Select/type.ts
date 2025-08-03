@@ -5,6 +5,7 @@ export interface ISelectOption {
    value: any;
    disabled?: boolean;
    icon?: keyof typeof Icons;
+   imageUrl?: string;
 }
 
 export const TOGGLE_OPTION_INJECT_KEY = Symbol('toggleOption');

@@ -15,7 +15,7 @@ export default defineTestHandler(async ({ $, page }) => {
 
 const { containerKey, onEditorContentChanged } = useSimpleEditor({
    script: script.value || defaultScript,
-   imports: ['/system.standalone.d.ts'],
+   imports: ['/system.standalone.dts'],
 });
 onEditorContentChanged((value) => {
    script.value = value;
@@ -42,6 +42,7 @@ onEditorContentChanged((value) => {
          <!-- Bottom -->
          <StSpace justify="end" class="p-4 w-full">
             <StButton
+               @click="opened = false"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                <div class="flex gap-2 items-center">
                   <StIcon name="SaveOne" class="text-[1.5rem]" />

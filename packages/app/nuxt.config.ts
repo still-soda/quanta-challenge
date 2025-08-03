@@ -21,6 +21,8 @@ export default defineNuxtConfig({
    },
 
    prisma: {
+      prismaRoot: '../database/prisma/',
+      prismaSchemaPath: '../database/prisma/schema.prisma',
       installStudio: false,
    },
 

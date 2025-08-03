@@ -92,6 +92,7 @@ export const usePopper = (options?: IUsePopperOptions) => {
    return {
       popperInstance,
       containerKey,
+      container,
       popperKey,
       onPopperUpdate,
       onFirstUpdate,

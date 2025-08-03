@@ -28,6 +28,7 @@ model User {
   Project            Project[]
   RoleTransition     RoleTransition[]
   UserImage          UserImage[]
+  JudgeRecord        JudgeRecord[]
 
   @@map("users")
 }
@@ -137,15 +138,14 @@ model Problem {
   status       Status
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  hasProject   Boolean?   @default(false)
   coverImageId String?
 
   AuditRecord         AuditRecord[]
   StatusTransitions   StatusTransitions[]
   JudgeFile           JudgeFile[]
-  ShadowFile          ShadowFile[]
   Project             Project[]
   ProblemDefaultCover ProblemDefaultCover[]
+  JudgeRecord         JudgeRecord[]
 
   @@map("problems")
 }
@@ -218,6 +218,35 @@ enum ChangeByType {
   system
 }
 
+model JudgeRecord {
+  id          Int         @id @default(autoincrement())
+  problemId   Int
+  userId      String
+  result      JudgeResult @default(pending)
+  type        JudgeType
+  score       Int         @default(0)
+  pendingTime Int         @default(0)
+  judgingTime Int         @default(0)
+  createdAt   DateTime    @default(now())
+
+  problem    Problem      @relation(fields: [problemId], references: [pid])
+  user       User         @relation(fields: [userId], references: [id])
+  ShadowFile ShadowFile[]
+
+  @@map("judge_records")
+}
+
+enum JudgeResult {
+  pending
+  success
+  failed
+}
+
+enum JudgeType {
+  audit
+  judge
+}
+
 // 判题文件表
 model JudgeFile {
   id          Int    @id @default(autoincrement())
@@ -249,11 +278,12 @@ model Tag {
 
 // 文件系统表
 model FileSystem {
-  fsid      String   @id @default(uuid())
+  fsid      String        @id @default(uuid())
   ownerId   String
   projectId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  files     VirtualFile[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   owner   User     @relation(fields: [ownerId], references: [id])
   project Project? @relation(fields: [projectId], references: [pid])
@@ -263,12 +293,14 @@ model FileSystem {
 
 // 项目表
 model Project {
-  pid       String   @id @default(uuid())
-  name      String
-  ownerId   String
-  problemId Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  pid        String   @id @default(uuid())
+  // 是否为作答模板
+  isTemplate Boolean  @default(false)
+  name       String
+  ownerId    String
+  problemId  Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   owner      User         @relation(fields: [ownerId], references: [id])
   problem    Problem      @relation(fields: [problemId], references: [pid])
@@ -282,12 +314,14 @@ model Project {
 model VirtualFile {
   vid       String   @id @default(uuid())
   path      String
-  content   String?
+  content   String
   ownerId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner User @relation(fields: [ownerId], references: [id])
+  owner          User        @relation(fields: [ownerId], references: [id])
+  FileSystem     FileSystem? @relation(fields: [fileSystemFsid], references: [fsid])
+  fileSystemFsid String?
 
   @@index([ownerId])
   @@map("virtual_files")
@@ -303,19 +337,19 @@ model FileSystemState {
   @@map("file_system_states")
 }
 
-// 影子文件表
+// 影子文件表，判题产生的文件
 model ShadowFile {
-  sfid      String         @id @default(uuid())
-  type      ShadowFileType
-  problemId Int
-  imageId   String?
-  text      String?
-  jsonb     Json?
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  sfid          String         @id @default(uuid())
+  type          ShadowFileType
+  judgeRecordId Int
+  imageId       String?
+  text          String?
+  jsonb         Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  problem Problem @relation(fields: [problemId], references: [pid])
-  image   Image?  @relation(fields: [imageId], references: [id])
+  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id])
+  image       Image?      @relation(fields: [imageId], references: [id])
 
   @@map("shadow_files")
 }

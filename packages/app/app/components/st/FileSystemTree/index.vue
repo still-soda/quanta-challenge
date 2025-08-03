@@ -5,6 +5,7 @@ const props = defineProps<{
    directory: FileSystemItem[];
    currentFilePath?: string;
    deep?: number;
+   defaultOpened?: boolean;
 }>();
 
 const sortedDirectory = computed(() => {
@@ -32,6 +33,7 @@ const handleFileOrFolderClick = (fileOrFolder: FileSystemItem) => {
             :deep="deep ?? 0" />
          <StFileSystemTreeFolderItem
             v-else
+            :default-opened="props.defaultOpened"
             :folder="item"
             :current-file-path="props.currentFilePath"
             :deep="deep ?? 0"

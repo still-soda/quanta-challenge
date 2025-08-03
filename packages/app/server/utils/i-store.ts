@@ -1,6 +1,6 @@
 export interface IStore {
    /** 保存文件 */
-   save(file: File): Promise<string>;
+   save(buffer: Buffer, name: string): Promise<string>;
    /** 获取文件 */
    get(fileId: string): Promise<File | null>;
    /** 删除文件 */

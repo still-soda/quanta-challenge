@@ -4,6 +4,7 @@ import type { FileSystemItem } from '~/components/st/FileSystemTree/type';
 
 const props = defineProps<{
    placeholder?: string;
+   ignoreDirectories?: string[];
 }>();
 
 const directory = ref<IDirectory>();
@@ -61,26 +62,95 @@ const handleFileOrFolderClick = (target: FileSystemItem) => {
 };
 
 const handleRemoveFile = () => {
-   directory.value = {};
    fileSystemItems.value = [];
    previewCode.value = '';
+   directory.value = undefined;
+   projectFs.value = undefined;
 };
+
+// 从 projectFs 重建 FileSystemItem[]
+const restoreFileSystemItem = () => {
+   if (!projectFs.value) return;
+
+   const filePathsMap = new Map<string, FileSystemItem>();
+   const rootItems: FileSystemItem[] = [];
+
+   // 首先创建所有文件节点
+   Object.entries(projectFs.value).forEach(([path, content]) => {
+      const segments = path.split('/').filter(Boolean); // 移除空字符串
+      const fileName = segments[segments.length - 1] ?? '';
+
+      const fileItem: FileSystemItem = {
+         name: fileName,
+         path: segments.join('/'),
+         type: 'file',
+         content,
+      };
+
+      filePathsMap.set(segments.join('/'), fileItem);
+   });
+
+   // 然后创建所有必要的文件夹节点
+   const allPaths = Array.from(filePathsMap.keys());
+   const folderPaths = new Set<string>();
+
+   allPaths.forEach((filePath) => {
+      const segments = filePath.split('/');
+      // 为每个文件路径创建所有父级文件夹
+      for (let i = 1; i < segments.length; i++) {
+         const folderPath = segments.slice(0, i).join('/');
+         if (!folderPaths.has(folderPath) && !filePathsMap.has(folderPath)) {
+            folderPaths.add(folderPath);
+            const folderName = segments[i - 1] ?? '';
+            const folderItem: FileSystemItem = {
+               name: folderName,
+               path: folderPath,
+               type: 'folder',
+               children: [],
+            };
+            filePathsMap.set(folderPath, folderItem);
+         }
+      }
+   });
+
+   // 构建树形结构
+   const sortedPaths = Array.from(filePathsMap.keys()).sort();
+
+   sortedPaths.forEach((path) => {
+      const item = filePathsMap.get(path)!;
+      const segments = path.split('/');
+      if (segments.length === 1) {
+         rootItems.push(item);
+      } else {
+         const parentPath = segments.slice(0, -1).join('/');
+         const parent = filePathsMap.get(parentPath);
+         if (parent && parent.type === 'folder') {
+            parent.children = parent.children || [];
+            parent.children.push(item);
+         }
+      }
+   });
+
+   fileSystemItems.value = rootItems;
+};
+restoreFileSystemItem();
 </script>
 
 <template>
    <div
       :class="[
          'border border-accent-300 rounded-lg overflow-hidden',
-         !directory ? 'h-[10.6rem]' : 'h-[20rem]',
+         !projectFs ? 'h-[10.6rem]' : 'h-[20rem]',
          [
             'bg-background',
-            !directory && 'hover:bg-accent-600/50 hover:cursor-pointer',
+            !projectFs && 'hover:bg-accent-600/50 hover:cursor-pointer',
          ],
          'transition-colors',
          'flex items-center justify-center',
       ]">
       <StDropUploader
-         v-if="!directory"
+         v-if="!fileSystemItems.length"
+         :ignores="{ directories: props.ignoreDirectories }"
          :placeholder="props.placeholder"
          type="folder"
          @update:directory="directory = $event" />
@@ -88,24 +158,22 @@ const handleRemoveFile = () => {
          <StSpace
             direction="vertical"
             gap="0.5rem"
-            class="w-[12.56rem] h-full shrink-0">
+            class="w-[12.56rem] h-full shrink-0 pt-1">
             <StScrollable fill scroll-y class="overflow-x-hidden">
                <StSpace direction="vertical">
                   <StFileSystemTree
                      @file-or-folder-click="handleFileOrFolderClick"
                      :current-file-path="currentFilePath"
                      :directory="fileSystemItems"
+                     default-opened
                      class="w-full h-full" />
                   <div class="h-16 w-full"></div>
                </StSpace>
             </StScrollable>
             <StButton
+               @click="handleRemoveFile"
                class="!rounded-[0.25rem] !bg-transparent border !border-error h-[1.875rem] w-full px-[1.25rem]">
-               <StSpace
-                  @click="handleRemoveFile"
-                  gap="0.375rem"
-                  align="center"
-                  class="text-error">
+               <StSpace gap="0.375rem" align="center" class="text-error">
                   <StIcon name="DeleteFour" />
                   <span class="st-font-caption">取消选择</span>
                </StSpace>
