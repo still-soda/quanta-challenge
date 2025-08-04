@@ -166,10 +166,6 @@ importers:
       typescript:
         specifier: ^5.0.0
         version: 5.8.3
-    devDependencies:
-      '@types/bun':
-        specifier: latest
-        version: 1.2.19(@types/react@19.1.8)
 
   packages/judge:
     dependencies:

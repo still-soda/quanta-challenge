@@ -2,6 +2,9 @@ import { serve } from '@hono/node-server';
 import app from './routes/index.js';
 import { QueueService } from './services/queue.js';
 import { RedisService } from './services/redis.js';
+import { DockerService } from './services/docker.js';
+
+await DockerService.instance.init();
 
 const server = serve(
    {
@@ -16,4 +19,5 @@ const server = serve(
 server.on('close', () => {
    QueueService.instance.destroy();
    RedisService.instance.destroy();
+   DockerService.instance.destroy();
 });

@@ -1,12 +1,12 @@
 export class Singleton {
-   private static _instance: Singleton;
+   private static instances = new Map<Function, Singleton>();
 
    constructor() {}
 
-   static getInstance<T>(): T {
-      if (!Singleton._instance) {
-         Singleton._instance = new this();
+   protected static getInstance<T extends Singleton>(): T {
+      if (!Singleton.instances.has(this)) {
+         Singleton.instances.set(this, new (this as any)());
       }
-      return Singleton._instance as T;
+      return Singleton.instances.get(this) as T;
    }
 }
