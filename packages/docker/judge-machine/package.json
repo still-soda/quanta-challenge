@@ -1,6 +1,12 @@
 {
    "name": "@challenge/judge-machine",
    "type": "module",
+   "exports": {
+      ".": {
+         "import": "./dist/protocol/index.js",
+         "require": "./dist/protocol/index.js"
+      }
+   },
    "scripts": {
       "dev": "tsx watch src/index.ts",
       "build": "tsc",
@@ -8,7 +14,11 @@
    },
    "dependencies": {
       "@hono/node-server": "^1.18.1",
-      "hono": "^4.8.12"
+      "@hono/node-ws": "^1.2.0",
+      "hono": "^4.8.12",
+      "playwright": "^1.54.2",
+      "vm2": "^3.9.19",
+      "zod": "^4.0.5"
    },
    "devDependencies": {
       "@types/node": "^20.11.17",

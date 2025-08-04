@@ -9,6 +9,7 @@
    "dependencies": {
       "@challenge/database": "workspace:^",
       "@hono/node-server": "^1.18.1",
+      "@hono/node-ws": "^1.2.0",
       "@hono/zod-validator": "^0.7.2",
       "@types/dockerode": "^3.3.42",
       "bullmq": "^5.56.9",

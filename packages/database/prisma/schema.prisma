@@ -146,6 +146,7 @@ model Problem {
   Project             Project[]
   ProblemDefaultCover ProblemDefaultCover[]
   JudgeRecord         JudgeRecord[]
+  TemplateJudgeRecord TemplateJudgeRecord[]
 
   @@map("problems")
 }
@@ -218,10 +219,21 @@ enum ChangeByType {
   system
 }
 
+model TemplateJudgeRecord {
+  id            Int      @id @default(autoincrement())
+  judgeRecordId Int
+  problemId     Int
+  createdAt     DateTime @default(now())
+
+  problem     Problem     @relation(fields: [problemId], references: [pid])
+  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id])
+}
+
 model JudgeRecord {
   id          Int         @id @default(autoincrement())
   problemId   Int
   userId      String
+  info        Json
   result      JudgeResult @default(pending)
   type        JudgeType
   score       Int         @default(0)
@@ -229,9 +241,10 @@ model JudgeRecord {
   judgingTime Int         @default(0)
   createdAt   DateTime    @default(now())
 
-  problem    Problem      @relation(fields: [problemId], references: [pid])
-  user       User         @relation(fields: [userId], references: [id])
-  ShadowFile ShadowFile[]
+  problem             Problem               @relation(fields: [problemId], references: [pid])
+  user                User                  @relation(fields: [userId], references: [id])
+  ShadowFile          ShadowFile[]
+  TemplateJudgeRecord TemplateJudgeRecord[]
 
   @@map("judge_records")
 }

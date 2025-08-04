@@ -1,12 +1,9 @@
 import { Hono } from 'hono';
 import { CreateTaskSchema } from '../schemas/create-task.js';
 import { QueueService } from '../services/queue.js';
-import { judgeProcessor } from '../services/judge-processor.js';
 import type z from 'zod';
 import { JobSchema } from '../schemas/job.js';
 import { zValidator } from '../utils/validator.js';
-
-QueueService.instance.initWorkers('judge-task', judgeProcessor, 3);
 
 const taskRoute = new Hono();
 
