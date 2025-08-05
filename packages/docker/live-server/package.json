@@ -1,0 +1,8 @@
+{
+   "name": "@challenge/judge-live-server",
+   "scripts": {
+      "docker:build": "docker build -t node-pnpm-liveserver ."
+   },
+   "dependencies": {},
+   "devDependencies": {}
+}

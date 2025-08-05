@@ -1,5 +1,6 @@
 import z from 'zod';
 import type { Page } from 'playwright';
+import { diff, Jimp } from 'jimp';
 
 type BuildProxyProps<
    Mode extends 'pick' | 'omit',
@@ -89,12 +90,16 @@ export class System {
       return files;
    }
 
-   constructor() {}
+   constructor(
+      public readonly mode: 'audit' | 'judge',
+      public readonly info: Record<string, string> = {}
+   ) {}
 
    async saveOrCompare(type: SaveType) {
       SaveSchema.parse(type);
       if (type.type === 'image') {
-         return await this.saveImage(type.buffer, type.name as any);
+         const fn = this.mode === 'audit' ? this.saveImage : this.compareImage;
+         return await fn.call(this, type.buffer, type.name as any);
       }
    }
 
@@ -119,6 +124,19 @@ export class System {
       }
    }
 
+   async compareImage(buffer: Buffer, name: `${string}.png`) {
+      const templateImgUrl = this.info[name];
+      const templateImage = await fetch(templateImgUrl).then((res) =>
+         res.arrayBuffer()
+      );
+
+      const templateData = await Jimp.read(templateImage);
+      const providedImage = await Jimp.read(buffer);
+      const { percent } = diff(templateData, providedImage);
+
+      return 1 - percent;
+   }
+
    async saveImage(
       buffer: Buffer,
       name: `${string}.png` = `${generateUUID()}.png`
@@ -127,7 +145,7 @@ export class System {
          throw new Error('Image size exceeds 5MB limit');
       }
       this.files[name] = buffer;
-      return name;
+      return 1; // 返回相似度 1 表示完全相同
    }
 
    async score(totalScore: number, rating: () => number) {

@@ -2,7 +2,7 @@ import z from 'zod';
 
 export const TaskSchema = z
    .object({
-      judgeRecordId: z.string('Judge record ID is required'),
+      judgeRecordId: z.number('Judge record ID is required'),
       judgeScript: z.string('Judge script is required'),
       url: z.url('URL is required'),
       mode: z.enum(
@@ -11,6 +11,6 @@ export const TaskSchema = z
       ),
       info: z.record(z.string(), z.string()).optional(),
    })
-   .refine((data) => !(data.mode === 'audit' && !data.info), {
-      error: 'Info is required when mode is "audit"',
+   .refine((data) => !(data.mode === 'judge' && !data.info), {
+      error: 'Info is required when mode is "judge"',
    });

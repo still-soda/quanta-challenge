@@ -17,13 +17,7 @@ taskRoute.post('/create', zValidator('json', CreateTaskSchema), async (c) => {
    };
    const job = await QueueService.instance
       .getQueue<Job>('judge-task')
-      .add('judge-task', data, {
-         attempts: 3,
-         backoff: {
-            type: 'exponential',
-            delay: 1000,
-         },
-      });
+      .add('judge-task', data);
 
    return c.json(
       {

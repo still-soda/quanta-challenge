@@ -3,6 +3,7 @@ import { protectedAdminProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import { useStore } from '../../store';
 import prisma from '@challenge/database';
+import path from 'path';
 
 const UploadImageSchema = z.object({
    fileBase64: z.base64().refine(
@@ -22,11 +23,10 @@ const uploadImageProcedure = protectedAdminProcedure
       const fileBuffer = Buffer.from(fileBase64, 'base64');
       const store = useStore();
       const fileId = await store.save(fileBuffer, fileName);
-      const fileUrl = await store.url(fileId);
       return await prisma.image.create({
          data: {
             id: fileId,
-            url: fileUrl,
+            name: `${fileId}${path.extname(fileName)}`,
             UserImage: {
                create: {
                   userId: ctx.user.userId,

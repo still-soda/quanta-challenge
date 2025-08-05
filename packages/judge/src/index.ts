@@ -1,12 +1,10 @@
 import { serve } from '@hono/node-server';
 import app from './controllers/index.js';
-import { QueueService } from './services/queue.js';
-import { RedisService } from './services/redis.js';
-import { DockerService } from './services/docker.js';
-import { judgeProcessor } from './services/judge-processor.js';
+import { initMq } from './mq/index.js';
+import { destroyServices, initServices } from './services/index.js';
 
-QueueService.instance.initWorkers('judge-task', judgeProcessor, 3);
-await DockerService.instance.init();
+await initMq();
+await initServices();
 
 const server = serve(
    {
@@ -18,8 +16,6 @@ const server = serve(
    }
 );
 
-server.on('close', () => {
-   QueueService.instance.destroy();
-   RedisService.instance.destroy();
-   DockerService.instance.destroy();
+server.on('close', async () => {
+   await destroyServices();
 });

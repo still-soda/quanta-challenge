@@ -8,15 +8,18 @@
    },
    "dependencies": {
       "@challenge/database": "workspace:^",
+      "@challenge/judge-machine": "workspace:^",
       "@hono/node-server": "^1.18.1",
       "@hono/node-ws": "^1.2.0",
       "@hono/zod-validator": "^0.7.2",
       "@types/dockerode": "^3.3.42",
+      "@types/lodash": "^4.17.20",
       "bullmq": "^5.56.9",
       "dockerode": "^4.0.7",
       "dotenv": "^17.2.1",
       "hono": "^4.8.12",
       "ioredis": "^5.6.1",
+      "lodash-es": "^4.17.21",
       "zod": "^4.0.5"
    },
    "devDependencies": {

@@ -51,6 +51,13 @@ export class PlaywrightService extends Singleton {
          .catch(() => false);
    }
 
+   private sanitizeUrl(input: string): string {
+      return input
+         .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '')
+         .replace(/[\u0000-\u001F\u007F]/g, '')
+         .trim();
+   }
+
    async openPage(
       url: string,
       maxRetries: number = 3
@@ -59,9 +66,10 @@ export class PlaywrightService extends Singleton {
       page: Page;
       close: () => Promise<void>;
    }> {
-      if (!(await this.checkUrlAccessible(url))) {
-         throw new Error(`URL is not accessible: ${url}`);
-      }
+      url = this.sanitizeUrl(url);
+      // if (!(await this.checkUrlAccessible(url))) {
+      //    throw new Error(`URL is not accessible: ${url}`);
+      // }
 
       try {
          const browser = await this.pickAliveBrowser();

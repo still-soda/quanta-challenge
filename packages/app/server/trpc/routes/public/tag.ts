@@ -6,12 +6,15 @@ const findAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
       include: {
          image: {
             select: {
-               url: true,
+               name: true,
             },
          },
       },
    });
-   return tags;
+   return tags.map((tag) => ({
+      ...tag,
+      url: tag.image ? `/api/static/${tag.image.name}` : null,
+   }));
 });
 
 export const tagRouter = router({

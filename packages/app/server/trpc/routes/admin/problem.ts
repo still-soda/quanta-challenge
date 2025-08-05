@@ -58,6 +58,7 @@ const uploadProcedure = protectedAdminProcedure
                type: 'audit',
                problemId: problem.pid,
                userId: userId,
+               info: {},
             },
             select: {
                id: true,
@@ -74,7 +75,7 @@ const uploadProcedure = protectedAdminProcedure
                userId: userId,
                judgeRecordId: judgeRecord.id,
                judgeScript: input.judgeScript,
-               fsSnapshot: input.answerTemplateSnapshot,
+               fsSnapshot: input.referenceAnswerSnapshot,
                mode: 'audit',
             }),
          }).then((res: any) => {

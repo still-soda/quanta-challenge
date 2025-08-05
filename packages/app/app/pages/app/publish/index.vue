@@ -124,6 +124,15 @@ const rules = ref<IRule[]>([
 ]);
 const form = useTemplateRef<InstanceType<typeof StForm>>('form');
 
+const removeRootDir = (project: Record<string, string>) => {
+   const newProject: Record<string, string> = {};
+   for (const key in project) {
+      const newKey = key.split('/').slice(2).join('/');
+      newProject[newKey] = project[key]!;
+   }
+   return newProject;
+};
+
 // 提交
 const submitLoading = ref(false);
 const handleSubmit = async () => {
@@ -135,8 +144,8 @@ const handleSubmit = async () => {
          tagIds: draft.value.tags,
          difficulty: draft.value.difficulty!,
          judgeScript: draft.value.judgeScript,
-         answerTemplateSnapshot: draft.value.answerTemplate,
-         referenceAnswerSnapshot: draft.value.referenceAnswer,
+         answerTemplateSnapshot: removeRootDir(draft.value.answerTemplate),
+         referenceAnswerSnapshot: removeRootDir(draft.value.referenceAnswer),
          coverMode: draft.value.coverMode,
       });
    submitLoading.value = true;

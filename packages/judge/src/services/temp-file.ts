@@ -26,7 +26,13 @@ export class TempFileService extends Singleton {
          const fullPath = path.join(fsRootPath, filePath);
          const dir = path.dirname(fullPath);
          await fs.mkdir(dir, { recursive: true });
-         await fs.writeFile(fullPath, content);
+         if (content.startsWith('data:image')) {
+            const base64Content = content.split(',')[1];
+            const buffer = Buffer.from(base64Content, 'base64');
+            await fs.writeFile(fullPath, buffer);
+         } else {
+            await fs.writeFile(fullPath, content);
+         }
       }
 
       return { fsName, fsRootPath };

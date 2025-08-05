@@ -99,7 +99,7 @@ model WebAuthnCredential {
 // 图片表
 model Image {
   id        String   @id @default(cuid())
-  url       String
+  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   refCount  Int      @default(0)
@@ -158,7 +158,7 @@ model ProblemDefaultCover {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  problem Problem @relation(fields: [problemId], references: [pid])
+  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
   image   Image   @relation(fields: [imageId], references: [id])
 
   @@map("problem_default_covers")
@@ -188,7 +188,7 @@ model AuditRecord {
   timeCost  Int      @default(0)
   createdAt DateTime @default(now())
 
-  problem Problem @relation(fields: [problemId], references: [pid])
+  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
 
   @@map("audit_records")
 }
@@ -208,7 +208,7 @@ model StatusTransitions {
   changeByUserId String?
   createdAt      DateTime     @default(now())
 
-  problem Problem @relation(fields: [problemId], references: [pid])
+  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
   user    User?   @relation(fields: [changeByUserId], references: [id])
 
   @@map("status_transitions")
@@ -225,8 +225,8 @@ model TemplateJudgeRecord {
   problemId     Int
   createdAt     DateTime @default(now())
 
-  problem     Problem     @relation(fields: [problemId], references: [pid])
-  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id])
+  problem     Problem     @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
 }
 
 model JudgeRecord {
@@ -241,7 +241,7 @@ model JudgeRecord {
   judgingTime Int         @default(0)
   createdAt   DateTime    @default(now())
 
-  problem             Problem               @relation(fields: [problemId], references: [pid])
+  problem             Problem               @relation(fields: [problemId], references: [pid], onDelete: Cascade)
   user                User                  @relation(fields: [userId], references: [id])
   ShadowFile          ShadowFile[]
   TemplateJudgeRecord TemplateJudgeRecord[]
@@ -266,7 +266,7 @@ model JudgeFile {
   judgeScript String
   problemId   Int
 
-  problem Problem @relation(fields: [problemId], references: [pid])
+  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
 
   @@map("judge_files")
 }
@@ -316,7 +316,7 @@ model Project {
   updatedAt  DateTime @updatedAt
 
   owner      User         @relation(fields: [ownerId], references: [id])
-  problem    Problem      @relation(fields: [problemId], references: [pid])
+  problem    Problem      @relation(fields: [problemId], references: [pid], onDelete: Cascade)
   FileSystem FileSystem[]
 
   @@index([ownerId, problemId])
@@ -333,7 +333,7 @@ model VirtualFile {
   updatedAt DateTime @updatedAt
 
   owner          User        @relation(fields: [ownerId], references: [id])
-  FileSystem     FileSystem? @relation(fields: [fileSystemFsid], references: [fsid])
+  FileSystem     FileSystem? @relation(fields: [fileSystemFsid], references: [fsid], onDelete: Cascade)
   fileSystemFsid String?
 
   @@index([ownerId])
@@ -361,7 +361,7 @@ model ShadowFile {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id])
+  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
   image       Image?      @relation(fields: [imageId], references: [id])
 
   @@map("shadow_files")

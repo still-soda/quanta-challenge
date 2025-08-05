@@ -7,9 +7,7 @@ export class TempFileService extends Singleton {
       return this.getInstance<TempFileService>();
    }
 
-   private constructor(
-      private readonly fileRoot: string = '/tmp/judge-machine'
-   ) {
+   private constructor(private readonly fileRoot: string = '/sandbox') {
       super();
       const rootPath = this.resolvePath();
       fs.mkdir(rootPath, { recursive: true }).catch((error) => {
@@ -20,8 +18,7 @@ export class TempFileService extends Singleton {
    }
 
    resolvePath(...paths: string[]) {
-      const __dirname = path.dirname(import.meta.url);
-      return path.join(__dirname, this.fileRoot, ...paths);
+      return path.join(process.cwd(), this.fileRoot, ...paths);
    }
 
    async writeTempFile(content: string | Buffer, ext: string = '.js') {

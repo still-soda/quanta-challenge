@@ -34,9 +34,7 @@ const fetchTags = async () => {
          label: tag.name,
          value: tag.tid,
          color: tag.color ?? '#FA7C0E',
-         imageUrl: tag.image?.url
-            ? `http://localhost:3000/api/${tag.image.url}`
-            : undefined,
+         imageUrl: tag.url ? `http://localhost:3000${tag.url}` : undefined,
       }))
       .toSorted((a, b) =>
          a.label.localeCompare(b.label)
