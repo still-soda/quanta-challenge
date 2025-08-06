@@ -9,7 +9,7 @@ export default defineNuxtConfig({
    vite: {
       plugins: [tailwindcss() as any],
       ssr: {
-         noExternal: ['@prisma/client'], // 如果你确实要用 SSR 引入
+         noExternal: ['@prisma/client'],
       },
    },
 
@@ -57,6 +57,9 @@ export default defineNuxtConfig({
          host: process.env.REDIS_HOST || 'localhost',
          port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
          password: process.env.REDIS_PASSWORD || '',
+      },
+      judge: {
+         serverUrl: process.env.JUDGE_SERVER || 'http://localhost:1888',
       },
    },
 });

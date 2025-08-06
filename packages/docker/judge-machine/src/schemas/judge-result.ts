@@ -6,8 +6,9 @@ export const JudgeSuccessResultSchema = z.object({
    judgeTime: z.number(),
    totalScore: z.number(),
    maxScore: z.number(),
-   status: z.enum(['pass', 'fail']),
+   status: z.enum(['completed', 'fail']),
    judgeRecordId: z.number(),
+   firstScreen: z.instanceof(Buffer).optional(),
    results: z.array(
       z.object({
          score: z.number(),

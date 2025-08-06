@@ -113,14 +113,11 @@ export class System {
       this._checkPoints.push({ name, totalScore, handler });
    }
 
-   async expect(
-      expression: any | (() => Promise<any> | any),
-      desc: string = 'Expectation failed'
-   ) {
+   expect(expression: any | (() => any), desc: string) {
       const result =
-         typeof expression === 'function' ? await expression() : expression;
+         typeof expression === 'function' ? expression() : expression;
       if (!result) {
-         throw new Error(`Expectation failed: ${desc}`);
+         throw new Error(`“${desc}”不符合要求`);
       }
    }
 
@@ -211,7 +208,7 @@ export const defineTestHandler = (
             results.push({
                score,
                totalScore: checkPoint.totalScore,
-               details: `CheckPoint "${checkPoint.name}" scored ${score} out of ${checkPoint.totalScore}`,
+               details: `测试点“${checkPoint.name}”分数为 ${score}，得分为 ${checkPoint.totalScore} 。`,
                status: score === checkPoint.totalScore ? 'pass' : 'fail',
                cacheFiles: system.getAndCleanupFiles(),
             });
@@ -219,7 +216,7 @@ export const defineTestHandler = (
             results.push({
                score,
                totalScore: checkPoint.totalScore,
-               details: `CheckPoint "${checkPoint.name}" failed: ${error.message}`,
+               details: `测试点“${checkPoint.name}”失败，原因是：${error.message}。`,
                status: 'fail',
                cacheFiles: system.getAndCleanupFiles(),
             });
@@ -230,8 +227,8 @@ export const defineTestHandler = (
          totalScore: results.reduce((sum, res) => sum + res.score, 0),
          maxScore: Math.max(...results.map((res) => res.score)),
          status: (results.every((res) => res.status === 'pass')
-            ? 'pass'
-            : 'fail') as 'pass' | 'fail',
+            ? 'completed'
+            : 'fail') as 'completed' | 'fail',
       };
    };
 };

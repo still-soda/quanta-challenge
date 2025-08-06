@@ -1,3 +1,4 @@
+import type z from 'zod';
 import { JRTP } from '../../protocol/judge-result-transfer-protocal.js';
 import { EventType, type EventMessage } from '../events/index.js';
 import { defineTestHandler, getExposePage, System } from '../lib/system.js';
@@ -6,6 +7,9 @@ import { Singleton } from '../utils/singleton.js';
 import { EventEmitterService } from './event-emitter.js';
 import { PlaywrightService } from './playwright.js';
 import { VM } from 'vm2';
+import type { JudgeSuccessResultSchema } from '../schemas/judge-result.js';
+
+type JudgeSuccessResult = z.infer<typeof JudgeSuccessResultSchema>;
 
 export class JudgeService extends Singleton {
    static get instance() {
@@ -69,6 +73,13 @@ export class JudgeService extends Singleton {
          );
          cleanupFns.push(() => close());
 
+         const firstScreenshot = await (async () => {
+            if (payload.mode === 'judge') return undefined;
+            return await page.screenshot({
+               fullPage: true,
+            });
+         })();
+
          const system = new System(payload.mode, payload.info);
          const vm = new VM({
             sandbox: {
@@ -94,8 +105,9 @@ export class JudgeService extends Singleton {
                type: 'done',
                message: 'Judge completed successfully',
                judgeTime: Date.now() - startTime,
+               firstScreen: firstScreenshot,
                judgeRecordId: payload.judgeRecordId,
-            })
+            } satisfies JudgeSuccessResult)
          );
       } catch (error: any) {
          ws.send(

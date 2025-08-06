@@ -17,3 +17,11 @@ const server = serve(
    }
 );
 injectWebSocket(server);
+
+process.on('unhandledRejection', (error) => {
+   console.error('Unhandled Rejection:', error);
+});
+
+process.on('uncaughtException', (error) => {
+   console.error('Uncaught Exception:', error);
+});

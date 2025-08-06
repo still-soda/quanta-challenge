@@ -1,4 +1,13 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import useAuthStore from '~/stores/auth-store';
+
+const authStore = useAuthStore();
+const isAdmin = computed(() => authStore.user?.role !== 'USER');
+
+const handleMyPublish = () => {
+   navigateTo('/app/publish/mine');
+};
+</script>
 
 <template>
    <div class="w-full h-full flex">
@@ -12,6 +21,12 @@
                   </StHeaderButton>
                   <StHeaderButton text="通知">
                      <StIcon name="Remind" class="text-[1.25rem]" />
+                  </StHeaderButton>
+                  <StHeaderButton
+                     v-if="isAdmin"
+                     @click="handleMyPublish"
+                     text="我的发布">
+                     <StIcon name="TableReport" class="text-[1.25rem]" />
                   </StHeaderButton>
                </StSpace>
             </template>

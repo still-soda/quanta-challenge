@@ -3,11 +3,31 @@ import { protectedAdminProcedure } from '../../protected-trpc';
 import { PublishSchema } from '../../schemas/publish-schema';
 import { router } from '../../trpc';
 import { IFile, projectService } from '../../services/project';
+import z from 'zod';
 
 const uploadProcedure = protectedAdminProcedure
    .input(PublishSchema)
    .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.user;
+      const { judge } = useRuntimeConfig();
+
+      const { code: judgeScript } = await fetch(
+         `${judge.serverUrl}/code/extract`,
+         {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+               code: input.judgeScript,
+            }),
+         }
+      ).then((res) => res.json());
+      if (!judgeScript || typeof judgeScript !== 'string') {
+         throw new Error('Judge script must export a default function');
+      }
+
+      let problemId: number | undefined;
 
       await prisma.$transaction(async (tx) => {
          // 创建问题
@@ -25,15 +45,14 @@ const uploadProcedure = protectedAdminProcedure
                   })),
                },
                JudgeFile: {
-                  create: {
-                     judgeScript: input.judgeScript,
-                  },
+                  create: { judgeScript },
                },
             },
             select: {
                pid: true,
             },
          });
+         problemId = problem.pid;
 
          // 创建模板工程
          const fs = Object.entries(input.answerTemplateSnapshot).map(
@@ -53,28 +72,37 @@ const uploadProcedure = protectedAdminProcedure
          });
 
          // 创建判题记录
-         const judgeRecord = await tx.judgeRecord.create({
+         const templateJudgeRecord = await tx.templateJudgeRecord.create({
             data: {
-               type: 'audit',
-               problemId: problem.pid,
-               userId: userId,
-               info: {},
+               problem: {
+                  connect: {
+                     pid: problem.pid,
+                  },
+               },
+               judgeRecord: {
+                  create: {
+                     type: 'audit',
+                     problemId: problem.pid,
+                     userId: userId,
+                     info: {},
+                  },
+               },
             },
             select: {
-               id: true,
+               judgeRecordId: true,
             },
          });
 
          // 发送任务到任务处理服务
-         await fetch('http://localhost:1888/task/create', {
+         await fetch(`${judge.serverUrl}/task/create`, {
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                userId: userId,
-               judgeRecordId: judgeRecord.id,
-               judgeScript: input.judgeScript,
+               judgeRecordId: templateJudgeRecord.judgeRecordId,
+               judgeScript: judgeScript,
                fsSnapshot: input.referenceAnswerSnapshot,
                mode: 'audit',
             }),
@@ -87,9 +115,120 @@ const uploadProcedure = protectedAdminProcedure
 
       return {
          message: 'Problem created and task queued successfully',
+         problemId,
       };
    });
 
+const GetPublishDetailsSchema = z.object({
+   problemId: z.number('Problem ID must be a number').int(),
+});
+
+const getPublishDetailsProcedure = protectedAdminProcedure
+   .input(GetPublishDetailsSchema)
+   .query(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const { problemId } = input;
+
+      const result = await prisma.problem.findUniqueOrThrow({
+         where: {
+            pid: problemId,
+         },
+         include: {
+            tags: true,
+            CoverImage: {
+               select: {
+                  name: true,
+                  id: true,
+               },
+            },
+            TemplateJudgeRecord: {
+               include: {
+                  judgeRecord: true,
+               },
+            },
+            ProblemDefaultCover: {
+               include: {
+                  image: {
+                     select: {
+                        id: true,
+                        name: true,
+                     },
+                  },
+               },
+            },
+            JudgeFile: {
+               select: {
+                  judgeScript: true,
+               },
+            },
+         },
+      });
+
+      const templateJudgeRecord = result.TemplateJudgeRecord[0]?.judgeRecord;
+      if (!templateJudgeRecord) {
+         throw new Error('No template judge record found for this problem');
+      }
+      if (templateJudgeRecord.userId !== userId) {
+         throw new Error('You do not have permission to access this problem');
+      }
+
+      const defaultCover = result.ProblemDefaultCover[0]?.image;
+
+      return {
+         ...result,
+         imageName: result.CoverImage?.name || defaultCover?.name,
+      };
+   });
+
+const TogglePublishStatusSchema = z.object({
+   problemId: z.number('Problem ID must be a number').int(),
+   publish: z.boolean('Publish must be a boolean'),
+});
+
+const setPublishStatusProcedure = protectedAdminProcedure
+   .input(TogglePublishStatusSchema)
+   .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const { problemId, publish } = input;
+
+      const problem = await prisma.problem.findUniqueOrThrow({
+         where: {
+            pid: problemId,
+            TemplateJudgeRecord: {
+               some: {
+                  judgeRecord: { userId },
+               },
+            },
+         },
+         select: { status: true },
+      });
+
+      if (!['ready', 'published'].includes(problem.status)) {
+         throw new Error(
+            'Only problems with status "ready" or "published" can change publish status'
+         );
+      }
+
+      const newStatus = publish ? 'published' : 'ready';
+
+      await prisma.problem.update({
+         where: {
+            pid: problemId,
+         },
+         data: {
+            status: newStatus,
+         },
+      });
+
+      return { message: `Problem is now ${newStatus}` };
+   });
+
+export const publishRouter = router({
+   getDetails: getPublishDetailsProcedure,
+});
+
 export const problemRouter = router({
    upload: uploadProcedure,
+   getPublishDetails: getPublishDetailsProcedure,
+   setPublishStatus: setPublishStatusProcedure,
 });

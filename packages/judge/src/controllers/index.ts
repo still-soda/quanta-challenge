@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { loadEnv } from '../middlewares/env.js';
 import taskRoute from './task.js';
+import codeRoute from './code.js';
 import { globalExpectionFilter } from '../filters/gloabl-expection-filter.js';
 import { DockerService } from '../services/docker.js';
 
@@ -11,6 +12,7 @@ app.use('*', loadEnv());
 app.onError(globalExpectionFilter);
 
 app.route('/task', taskRoute);
+app.route('/code', codeRoute);
 
 app.get('/', async (c) => {
    const result = await DockerService.instance.startLiveServerContainer({

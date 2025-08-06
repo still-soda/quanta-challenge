@@ -32,7 +32,7 @@ const init = async () => {
       console.error('Failed to initialize highlighter:', error);
    }
 };
-init();
+onMounted(init);
 
 const highlightHtml = ref('');
 const rehighlightCode = async () => {
@@ -63,7 +63,10 @@ watch(
 
 <template>
    <div class="!font-family-fira-code">
-      <div v-html="highlightHtml" class="code"></div>
+      <div v-if="highlightHtml" v-html="highlightHtml" class="code"></div>
+      <div v-else class="code text-accent-200">
+         <pre>{{ props.code }}</pre>
+      </div>
    </div>
 </template>
 

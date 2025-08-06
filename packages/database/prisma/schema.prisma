@@ -109,6 +109,7 @@ model Image {
   ShadowFile          ShadowFile[]
   ProblemDefaultCover ProblemDefaultCover[]
   UserImage           UserImage[]
+  Problem             Problem[]
 
   @@map("images")
 }
@@ -147,6 +148,7 @@ model Problem {
   ProblemDefaultCover ProblemDefaultCover[]
   JudgeRecord         JudgeRecord[]
   TemplateJudgeRecord TemplateJudgeRecord[]
+  CoverImage          Image?                @relation(fields: [coverImageId], references: [id])
 
   @@map("problems")
 }
@@ -227,6 +229,8 @@ model TemplateJudgeRecord {
 
   problem     Problem     @relation(fields: [problemId], references: [pid], onDelete: Cascade)
   judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
+
+  @@map("template_judge_records")
 }
 
 model JudgeRecord {

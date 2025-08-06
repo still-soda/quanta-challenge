@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { ISelectOption } from '~/components/st/Select/type';
-import ClosableTag from './ClosableTag.vue';
 import TagEditingDrawer from './TagEditingDrawer.vue';
 
 const { $trpc } = useNuxtApp();
@@ -27,7 +26,7 @@ const handleRemoveTag = (tag: number) => {
 
 const tagSelectOpened = ref(false);
 const fetchTagLoading = ref(false);
-const fetchTags = async () => {
+const fetchTags = async (): Promise<(ISelectOption & { color: string })[]> => {
    const tags = await $trpc.public.tag.findAll.query();
    return tags
       .map((tag) => ({
@@ -93,8 +92,9 @@ const onTagCreated = async () => {
       </template>
       <template #selected-preview="{ value }">
          <div class="flex gap-2 flex-wrap w-full">
-            <ClosableTag
+            <StTag
                v-for="tag in value"
+               closable
                :key="tag"
                :content="tagValueToLabel(tag)"
                :color="tagValueToColor(tag)"

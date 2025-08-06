@@ -44,21 +44,30 @@ export const judgeProcessor: Processor<JobType> = async (job) => {
 
       // 等待 Judge Machine 返回结果
       const result = await new Promise<JudgeResultType>((resolve, reject) => {
+         const off = () => {
+            EventEmitterService.instance.off(
+               EventType.JUDGE_FINISHED,
+               judgeFinished
+            );
+         };
+         const judgeFinished = async (payload: JudgeResultType) => {
+            if (payload.judgeRecordId !== job.data.judgeRecordId) return;
+            off();
+            clearTimeout(timer);
+            resolve(payload);
+         };
          EventEmitterService.instance.on<JudgeResultType>(
             EventType.JUDGE_FINISHED,
-            async (payload) => {
-               if (payload.judgeRecordId !== job.data.judgeRecordId) return;
-               resolve(payload);
-               clearTimeout(timer);
-            }
+            judgeFinished
          );
          const timer = setTimeout(() => {
+            off();
             reject(new Error('Judge Machine response timeout'));
          }, 30 * 1000); // 超时处理
       });
 
-      // 处理 Judge Machine 返回的结果，关闭容器
-      await processResult(
+      // 处理 Judge Machine 返回的结果
+      const pass = await processResult(
          { result, pendingTime, startTime, job },
          LocalStoreService.instance
       );
@@ -69,7 +78,7 @@ export const judgeProcessor: Processor<JobType> = async (job) => {
       return {
          judgeRecordId: job.data.judgeRecordId,
          jobId: job.id,
-         status: 'completed',
+         status: pass ? 'completed' : 'failed',
          message: 'Judge task processed successfully',
       };
    } catch (error: any) {
@@ -99,6 +108,45 @@ const processResult = async (
    const { result, pendingTime, startTime, job } = options;
 
    if (result.type === 'done') {
+      // 获取问题 ID 和问题总分
+      const {
+         problem: { pid: problemId, totalScore: score },
+      } = await prisma.judgeRecord.findUniqueOrThrow({
+         where: {
+            id: job.data.judgeRecordId,
+         },
+         select: {
+            problem: {
+               select: {
+                  pid: true,
+                  totalScore: true,
+               },
+            },
+         },
+      });
+
+      // 储存首屏截图
+      if (job.data.mode === 'audit' && result.firstScreen) {
+         const fileId = await store.save(result.firstScreen, 'screenshot.png');
+         const fileName = `${fileId}.png`;
+
+         await prisma.$transaction(async (tx) => {
+            const { id: imageId } = await tx.image.create({
+               data: {
+                  id: fileId,
+                  name: fileName,
+               },
+               select: { id: true },
+            });
+            await tx.problemDefaultCover.create({
+               data: {
+                  imageId,
+                  problemId,
+               },
+            });
+         });
+      }
+
       // 扁平化产生的文件记录
       const bufferRecords = result.results
          .map((item) => item.cacheFiles)
@@ -154,10 +202,18 @@ const processResult = async (
             pendingTime,
             judgingTime: Date.now() - startTime,
             info: savedResult,
-            result: result.status === 'pass' ? 'success' : 'failed',
+            result: result.status === 'completed' ? 'success' : 'failed',
             score: result.totalScore,
          },
       });
+
+      const allPass = result.results.every((item) => item.status === 'pass');
+
+      console.log(allPass, result.totalScore, score);
+
+      return job.data.mode === 'audit'
+         ? allPass && result.totalScore === score
+         : allPass;
    } else {
       console.log({
          pendingTime,
@@ -179,6 +235,8 @@ const processResult = async (
             result: 'failed',
          },
       });
+
+      return false;
    }
 };
 

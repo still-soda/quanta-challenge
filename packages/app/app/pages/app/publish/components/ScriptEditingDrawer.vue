@@ -4,9 +4,7 @@ import { useSimpleEditor } from '~/composables/utils/use-simple-editor';
 const script = defineModel<string>('script');
 const opened = defineModel<boolean>('opened', { default: false });
 
-const defaultScript = `import { defineTestHandler } from '@/lib/system'
-
-export default defineTestHandler(async ({ $, page }) => {
+const defaultScript = `export default defineTestHandler(async ({ $, page }) => {
    // 在这里编写测试逻辑
    // 使用 $.defineCheckPoint(name, score, action) 定义检查点
    // 使用 page 对象来操作页面元素

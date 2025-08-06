@@ -599,11 +599,6 @@ declare const getExposePage: (page: Page) => Omit<Page, 'goto'>;
  */
 type ExposePage = ReturnType<typeof getExposePage>;
 
-/**
- * 系统测试模块
- * 通过 @/lib/system 路径提供测试处理器功能
- */
-declare module '@/lib/system' {
    /**
     * 定义测试处理器
     * 创建一个测试执行函数，用于运行自动化测试并评分
@@ -630,7 +625,7 @@ declare module '@/lib/system' {
     * });
     * ```
     */
-   export const defineTestHandler: (
+   declear const defineTestHandler: (
       handler: (ctx: IHandlerCtx) => Promise<void>
    ) => (
       page: ExposePage,
@@ -645,4 +640,3 @@ declare module '@/lib/system' {
       /** 整体测试状态 */
       status: string;
    }>;
-}

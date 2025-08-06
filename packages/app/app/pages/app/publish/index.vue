@@ -124,6 +124,8 @@ const rules = ref<IRule[]>([
 ]);
 const form = useTemplateRef<InstanceType<typeof StForm>>('form');
 
+// 提交
+const submitLoading = ref(false);
 const removeRootDir = (project: Record<string, string>) => {
    const newProject: Record<string, string> = {};
    for (const key in project) {
@@ -132,9 +134,6 @@ const removeRootDir = (project: Record<string, string>) => {
    }
    return newProject;
 };
-
-// 提交
-const submitLoading = ref(false);
 const handleSubmit = async () => {
    const upload = async () =>
       await $trpc.admin.problem.upload.mutate({
@@ -149,13 +148,12 @@ const handleSubmit = async () => {
          coverMode: draft.value.coverMode,
       });
    submitLoading.value = true;
-   await atLeastTime(500, upload())
-      .catch((error) => {
-         alert('发布题目失败:' + error);
-      })
-      .finally(() => {
-         submitLoading.value = false;
-      });
+   const result = await atLeastTime(300, upload()).catch((error) => {
+      alert('发布题目失败:' + error);
+      submitLoading.value = false;
+      return;
+   });
+   navigateTo(`/app/publish/detail/${result?.problemId}`);
 };
 </script>
 
