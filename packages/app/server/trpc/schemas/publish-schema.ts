@@ -8,7 +8,7 @@ export const difficulties: Difficulty[] = [
    'very_hard',
 ] as const;
 
-export const PublishSchema = z
+export const UploadSchema = z
    .object({
       title: z.string().min(1, 'Title is required'),
       detail: z.string().min(1, 'Detail is required'),

@@ -18,17 +18,19 @@ model User {
   updatedAt DateTime @updatedAt
   lastLogin DateTime @default(now())
 
-  avatar             Image?               @relation(fields: [imageId], references: [id])
-  auths              Auth[]
-  WebAuthnCredential WebAuthnCredential[]
-  StatusTransitions  StatusTransitions[]
-  Tag                Tag[]
-  FileSystem         FileSystem[]
-  VirtualFile        VirtualFile[]
-  Project            Project[]
-  RoleTransition     RoleTransition[]
-  UserImage          UserImage[]
-  JudgeRecord        JudgeRecord[]
+  avatar                    Image?                      @relation(fields: [imageId], references: [id])
+  auths                     Auth[]
+  WebAuthnCredential        WebAuthnCredential[]
+  StatusTransitions         StatusTransitions[]
+  Tag                       Tags[]
+  FileSystem                FileSystems[]
+  VirtualFile               VirtualFiles[]
+  Project                   Projects[]
+  RoleTransition            RoleTransition[]
+  UserImage                 UserImage[]
+  JudgeRecord               JudgeRecords[]
+  BaseProblems              BaseProblems[]
+  ProblemVersionTransitions ProblemVersionTransitions[]
 
   @@map("users")
 }
@@ -105,11 +107,11 @@ model Image {
   refCount  Int      @default(0)
 
   User                User[]
-  Tag                 Tag[]
+  Tag                 Tags[]
   ShadowFile          ShadowFile[]
-  ProblemDefaultCover ProblemDefaultCover[]
+  ProblemDefaultCover ProblemDefaultCovers[]
   UserImage           UserImage[]
-  Problem             Problem[]
+  Problem             Problems[]
 
   @@map("images")
 }
@@ -129,39 +131,79 @@ model UserImage {
 }
 
 // 问题表
-model Problem {
+model BaseProblems {
+  id         Int      @id @default(autoincrement())
+  authorId   String
+  currentPid Int?     @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  Author                    User                        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  CurrentProblem            Problems?                   @relation("CurrentProblem", fields: [currentPid], references: [pid], onDelete: SetNull)
+  ProblemVersions           Problems[]                  @relation("ProblemVersions")
+  ProblemVersionTransitions ProblemVersionTransitions[]
+
+  @@map("base_problems")
+}
+
+// 问题版本表
+model Problems {
   pid          Int        @id @default(autoincrement())
+  baseId       Int
   title        String
   detail       String
-  tags         Tag[]
+  isDeprecated Boolean    @default(false)
   difficulty   Difficulty
   totalScore   Int
   status       Status
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   coverImageId String?
+  tags         Tags[]
 
-  AuditRecord         AuditRecord[]
-  StatusTransitions   StatusTransitions[]
-  JudgeFile           JudgeFile[]
-  Project             Project[]
-  ProblemDefaultCover ProblemDefaultCover[]
-  JudgeRecord         JudgeRecord[]
-  TemplateJudgeRecord TemplateJudgeRecord[]
-  CoverImage          Image?                @relation(fields: [coverImageId], references: [id])
+  AuditRecord                 AuditRecords[]
+  StatusTransitions           StatusTransitions[]
+  JudgeFile                   JudgeFiles[]
+  Project                     Projects[]
+  ProblemDefaultCover         ProblemDefaultCovers[]
+  JudgeRecord                 JudgeRecords[]
+  TemplateJudgeRecord         TemplateJudgeRecords[]
+  CoverImage                  Image?                      @relation(fields: [coverImageId], references: [id])
+  BaseProblem                 BaseProblems                @relation("ProblemVersions", fields: [baseId], references: [id], onDelete: Cascade)
+  CurrentOfBase               BaseProblems?               @relation("CurrentProblem")
+  ProblemVersionTransitions   ProblemVersionTransitions[] @relation("FromProblemVersions")
+  ProblemVersionTransitionsTo ProblemVersionTransitions[] @relation("ToProblemVersions")
 
   @@map("problems")
 }
 
-model ProblemDefaultCover {
+// 问题版本变更记录表
+model ProblemVersionTransitions {
+  id             Int          @id @default(autoincrement())
+  baseProblemId  Int
+  fromId         Int
+  toId           Int
+  changeByUserId String?
+  changeByType   ChangeByType
+  createdAt      DateTime     @default(now())
+
+  base BaseProblems @relation(fields: [baseProblemId], references: [id], onDelete: Cascade)
+  from Problems     @relation("FromProblemVersions", fields: [fromId], references: [pid], onDelete: Cascade)
+  to   Problems     @relation("ToProblemVersions", fields: [toId], references: [pid], onDelete: Cascade)
+  user User?        @relation(fields: [changeByUserId], references: [id])
+
+  @@map("problem_version_transitions")
+}
+
+model ProblemDefaultCovers {
   id        Int      @id @default(autoincrement())
   problemId Int
   imageId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
-  image   Image   @relation(fields: [imageId], references: [id])
+  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  image   Image    @relation(fields: [imageId], references: [id])
 
   @@map("problem_default_covers")
 }
@@ -181,7 +223,7 @@ enum Status {
 }
 
 // 审核记录表
-model AuditRecord {
+model AuditRecords {
   rid       Int      @id @default(autoincrement())
   problemId Int
   result    Result
@@ -190,7 +232,7 @@ model AuditRecord {
   timeCost  Int      @default(0)
   createdAt DateTime @default(now())
 
-  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
 
   @@map("audit_records")
 }
@@ -210,8 +252,8 @@ model StatusTransitions {
   changeByUserId String?
   createdAt      DateTime     @default(now())
 
-  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
-  user    User?   @relation(fields: [changeByUserId], references: [id])
+  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  user    User?    @relation(fields: [changeByUserId], references: [id])
 
   @@map("status_transitions")
 }
@@ -221,19 +263,19 @@ enum ChangeByType {
   system
 }
 
-model TemplateJudgeRecord {
+model TemplateJudgeRecords {
   id            Int      @id @default(autoincrement())
   judgeRecordId Int
   problemId     Int
   createdAt     DateTime @default(now())
 
-  problem     Problem     @relation(fields: [problemId], references: [pid], onDelete: Cascade)
-  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
+  problem     Problems     @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  judgeRecord JudgeRecords @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
 
   @@map("template_judge_records")
 }
 
-model JudgeRecord {
+model JudgeRecords {
   id          Int         @id @default(autoincrement())
   problemId   Int
   userId      String
@@ -245,10 +287,10 @@ model JudgeRecord {
   judgingTime Int         @default(0)
   createdAt   DateTime    @default(now())
 
-  problem             Problem               @relation(fields: [problemId], references: [pid], onDelete: Cascade)
-  user                User                  @relation(fields: [userId], references: [id])
+  problem             Problems               @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  user                User                   @relation(fields: [userId], references: [id])
   ShadowFile          ShadowFile[]
-  TemplateJudgeRecord TemplateJudgeRecord[]
+  TemplateJudgeRecord TemplateJudgeRecords[]
 
   @@map("judge_records")
 }
@@ -265,18 +307,18 @@ enum JudgeType {
 }
 
 // 判题文件表
-model JudgeFile {
+model JudgeFiles {
   id          Int    @id @default(autoincrement())
   judgeScript String
   problemId   Int
 
-  problem Problem @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
 
   @@map("judge_files")
 }
 
 // 标签表
-model Tag {
+model Tags {
   tid         Int      @id @default(autoincrement())
   name        String
   description String?
@@ -286,30 +328,30 @@ model Tag {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  creator User      @relation(fields: [creatorId], references: [id])
-  image   Image?    @relation(fields: [imageId], references: [id])
-  Problem Problem[]
+  creator User       @relation(fields: [creatorId], references: [id])
+  image   Image?     @relation(fields: [imageId], references: [id])
+  Problem Problems[]
 
   @@map("tags")
 }
 
 // 文件系统表
-model FileSystem {
-  fsid      String        @id @default(uuid())
+model FileSystems {
+  fsid      String         @id @default(uuid())
   ownerId   String
   projectId String?
-  files     VirtualFile[]
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  files     VirtualFiles[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
-  owner   User     @relation(fields: [ownerId], references: [id])
-  project Project? @relation(fields: [projectId], references: [pid])
+  owner   User      @relation(fields: [ownerId], references: [id])
+  project Projects? @relation(fields: [projectId], references: [pid])
 
   @@map("file_systems")
 }
 
 // 项目表
-model Project {
+model Projects {
   pid        String   @id @default(uuid())
   // 是否为作答模板
   isTemplate Boolean  @default(false)
@@ -319,16 +361,16 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  owner      User         @relation(fields: [ownerId], references: [id])
-  problem    Problem      @relation(fields: [problemId], references: [pid], onDelete: Cascade)
-  FileSystem FileSystem[]
+  owner      User          @relation(fields: [ownerId], references: [id])
+  problem    Problems      @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  FileSystem FileSystems[]
 
   @@index([ownerId, problemId])
   @@map("projects")
 }
 
 // 虚拟文件表
-model VirtualFile {
+model VirtualFiles {
   vid       String   @id @default(uuid())
   path      String
   content   String
@@ -336,22 +378,12 @@ model VirtualFile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  owner          User        @relation(fields: [ownerId], references: [id])
-  FileSystem     FileSystem? @relation(fields: [fileSystemFsid], references: [fsid], onDelete: Cascade)
+  owner          User         @relation(fields: [ownerId], references: [id])
+  FileSystem     FileSystems? @relation(fields: [fileSystemFsid], references: [fsid], onDelete: Cascade)
   fileSystemFsid String?
 
   @@index([ownerId])
   @@map("virtual_files")
-}
-
-// 文件系统状态表
-model FileSystemState {
-  sid       String   @id @default(uuid())
-  fsJson    Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("file_system_states")
 }
 
 // 影子文件表，判题产生的文件
@@ -365,8 +397,8 @@ model ShadowFile {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
-  judgeRecord JudgeRecord @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
-  image       Image?      @relation(fields: [imageId], references: [id])
+  judgeRecord JudgeRecords @relation(fields: [judgeRecordId], references: [id], onDelete: Cascade)
+  image       Image?       @relation(fields: [imageId], references: [id])
 
   @@map("shadow_files")
 }

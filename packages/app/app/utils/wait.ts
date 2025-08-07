@@ -6,8 +6,11 @@ export const atLeastTime = async <T extends Promise<any>>(
    ms: number,
    promise: T
 ) => {
-   return new Promise(async (resolve) => {
-      const [result] = await Promise.all([promise, wait(ms)]);
+   return new Promise(async (resolve, reject) => {
+      const [result] = await Promise.all([
+         promise.catch((err) => reject(err)),
+         wait(ms),
+      ]);
       resolve(result);
    }) as T;
 };

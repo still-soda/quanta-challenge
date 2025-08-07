@@ -111,7 +111,7 @@ const processResult = async (
       // 获取问题 ID 和问题总分
       const {
          problem: { pid: problemId, totalScore: score },
-      } = await prisma.judgeRecord.findUniqueOrThrow({
+      } = await prisma.judgeRecords.findUniqueOrThrow({
          where: {
             id: job.data.judgeRecordId,
          },
@@ -138,7 +138,7 @@ const processResult = async (
                },
                select: { id: true },
             });
-            await tx.problemDefaultCover.create({
+            await tx.problemDefaultCovers.create({
                data: {
                   imageId,
                   problemId,
@@ -196,7 +196,7 @@ const processResult = async (
       }));
 
       // 更新数据库记录
-      await prisma.judgeRecord.update({
+      await prisma.judgeRecords.update({
          where: { id: job.data.judgeRecordId },
          data: {
             pendingTime,
@@ -208,8 +208,6 @@ const processResult = async (
       });
 
       const allPass = result.results.every((item) => item.status === 'pass');
-
-      console.log(allPass, result.totalScore, score);
 
       return job.data.mode === 'audit'
          ? allPass && result.totalScore === score
@@ -224,7 +222,7 @@ const processResult = async (
          result: 'failed',
       });
       // 处理错误结果
-      await prisma.judgeRecord.update({
+      await prisma.judgeRecords.update({
          where: { id: job.data.judgeRecordId },
          data: {
             pendingTime,
@@ -246,7 +244,7 @@ const handleError = async (options: {
    startTime: number;
    job: Job<JobType>;
 }) => {
-   await prisma.judgeRecord.update({
+   await prisma.judgeRecords.update({
       where: { id: options.job.data.judgeRecordId },
       data: {
          pendingTime: options.pendingTime,

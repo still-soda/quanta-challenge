@@ -10,7 +10,7 @@ export interface IUsePopperOptions {
    containerKey?: string;
    popperKey?: string;
    fillWidth?: boolean;
-   options?: Options;
+   options?: Partial<Options>;
 }
 
 const phases: Modifier['phase'][] = [

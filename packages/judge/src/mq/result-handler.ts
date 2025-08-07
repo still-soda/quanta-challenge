@@ -9,13 +9,13 @@ export const initTaskResultHandlers = () => {
       judgeRecordId: number,
       status: 'ready' | 'invalid'
    ) => {
-      const { problemId } = await prisma.judgeRecord.findUniqueOrThrow({
+      const { problemId } = await prisma.judgeRecords.findUniqueOrThrow({
          where: {
             id: judgeRecordId,
          },
          select: { problemId: true },
       });
-      await prisma.problem.update({
+      await prisma.problems.update({
          where: {
             pid: problemId,
          },

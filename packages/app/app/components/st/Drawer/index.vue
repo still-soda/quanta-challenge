@@ -16,7 +16,7 @@ const opened = defineModel<boolean>('opened', {
       :is="global ? Teleport : 'div'"
       to="body"
       :class="{ 'pointer-events-none': !opened }"
-      class="w-full h-full z-[100]">
+      class="w-full h-full z-[9999]">
       <div
          @click.self="opened = false"
          @wheel.prevent
@@ -31,7 +31,7 @@ const opened = defineModel<boolean>('opened', {
                'bg-background/50 backdrop-blur-xs': opened,
             },
          ]"
-         class="z-[100] flex items-center justify-end transition-all">
+         class="z-[9999] flex items-center justify-end transition-all">
          <div
             class="h-screen w-fit bg-black border-l border-accent-600 transition-all duration-300"
             :class="[opened ? 'right-0' : 'translate-x-full', ,]"

@@ -96,7 +96,7 @@ const verifyAuthnRegistrationProcedure = protectedProcedure
          },
       });
 
-      return generateTokens({ userId });
+      return generateTokens({ userId, role: 'USER' });
    });
 
 const AuthenticateAuthnSchema = z.object({
@@ -183,10 +183,13 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
 
       const user = await prisma.user.findUniqueOrThrow({
          where: { email },
-         select: { id: true },
+         select: { id: true, role: true },
       });
 
-      return generateTokens({ userId: user.id });
+      return generateTokens({
+         userId: user.id,
+         role: user.role,
+      });
    });
 
 export const authnRouter = router({

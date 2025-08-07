@@ -18,7 +18,7 @@ const AddTagSchema = z.object({
 const addTagProcedure = protectedAdminProcedure
    .input(AddTagSchema)
    .mutation(async ({ ctx, input }) => {
-      const tag = await prisma.tag.create({
+      const tag = await prisma.tags.create({
          data: {
             name: input.name,
             color: input.color,
@@ -53,7 +53,7 @@ const EditTagSchema = AddTagSchema.partial().extend({
 const editTagProcedure = protectedAdminProcedure
    .input(EditTagSchema)
    .mutation(async ({ ctx, input }) => {
-      const tag = await prisma.tag.update({
+      const tag = await prisma.tags.update({
          where: { tid: input.tid },
          data: {
             ...input,
@@ -70,7 +70,7 @@ const deleteTagProcedure = protectedAdminProcedure
    .input(DeleteTagSchema)
    .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.user;
-      const tag = await prisma.tag.delete({
+      const tag = await prisma.tags.delete({
          where: {
             tid: input.tid,
             creatorId: userId,
@@ -79,8 +79,39 @@ const deleteTagProcedure = protectedAdminProcedure
       return tag;
    });
 
+const getTagsInMyPublishedProcedure = protectedAdminProcedure.query(
+   async ({ ctx }) => {
+      const { userId } = ctx.user;
+      const tags = await prisma.tags.findMany({
+         where: {
+            creatorId: userId,
+            Problem: {
+               some: {
+                  BaseProblem: {
+                     authorId: userId,
+                  },
+               },
+            },
+         },
+         select: {
+            tid: true,
+            name: true,
+            color: true,
+            image: {
+               select: {
+                  name: true,
+               },
+            },
+         },
+      });
+
+      return tags;
+   }
+);
+
 export const tagRouter = router({
    add: addTagProcedure,
    edit: editTagProcedure,
    delete: deleteTagProcedure,
+   getTagsInMyPublished: getTagsInMyPublishedProcedure,
 });

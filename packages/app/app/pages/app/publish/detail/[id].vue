@@ -6,7 +6,10 @@ import {
 } from './components/AuditStatus';
 import DataItem from './components/DataItem.vue';
 import FixedButton from './components/FixedButton.vue';
+import dayjs from 'dayjs';
 import { NotPassed, Published, Unpublished } from './components/PublishStatus';
+import VersionPreviewDrawer from './components/VersionPreviewDrawer.vue';
+import SidePopper from './components/SidePopper.vue';
 
 const route = useRoute();
 const id = route.params.id as string;
@@ -16,13 +19,13 @@ if (!id) {
 
 const { $trpc } = useNuxtApp();
 type DataType = Awaited<
-   ReturnType<typeof $trpc.admin.problem.getPublishDetails.query>
+   ReturnType<typeof $trpc.admin.problem.getAuditDetail.query>
 >;
 const detail = ref<DataType | null>(null);
 
 const fetchPublishDetails = async () => {
    try {
-      const data = await $trpc.admin.problem.getPublishDetails.query({
+      const data = await $trpc.admin.problem.getAuditDetail.query({
          problemId: Number(id),
       });
       detail.value = data;
@@ -33,7 +36,7 @@ const fetchPublishDetails = async () => {
    if (detail.value?.status === 'draft') {
       setTimeout(() => {
          fetchPublishDetails();
-      }, 3000);
+      }, 1000);
    }
 };
 onMounted(fetchPublishDetails);
@@ -43,14 +46,21 @@ const judgeCode = computed(() => {
 });
 const publishDate = computed(() => {
    const date = detail.value?.createdAt ?? '';
-   return date.split('T').join(' ').slice(0, 16);
+   return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
 });
 const failedReason = computed<string>(() => {
    if (detail.value?.status !== 'invalid') return '';
    const judgeRecord = detail.value?.TemplateJudgeRecord[0]?.judgeRecord;
+
+   const isSomeJudgeFailed =
+      Array.isArray(judgeRecord?.info) &&
+      judgeRecord.info.some((i) => i.status !== 'pass');
+
    if (judgeRecord?.info.errorMessage) {
       // @ts-ignore
       return judgeRecord.info.errorMessage;
+   } else if (isSomeJudgeFailed) {
+      return `使用标准答案未能通过所有测试点，判题脚本可能有误。`;
    } else if (detail.value.totalScore !== judgeRecord?.score) {
       return `使用标准答案进行判题无法得到满分，总分应该为 ${detail.value.totalScore}，实际上为 ${judgeRecord?.score}。`;
    } else {
@@ -92,7 +102,9 @@ const Difficulty = () => {
    } else if (detail.value?.difficulty === 'medium') {
       return <span class='text-warning'>中等</span>;
    } else if (detail.value?.difficulty === 'hard') {
-      return <span class='text-error'>困难</span>;
+      return <span class='text-primary'>困难</span>;
+   } else if (detail.value?.difficulty === 'very_hard') {
+      return <span class='text-error'> 非常困难</span>;
    } else {
       return <span>未知</span>;
    }
@@ -102,7 +114,7 @@ const onSwitchPublishStatus = ref(false);
 const handleSwitchPublishStatus = async () => {
    onSwitchPublishStatus.value = true;
    try {
-      const switchStatus = $trpc.admin.problem.setPublishStatus.mutate({
+      const switchStatus = $trpc.admin.problem.setStatus.mutate({
          problemId: Number(id),
          publish: detail.value?.status === 'published' ? false : true,
       });
@@ -114,25 +126,89 @@ const handleSwitchPublishStatus = async () => {
       onSwitchPublishStatus.value = false;
    }
 };
+
+const onSetCurrentProblem = ref(false);
+const versionPreviewDrawer = useTemplateRef('drawer');
+const handleSetCurrentProblem = async () => {
+   if (!detail.value) return;
+   onSetCurrentProblem.value = true;
+   try {
+      const setProblem = $trpc.admin.problem.setCurrentProblem.mutate({
+         problemId: detail.value.pid,
+      });
+      await atLeastTime(500, setProblem);
+      await fetchPublishDetails();
+      versionPreviewDrawer.value?.refresh();
+   } catch (e) {
+      console.error(e);
+   } finally {
+      onSetCurrentProblem.value = false;
+   }
+};
+
 const switchButtonIcon = computed(() => {
    return detail.value?.status === 'published' ? 'Lock' : 'Unlock';
 });
+const showSetCurrentButton = computed(() => {
+   return Number(id) !== detail.value?.BaseProblem.currentPid;
+});
 const showSwitchButton = computed(() => {
+   if (showSetCurrentButton.value) {
+      return false;
+   }
    const status = detail.value?.status;
    return status === 'published' || status === 'ready';
 });
+
+const handleEdit = () => {
+   navigateTo(`/app/publish?fromId=${id}`);
+};
+
+const handleReturn = () => {
+   navigateTo('/app/publish/mine');
+};
+
+const drawerOpener = ref(false);
+const handlerViewVersion = () => {
+   drawerOpener.value = true;
+};
 </script>
 
 <template>
    <StSpace full justify="center" class="overflow-auto">
-      <FixedButton
-         v-if="showSwitchButton"
-         @click="handleSwitchPublishStatus"
-         :loading="onSwitchPublishStatus"
-         :icon="switchButtonIcon"
-         class="right-[1.82rem] bottom-[13.32rem]" />
-      <FixedButton icon="Edit" class="right-[1.82rem] bottom-[7.57rem]" />
-      <FixedButton icon="Return" class="right-[1.82rem] bottom-[1.82rem]" />
+      <VersionPreviewDrawer
+         ref="drawer"
+         v-model:opened="drawerOpener"
+         :problem-id="detail?.pid" />
+      <StFixed right="1.82rem" bottom="1.82rem">
+         <StSpace direction="vertical" gap="1.2rem" align="center">
+            <SidePopper content="审核记录">
+               <FixedButton
+                  @click="handlerViewVersion"
+                  icon="HamburgerButton" />
+            </SidePopper>
+            <SidePopper v-if="showSetCurrentButton" content="设为当前版本">
+               <FixedButton
+                  @click="handleSetCurrentProblem"
+                  :loading="onSetCurrentProblem"
+                  icon="Flag" />
+            </SidePopper>
+            <SidePopper
+               v-if="showSwitchButton"
+               :content="detail?.status === 'published' ? '取消发布' : '发布'">
+               <FixedButton
+                  @click="handleSwitchPublishStatus"
+                  :loading="onSwitchPublishStatus"
+                  :icon="switchButtonIcon" />
+            </SidePopper>
+            <SidePopper content="编辑">
+               <FixedButton @click="handleEdit" icon="Edit" />
+            </SidePopper>
+            <SidePopper content="返回">
+               <FixedButton @click="handleReturn" icon="Return" />
+            </SidePopper>
+         </StSpace>
+      </StFixed>
       <StSpace
          direction="vertical"
          gap="1.5rem"
@@ -155,7 +231,7 @@ const showSwitchButton = computed(() => {
                      </span>
                   </StSkeleton>
                </DataItem>
-               <DataItem title="发布时间">
+               <DataItem title="提交时间">
                   <StSkeleton :loading="!detail">
                      <template #loading>
                         <StSkeletonItem class="w-32 h-6" />

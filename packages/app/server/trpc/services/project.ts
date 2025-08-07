@@ -1,5 +1,5 @@
 import prisma from '@challenge/database';
-import { Prisma, PrismaClient, VirtualFile } from '@prisma/client';
+import { Prisma, PrismaClient, VirtualFiles } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 
 type Tx = Omit<
@@ -36,7 +36,7 @@ const create = async (options: ICreateProjectOptions) => {
 
    const doTransaction = async (tx: Tx) => {
       // Create the project
-      const project = await tx.project.create({
+      const project = await tx.projects.create({
          data: {
             isTemplate: options.isTemplate,
             name: options.projectName || `Project-${Date.now()}`,
@@ -58,7 +58,7 @@ const create = async (options: ICreateProjectOptions) => {
       result.projectId = project.pid;
 
       // Create the file system for the project
-      const fileSystem = await tx.fileSystem.create({
+      const fileSystem = await tx.fileSystems.create({
          data: {
             ownerId: options.userId,
             projectId: project.pid,
@@ -70,7 +70,7 @@ const create = async (options: ICreateProjectOptions) => {
       result.fileSystemId = fileSystem.fsid;
 
       // Create the virtual files in the file system
-      await tx.virtualFile.createMany({
+      await tx.virtualFiles.createMany({
          data: options.fs.map(
             (file) =>
                ({
@@ -78,11 +78,14 @@ const create = async (options: ICreateProjectOptions) => {
                   content: file.content,
                   ownerId: options.userId,
                   fileSystemFsid: fileSystem.fsid,
-               } satisfies Omit<VirtualFile, 'vid' | 'createdAt' | 'updatedAt'>)
+               } satisfies Omit<
+                  VirtualFiles,
+                  'vid' | 'createdAt' | 'updatedAt'
+               >)
          ),
       });
 
-      const vids = await tx.virtualFile.findMany({
+      const vids = await tx.virtualFiles.findMany({
          where: {
             fileSystemFsid: result.fileSystemId,
          },
@@ -147,7 +150,7 @@ const fork = async (options: IForkProjectOptions) => {
       result.projectId = newProjectId;
 
       // 创建新文件系统
-      const newFileSystem = await tx.fileSystem.create({
+      const newFileSystem = await tx.fileSystems.create({
          data: {
             ownerId: options.userId,
             projectId: newProjectId,
@@ -174,7 +177,7 @@ const fork = async (options: IForkProjectOptions) => {
             WHERE projectId = ${options.projectId}
          )
       `;
-      const vids = await tx.virtualFile.findMany({
+      const vids = await tx.virtualFiles.findMany({
          where: {
             fileSystemFsid: result.fileSystemId,
          },

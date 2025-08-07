@@ -149,7 +149,7 @@ restoreFileSystemItem();
          'flex items-center justify-center',
       ]">
       <StDropUploader
-         v-if="!fileSystemItems.length"
+         v-if="!projectFs"
          :ignores="{ directories: props.ignoreDirectories }"
          :placeholder="props.placeholder"
          type="folder"
