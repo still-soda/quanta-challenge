@@ -139,59 +139,74 @@ export class DockerService extends Singleton {
    }
 
    async startPlaywrightContainer() {
-      const container = await this.docker.createContainer({
-         Image: 'node-playwright-judge-machine',
-         HostConfig: {
-            AutoRemove: true,
-            PortBindings: {
-               '3000/tcp': [{ HostPort: '1889' }],
-            },
-         },
-         ExposedPorts: {
-            '3000/tcp': {},
-         },
-         NetworkingConfig: {
-            EndpointsConfig: {
-               [this.networkName]: {
-                  Aliases: ['judge-machine'],
+      const containerList = await this.docker.listContainers();
+      const imageName = 'node-playwright-judge-machine';
+      let container: Docker.Container;
+
+      const existContainer = (() => {
+         const container = containerList.find((c) => c.Image === imageName);
+         return container && container.Ports.some((p) => p.PublicPort === 1889);
+      })();
+
+      if (existContainer) {
+         console.log(`Using existing container with image ${imageName}`);
+         container = this.docker.getContainer(
+            containerList.find((c) => c.Image === imageName)!.Id
+         );
+      } else {
+         container = await this.docker.createContainer({
+            Image: imageName,
+            HostConfig: {
+               AutoRemove: true,
+               PortBindings: {
+                  '3000/tcp': [{ HostPort: '1889' }],
                },
             },
-         },
-      });
+            ExposedPorts: {
+               '3000/tcp': {},
+            },
+            NetworkingConfig: {
+               EndpointsConfig: {
+                  [this.networkName]: {
+                     Aliases: ['judge-machine'],
+                  },
+               },
+            },
+         });
 
-      const startProcess = await container.attach({
-         stream: true,
-         stdout: true,
-         stderr: true,
-      });
+         const startProcess = await container.attach({
+            stream: true,
+            stdout: true,
+            stderr: true,
+         });
 
-      await container.start();
-      await new Promise<void>((resolve, reject) => {
-         let hasReady = false;
+         await container.start();
+         await new Promise<void>((resolve, reject) => {
+            let hasReady = false;
 
-         // 设置超时，防止容器长时间未响应
-         setTimeout(() => {
-            if (hasReady) return;
-            reject(new Error('Container did not start in time'));
-            ignoreError(() => container.stop());
-         }, this.liveServerStartTimeout);
+            // 设置超时，防止容器长时间未响应
+            setTimeout(() => {
+               if (hasReady) return;
+               reject(new Error('Container did not start in time'));
+               ignoreError(() => container.stop());
+            }, this.liveServerStartTimeout);
 
-         const onData = (data: Buffer) => {
-            const output: string = data.toString();
-            if (output.includes('Server is running')) {
-               hasReady = true;
-               resolve();
-               startProcess.off('data', onData);
-            }
-         };
+            const onData = (data: Buffer) => {
+               const output: string = data.toString();
+               if (output.includes('Server is running')) {
+                  hasReady = true;
+                  resolve();
+                  startProcess.off('data', onData);
+               }
+            };
 
-         startProcess.on('data', onData);
-      });
+            startProcess.on('data', onData);
+         });
+      }
 
       const ws = await this.connectWebSocket();
 
       return {
-         startProcess,
          containerId: container.id,
          container,
          ws,
