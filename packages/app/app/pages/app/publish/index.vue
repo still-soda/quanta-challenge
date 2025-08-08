@@ -23,6 +23,10 @@ const { $trpc } = useNuxtApp();
 const { draft, coverModeOptions, difficultyOptions, formKey, rules } =
    usePublishForm(storageName);
 
+const imageName = ref('');
+const imageUrl = computed(() => {
+   return imageName.value ? `/api/static/${imageName.value}` : undefined;
+});
 const fetchProblemDetail = async () => {
    if (!fromId) return;
 
@@ -31,6 +35,7 @@ const fetchProblemDetail = async () => {
    });
    baseId = problem.BaseProblem.id;
 
+   imageName.value = problem.CoverImage?.name ?? '';
    draft.value.title = problem.title;
    draft.value.detail = problem.detail;
    draft.value.score = problem.totalScore;
@@ -122,14 +127,9 @@ const handleSubmit = async () => {
                      <MarkdownEditingDrawer
                         v-model:opened="markdownEditing"
                         v-model:markdown="draft.detail" />
-                     <div
+                     <StTextButton
                         @click="markdownEditing = !markdownEditing"
-                        :class="[
-                           'st-font-caption text-primary underline underline-offset-3',
-                           'cursor-pointer hover:opacity-75 transition-opacity',
-                        ]">
-                        使用 md 编辑器
-                     </div>
+                        text="使用 md 编辑器" />
                   </template>
                   <StTextarea
                      rows="3"
@@ -162,6 +162,7 @@ const handleSubmit = async () => {
                   <UploadImage
                      v-show="draft.coverMode === 'custom'"
                      v-model:image-id="draft.coverImageId"
+                     :image-url="imageUrl"
                      placeholder="请选择封面图片" />
                </StFormItem>
                <StFormItem name="answerTemplate" label="作答模板" required>

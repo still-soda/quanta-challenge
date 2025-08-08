@@ -74,13 +74,30 @@ const selectAll = () => {
    selectedTags.value = [];
    getMyPublishProblems();
 };
+
+const showEmptyStatus = computed(() => {
+   return Array.isArray(problems.value) && problems.value.length === 0;
+});
 </script>
 
 <template>
-   <StSpace direction="vertical" align="center" gap="0" class="h-full">
+   <StSpace
+      fill-y
+      direction="vertical"
+      align="center"
+      gap="0"
+      class="overflow-auto hide-scrollbar">
       <StSpace
+         v-if="showEmptyStatus"
+         fill-y
          direction="vertical"
-         class="mt-6 h-full overflow-scroll hide-scrollbar">
+         class="mt-6 w-[50rem]">
+         <h1 class="text-[2.5rem] font-bold text-white">我的发布</h1>
+         <div class="w-full h-[1px] shrink-0 bg-accent-600"></div>
+         <StEmptyStatus content="暂无发布内容" class="pb-32" />
+      </StSpace>
+
+      <StSpace v-else fill-y direction="vertical" class="mt-6">
          <h1 class="text-[2.5rem] font-bold text-white">我的发布</h1>
          <StSkeleton :loading="!tags" class="mt-4">
             <template #loading>
@@ -141,6 +158,7 @@ const selectAll = () => {
                </NuxtLink>
             </div>
          </StSkeleton>
+         <div class="w-full h-4 flex shrink-0"></div>
       </StSpace>
    </StSpace>
 </template>

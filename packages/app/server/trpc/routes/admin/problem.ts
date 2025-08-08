@@ -6,6 +6,8 @@ import { IFile, projectService } from '../../services/project';
 import z from 'zod';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
+import { useStore } from '../../store';
+import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash';
 
 type TX = Omit<
    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
@@ -139,8 +141,25 @@ const uploadProcedure = protectedAdminProcedure
          throw new Error('Judge script must export a default function');
       }
 
-      let problemId: number | undefined;
+      // 如果有封面图片，计算其 thumbhash
+      if (input.coverImageId) {
+         const { name } = await prisma.image.findUniqueOrThrow({
+            where: { id: input.coverImageId },
+            select: { name: true },
+         });
+         const store = useStore();
+         const buffer = await store.getBuffer(name);
+         if (!buffer) {
+            throw new Error('Cover image not found in storage');
+         }
+         const hash = await generateThumbhashFromBuffer(buffer);
+         await prisma.image.update({
+            where: { id: input.coverImageId },
+            data: { thumbhash: hash },
+         });
+      }
 
+      let problemId: number | undefined;
       await prisma.$transaction(async (tx) => {
          // 创建问题
          const baseProblem = await tx.baseProblems.create({

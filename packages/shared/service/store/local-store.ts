@@ -1,5 +1,5 @@
 import path from 'path';
-import { IStore } from './i-store';
+import type { IStore } from './i-store';
 import fs from 'fs/promises';
 
 export class LocalStore implements IStore {
@@ -23,15 +23,6 @@ export class LocalStore implements IStore {
       if (!file) return null;
       const buffer = await fs.readFile(path.join(this.storePath, file));
       return new File([buffer], file);
-   }
-
-   async getBuffer(fileName: string): Promise<Buffer | null> {
-      const filePath = path.join(this.storePath, fileName);
-      try {
-         return await fs.readFile(filePath);
-      } catch {
-         return null;
-      }
    }
 
    async exists(fileId: string): Promise<boolean> {

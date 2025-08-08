@@ -58,18 +58,20 @@ defineExpose({ refresh });
                      class="h-[4.5rem] w-full rounded-lg" />
                </StSpace>
             </template>
-            <StSpace fill-x direction="vertical" gap="0.75rem">
-               <NuxtLink
-                  v-for="version in versions"
-                  :key="version.pid"
-                  :to="`/app/publish/detail/${version.pid}`"
-                  class="w-full">
-                  <VersionItem
-                     :version="version"
-                     :view-pid="props.problemId!"
-                     :current-pid="currentPid!" />
-               </NuxtLink>
-            </StSpace>
+            <StScrollable scroll-y fill-x>
+               <StSpace fill-x direction="vertical" gap="0.75rem">
+                  <NuxtLink
+                     v-for="version in versions"
+                     :key="version.pid"
+                     :to="`/app/publish/detail/${version.pid}`"
+                     class="w-full">
+                     <VersionItem
+                        :version="version"
+                        :view-pid="props.problemId!"
+                        :current-pid="currentPid!" />
+                  </NuxtLink>
+               </StSpace>
+            </StScrollable>
          </StSkeleton>
       </StSpace>
    </StDrawer>

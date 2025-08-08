@@ -16,6 +16,7 @@
    "dependencies": {
       "@challenge/database": "workspace:^",
       "@challenge/judge-machine": "workspace:^",
+      "@challenge/shared": "workspace:^",
       "@highlightjs/vue-plugin": "^2.1.0",
       "@icon-park/vue-next": "^1.4.2",
       "@pinia/nuxt": "^0.11.1",

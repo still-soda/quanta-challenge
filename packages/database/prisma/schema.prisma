@@ -102,6 +102,7 @@ model WebAuthnCredential {
 model Image {
   id        String   @id @default(cuid())
   name      String
+  thumbhash String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   refCount  Int      @default(0)

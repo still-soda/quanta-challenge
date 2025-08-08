@@ -3,8 +3,6 @@ export interface IStore {
    save(buffer: Buffer, name: string): Promise<string>;
    /** 获取文件 */
    get(fileId: string): Promise<File | null>;
-   /** 获取文件内容 */
-   getBuffer(fileName: string): Promise<Buffer | null>;
    /** 删除文件 */
    delete(fileId: string): Promise<void>;
    /** 列出所有文件 */

@@ -10,6 +10,7 @@
    "dependencies": {
       "@challenge/database": "workspace:^",
       "@challenge/judge-machine": "workspace:^",
+      "@challenge/shared": "workspace:^",
       "@hono/node-server": "^1.18.1",
       "@hono/node-ws": "^1.2.0",
       "@hono/zod-validator": "^0.7.2",

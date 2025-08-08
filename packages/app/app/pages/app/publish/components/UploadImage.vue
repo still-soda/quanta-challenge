@@ -30,7 +30,7 @@ const uploadImage = async () => {
          fileName: imageFile.value.name,
       })
       .then((res) => {
-         imageUrl.value = 'http://localhost:3000/api/' + res.url;
+         imageUrl.value = '/api/static/' + res.name;
          imageId.value = res.id;
       })
       .catch((error) => {
@@ -82,7 +82,7 @@ const cleanup = () => {
             alt="Uploaded Image" />
          <div class="relative flex flex-col">
             <div class="st-font-caption text-white">
-               {{ imageFile?.name }}
+               {{ imageFile?.name ?? '已上传图片' }}
             </div>
             <StSpace
                @click="cleanup"
