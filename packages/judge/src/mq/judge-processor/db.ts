@@ -3,7 +3,7 @@ import prisma from '../../utils/prisma.js';
 import { JudgeJob } from './types.js';
 import z from 'zod';
 import { JudgeSuccessResultSchema } from '@challenge/judge-machine/schemas';
-import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash';
+import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash/server';
 
 export const getProblemInfoByRecordId = async (judgeRecordId: number) => {
    const result = await prisma.judgeRecords.findUniqueOrThrow({
@@ -108,6 +108,19 @@ export const saveSuccessRecord = async (options: {
          info: savedResult,
          result: result.status === 'completed' ? 'success' : 'failed',
          score: result.totalScore,
+         problem: {
+            update: {
+               JudgeStatus: {
+                  update: {
+                     totalCount: { increment: 1 },
+                     passedCount:
+                        result.status === 'completed'
+                           ? { increment: 1 }
+                           : undefined,
+                  },
+               },
+            },
+         },
       },
    });
 };
@@ -126,6 +139,15 @@ export const saveErrorRecord = async (options: {
          result: 'failed',
          info: {
             errorMessage: options.error.message,
+         },
+         problem: {
+            update: {
+               JudgeStatus: {
+                  update: {
+                     totalCount: { increment: 1 },
+                  },
+               },
+            },
          },
       },
    });

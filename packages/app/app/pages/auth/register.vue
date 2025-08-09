@@ -109,7 +109,7 @@ const getStatus = (
             </StFormItem>
             <StButton :loading @click.prevent="handleRegister"> 注册 </StButton>
          </StForm>
-         <StDevider>或者</StDevider>
+         <StDivider>或者</StDivider>
          <StButton class="!bg-accent-600 !text-accent-200 w-full">
             <div class="flex items-center gap-2">
                <IconQQ />

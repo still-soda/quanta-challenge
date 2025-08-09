@@ -35,7 +35,7 @@ const textColorClass = computed(() => {
    <StSpace
       gap="0.5rem"
       align="center"
-      class="h-[3.5rem] px-6 rounded-full cursor-pointer border-transparent border hover:border-[var(--c)]"
+      class="h-[3.5rem] px-6 rounded-full cursor-pointer border-transparent border hover:border-[var(--c)] shrink-0 text-nowrap whitespace-nowrap"
       :class="{
          'bg-accent-600 text-accent-100': !props.selected,
          'bg-accent-100 text-accent-600': props.selected,

@@ -7,7 +7,7 @@ import z from 'zod';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { useStore } from '../../store';
-import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash';
+import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash/server';
 
 type TX = Omit<
    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
@@ -41,6 +41,9 @@ const handleCreateVersion = async (options: {
          },
          JudgeFile: {
             create: { judgeScript },
+         },
+         JudgeStatus: {
+            create: {},
          },
       },
       select: {

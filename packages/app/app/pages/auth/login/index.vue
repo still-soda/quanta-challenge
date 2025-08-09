@@ -80,7 +80,7 @@ const gotoWebAuthnLogin = () => {
             </StFormItem>
             <StButton :loading @click.prevent="handleLogin">登录</StButton>
          </StForm>
-         <StDevider>或使用</StDevider>
+         <StDivider>或使用</StDivider>
          <div class="flex gap-4 w-full text-sm">
             <StButton
                v-if="supportWebAuthn"

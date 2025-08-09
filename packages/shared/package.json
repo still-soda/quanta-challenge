@@ -2,12 +2,16 @@
    "name": "@challenge/shared",
    "version": "1.0.0",
    "description": "",
+   "type": "module",
    "exports": {
       "./store": {
          "import": "./service/store/index.ts"
       },
-      "./thumbhash": {
-         "import": "./service/thumbhash/index.ts"
+      "./thumbhash/server": {
+         "import": "./service/thumbhash/server.ts"
+      },
+      "./thumbhash/client": {
+         "import": "./service/thumbhash/client.ts"
       }
    },
    "main": "index.js",

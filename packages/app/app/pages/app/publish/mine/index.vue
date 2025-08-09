@@ -1,8 +1,8 @@
 <script setup lang="tsx">
 import { StSpace } from '#components';
 import { $Enums } from '@prisma/client';
-import TagButton from './components/TagButton.vue';
 import { useViewTransition } from '~/composables/utils/use-view-transition';
+import Divider from '../components/Divider.vue';
 
 const { $trpc } = useNuxtApp();
 
@@ -93,10 +93,9 @@ const showEmptyStatus = computed(() => {
          direction="vertical"
          class="mt-6 w-[50rem]">
          <h1 class="text-[2.5rem] font-bold text-white">我的发布</h1>
-         <div class="w-full h-[1px] shrink-0 bg-accent-600"></div>
+         <Divider />
          <StEmptyStatus content="暂无发布内容" class="pb-32" />
       </StSpace>
-
       <StSpace v-else fill-y direction="vertical" class="mt-6">
          <h1 class="text-[2.5rem] font-bold text-white">我的发布</h1>
          <StSkeleton :loading="!tags" class="mt-4">
@@ -109,12 +108,12 @@ const showEmptyStatus = computed(() => {
                </StSpace>
             </template>
             <StSpace gap="0.75rem" class="mt-4">
-               <TagButton
+               <StTagButton
                   @click="selectAll"
                   :selected="selectedTags.length === 0"
                   icon-name="ThreeHexagons"
                   :tag="{ name: '全部' }" />
-               <TagButton
+               <StTagButton
                   v-for="(tag, idx) in tags"
                   :key="idx"
                   :tag="tag"
@@ -122,18 +121,18 @@ const showEmptyStatus = computed(() => {
                   @click="toggleTag(tag.tid)" />
             </StSpace>
          </StSkeleton>
-         <div class="w-full h-[1px] shrink-0 bg-accent-600"></div>
+         <Divider />
          <StSkeleton :loading="!problems" class="w-full h-full">
             <template #loading>
-               <div class="grid grid-cols-4 gap-5 w-full h-full">
+               <StGrid fill :cols="4" gap="1.25rem">
                   <StSkeletonItem
                      v-for="i in 12"
                      :key="i"
                      class="w-[14.5rem] h-[20rem]"
                      rounded="lg" />
-               </div>
+               </StGrid>
             </template>
-            <div class="grid grid-cols-4 gap-5 w-full h-full">
+            <StGrid fill :cols="4" gap="1.25rem">
                <NuxtLink
                   v-for="(problem, idx) in problems"
                   class="h-fit"
@@ -156,9 +155,9 @@ const showEmptyStatus = computed(() => {
                      </StProblemCardInfo>
                   </StProblemCard>
                </NuxtLink>
-            </div>
+            </StGrid>
          </StSkeleton>
-         <div class="w-full h-4 flex shrink-0"></div>
+         <StSpacer fill flex no-shrink height="1rem" />
       </StSpace>
    </StSpace>
 </template>

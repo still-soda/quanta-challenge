@@ -1,7 +1,7 @@
 import prisma from '@challenge/database';
 import { publicProcedure, router } from '../../trpc';
 
-const findAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
+const listAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
    const tags = await prisma.tags.findMany({
       include: {
          image: {
@@ -18,5 +18,5 @@ const findAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
 });
 
 export const tagRouter = router({
-   findAll: findAllTagsProcedure,
+   list: listAllTagsProcedure,
 });

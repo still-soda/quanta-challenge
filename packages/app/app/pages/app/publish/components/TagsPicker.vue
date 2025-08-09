@@ -27,7 +27,7 @@ const handleRemoveTag = (tag: number) => {
 const tagSelectOpened = ref(false);
 const fetchTagLoading = ref(false);
 const fetchTags = async (): Promise<(ISelectOption & { color: string })[]> => {
-   const tags = await $trpc.public.tag.findAll.query();
+   const tags = await $trpc.public.tag.list.query();
    return tags
       .map((tag) => ({
          label: tag.name,

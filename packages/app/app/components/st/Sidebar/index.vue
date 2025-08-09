@@ -19,24 +19,36 @@ const role = computed(() => authStore.user?.role ?? 'USER');
             align="center"
             justify="center"
             class="h-full">
-            <StSidebarNavigationButton to="/app/dashboard">
-               <StIcon name="DashboardTwo" />
-            </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="#">
-               <StIcon name="Ranking" />
-            </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="/app/problems">
-               <StIcon name="TableReport" />
-            </StSidebarNavigationButton>
-            <StSidebarNavigationButton v-if="role !== 'USER'" to="/app/publish">
-               <StIcon name="UploadTwo" />
-            </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="#">
-               <StIcon name="Trophy" />
-            </StSidebarNavigationButton>
-            <StSidebarNavigationButton to="/app/settings">
-               <StIcon name="SettingTwo" />
-            </StSidebarNavigationButton>
+            <StSidebarSidePopper content="仪表盘">
+               <StSidebarNavigationButton to="/app/dashboard">
+                  <StIcon name="DashboardTwo" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
+            <StSidebarSidePopper content="排行榜">
+               <StSidebarNavigationButton to="#">
+                  <StIcon name="Ranking" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
+            <StSidebarSidePopper content="题目">
+               <StSidebarNavigationButton to="/app/problems">
+                  <StIcon name="TableReport" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
+            <StSidebarSidePopper v-if="role !== 'USER'" content="发布题目">
+               <StSidebarNavigationButton to="/app/publish">
+                  <StIcon name="UploadTwo" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
+            <StSidebarSidePopper content="成就">
+               <StSidebarNavigationButton to="#">
+                  <StIcon name="Trophy" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
+            <StSidebarSidePopper content="设置">
+               <StSidebarNavigationButton to="/app/settings">
+                  <StIcon name="SettingTwo" />
+               </StSidebarNavigationButton>
+            </StSidebarSidePopper>
          </StSpace>
          <StSidebarNavigationButton to="#">
             <StIcon name="Plus" />
