@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ScriptEditingDrawer from './ScriptEditingDrawer.vue';
+import LazyScriptEditingDrawer from './ScriptEditingDrawer.vue';
 
 const ready = ref(false);
 const isEditing = ref(false);
@@ -7,7 +7,10 @@ const script = defineModel<string>('script', { default: '' });
 </script>
 
 <template>
-   <ScriptEditingDrawer v-model:opened="isEditing" v-model:script="script" />
+   <LazyScriptEditingDrawer
+      hydrate-on-visible
+      v-model:opened="isEditing"
+      v-model:script="script" />
    <div
       class="p-[0.375rem] pb-4 border border-accent-300 rounded-lg flex flex-col items-center gap-3">
       <div class="p-4 rounded-[0.25rem] bg-accent-600 w-full">

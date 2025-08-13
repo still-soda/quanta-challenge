@@ -72,7 +72,7 @@ onMounted(() => {
    });
 });
 
-const { mountFileSystem, onWebContainerReady, runCommand } = useWebContainer();
+const { mountFileSystem, runCommand } = useWebContainer();
 const terminal = useTemplateRef('terminal');
 runCommand('sh').then((process) => {
    terminal.value?.attachProcess(process);
@@ -99,7 +99,7 @@ runCommand('sh').then((process) => {
                   <StSplitPanel
                      direction="vertical"
                      class="size-full"
-                     :start-percent="70">
+                     :start-percent="65">
                      <template #start>
                         <CodeEditorPanel
                            ref="code-editor"

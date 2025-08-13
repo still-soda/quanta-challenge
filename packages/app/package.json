@@ -3,7 +3,7 @@
    "private": true,
    "type": "module",
    "scripts": {
-      "build": "bun scripts/pre-build.ts && nuxt build && bun scripts/post-build.ts",
+      "build": "bun scripts/pre-build.ts && NODE_OPTIONS='--max-old-space-size=4096' nuxt build && bun scripts/post-build.ts",
       "dev": "nuxt dev",
       "generate": "nuxt generate",
       "preview": "nuxt preview",

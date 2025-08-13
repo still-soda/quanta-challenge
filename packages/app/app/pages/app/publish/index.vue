@@ -2,7 +2,7 @@
 import JudgeScript from './components/JudgeScript.vue';
 import UploadProject from './components/UploadProject.vue';
 import UploadImage from './components/UploadImage.vue';
-import MarkdownEditingDrawer from './components/MarkdownEditingDrawer.vue';
+import LazyMarkdownEditingDrawer from './components/MarkdownEditingDrawer.vue';
 import TagsPicker from './components/TagsPicker.vue';
 import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
@@ -124,7 +124,8 @@ const handleSubmit = async () => {
                </StFormItem>
                <StFormItem name="description" label="题目描述" required>
                   <template #header-right>
-                     <MarkdownEditingDrawer
+                     <LazyMarkdownEditingDrawer
+                        hydrate-on-visible
                         v-model:opened="markdownEditing"
                         v-model:markdown="draft.detail" />
                      <StTextButton

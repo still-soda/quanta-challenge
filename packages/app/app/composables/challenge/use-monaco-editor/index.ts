@@ -4,13 +4,14 @@ import { shikiToMonaco } from '@shikijs/monaco';
 import { registerLanguageWorkers } from './workers';
 import * as editorActions from './editor-actions';
 import { useEventEmitter } from '~/composables/utils/use-event-emitter';
+import { defaultEditorOptions, editorTheme } from './config';
 
 export type MonacoEditor = typeof import('monaco-editor');
 
 const attachHighligher = async (monaco: MonacoEditor) => {
    const langs = ['javascript', 'typescript', 'html', 'css', 'json', 'vue'];
    const highlighter = await createHighlighter({
-      themes: ['ayu-dark'],
+      themes: [editorTheme],
       langs,
    });
    langs.forEach((lang) => {
@@ -143,17 +144,7 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
 
       // 创建编辑器实例
       const instance = monaco.editor.create(container.value, {
-         theme: 'ayu-dark',
-         automaticLayout: true,
-         fontSize: 14,
-         autoClosingBrackets: 'languageDefined',
-         tabSize: 2,
-         minimap: { enabled: false },
-         cursorSmoothCaretAnimation: 'on',
-         autoClosingQuotes: 'always',
-         stickyScroll: {
-            enabled: false,
-         },
+         ...defaultEditorOptions,
          ...options?.options,
       });
       editorInstance = instance;
