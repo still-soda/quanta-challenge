@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { FileSystemItem } from './type';
+import type { IFileSystemItem } from './type';
 
 const props = defineProps<{
-   folder: FileSystemItem;
+   folder: IFileSystemItem;
    deep: number;
    defaultOpened?: boolean;
    currentFilePath?: string;
@@ -11,20 +11,25 @@ const props = defineProps<{
 const opened = ref(props.defaultOpened ?? false);
 
 const emits = defineEmits(['file-or-folder-click']);
-const handleFileOrFolderClick = (fileOrFolder: FileSystemItem) => {
+const handleFileOrFolderClick = (fileOrFolder: IFileSystemItem) => {
    emits('file-or-folder-click', fileOrFolder);
 };
 const handleOpenedChange = () => {
    opened.value = !opened.value;
    return true;
 };
+
+const selected = computed(() => {
+   return props.currentFilePath === props.folder.path;
+});
 </script>
 
 <template>
    <div class="flex flex-col w-full">
       <div
          :style="{ paddingLeft: `${props.deep * 1 + 0.5}rem` }"
-         class="flex items-center gap-1 font-family-fira-code py-0.5 px-2 hover:cursor-pointer hover:bg-accent-600 w-full"
+         class="flex items-center gap-1 font-family-fira-code py-1 px-2 hover:cursor-pointer hover:bg-accent-600 w-full"
+         :class="{ 'bg-accent-600': selected }"
          @click.stop="handleOpenedChange() && handleFileOrFolderClick(folder)">
          <StIcon
             theme="filled"

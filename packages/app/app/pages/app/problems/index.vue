@@ -7,12 +7,10 @@ import { useViewTransition } from '~/composables/utils/use-view-transition';
 const { $trpc } = useNuxtApp();
 
 type TagsType = Awaited<ReturnType<typeof $trpc.public.tag.list.query>>;
-const tags = ref<TagsType>();
-const getAllTags = async () => {
-   const result = await $trpc.public.tag.list.query();
-   tags.value = result;
-};
-onMounted(getAllTags);
+const { data: tags, status: tagsStatus } = await useAsyncData<TagsType>(
+   'tags',
+   async () => await $trpc.public.tag.list.query()
+);
 
 const selectedTags = ref<number[]>([]);
 const toggleTag = (id: number) => {
@@ -90,7 +88,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
       class="overflow-scroll hide-scrollbar">
       <StSpace fill-y direction="vertical" class="mt-6">
          <h1 class="text-[2.5rem] font-bold text-white">题目</h1>
-         <StSkeleton :loading="!tags" class="mt-4">
+         <StSkeleton :loading="tagsStatus === 'pending'" class="mt-4">
             <template #loading>
                <StSpace gap="0.75rem">
                   <StSkeletonItem
@@ -127,7 +125,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                   <StSkeletonItem
                      v-for="i in 12"
                      :key="i"
-                     class="w-[14rem] h-[20rem]"
+                     class="w-[14.5rem] h-[20rem]"
                      rounded="lg" />
                </StGrid>
             </template>
@@ -136,12 +134,12 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                content="暂无题目"
                class="!w-[61.75rem] pb-32" />
             <StGrid v-else fill :cols="4" gap="1.25rem">
-               <NuxtLink
+               <a
                   v-for="(problem, idx) in problems"
                   class="h-fit"
                   :style="{ viewTransitionName: `card-${problem.pid}` }"
                   :key="idx"
-                  :to="`/app/publish/detail/${problem.pid}`">
+                  :href="`/challenge/${problem.pid}`">
                   <StProblemCard
                      class="w-[14.5rem] h-fit"
                      :cover-image-name="problem.imageName">
@@ -162,7 +160,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                         </StProblemCardInfoItem>
                      </StProblemCardInfo>
                   </StProblemCard>
-               </NuxtLink>
+               </a>
             </StGrid>
          </StSkeleton>
          <StSpacer fill flex no-shrink height="1rem" />

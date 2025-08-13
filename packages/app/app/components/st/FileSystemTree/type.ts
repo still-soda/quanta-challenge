@@ -1,8 +1,8 @@
-export interface FileSystemItem {
+export interface IFileSystemItem {
    name: string;
    path: string;
    type: 'file' | 'folder';
    mimeType?: string;
    content?: string;
-   children?: FileSystemItem[];
+   children?: IFileSystemItem[];
 }

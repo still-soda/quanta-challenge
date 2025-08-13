@@ -1,3 +1,30 @@
 .hide-scrollbar::-webkit-scrollbar {
    display: none;
 }
+
+.mini-scrollbar::-webkit-scrollbar {
+   height: 3px;
+   width: 0;
+   background: transparent;
+   display: none;
+}
+
+.mini-scrollbar:hover::-webkit-scrollbar {
+   display: block;
+}
+
+.mini-scrollbar::-webkit-scrollbar-track {
+   background: rgba(128, 128, 128, 0.1);
+   border-radius: 4px;
+}
+
+.mini-scrollbar::-webkit-scrollbar-thumb {
+   background: rgba(128, 128, 128, 0.5);
+   border-radius: 4px;
+   transition: background 0.3s ease-in-out;
+}
+
+.mini-scrollbar::-webkit-scrollbar-thumb:hover {
+   background: #a6fb1d;
+   cursor: pointer;
+}

@@ -67,9 +67,9 @@ export class PlaywrightService extends Singleton {
       close: () => Promise<void>;
    }> {
       url = this.sanitizeUrl(url);
-      // if (!(await this.checkUrlAccessible(url))) {
-      //    throw new Error(`URL is not accessible: ${url}`);
-      // }
+      if (!(await this.checkUrlAccessible(url))) {
+         throw new Error(`URL is not accessible: ${url}`);
+      }
 
       try {
          const browser = await this.pickAliveBrowser();

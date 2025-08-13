@@ -1,6 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
    text?: string;
+   class?: any;
 }>();
 </script>
 
@@ -9,6 +10,7 @@ defineProps<{
       :class="[
          'px-6 py-4 rounded-full bg-accent-600 text-white',
          'hover:opacity-80 transition-opacity hover:cursor-pointer',
+         props.class,
       ]">
       <StSpace gap=".75rem" align="center">
          <slot></slot>

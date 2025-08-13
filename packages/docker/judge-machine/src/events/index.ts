@@ -7,7 +7,7 @@ export enum EventType {
    OPEN = 'open',
 }
 
-export interface EventMessage {
+export interface IEventMessage {
    MESSAGE: {
       data: WSMessageReceive;
       ws: WSContext<WebSocket>;

@@ -5,17 +5,19 @@ import useAuthStore from '~/stores/auth-store';
 export default defineNuxtPlugin(() => {
    const authStore = useAuthStore();
 
+   const baseUrl = import.meta.server ? process.env.API_BASE_URL : '';
+
    const trpc = createTRPCClient<AppRouter>({
       links: [
          httpBatchLink({
-            url: '/api/trpc',
+            url: baseUrl + '/api/trpc',
             headers() {
                if (!authStore.accessToken) return {};
                return {
                   Authorization: `Bearer ${authStore.accessToken}`,
                };
             },
-            async fetch(url, options) {
+            async fetch(url, options: any) {
                let res = await fetch(url, options);
 
                if (res.status === 401) {

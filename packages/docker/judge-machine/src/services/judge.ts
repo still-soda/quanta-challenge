@@ -1,6 +1,6 @@
 import type z from 'zod';
 import { JRTP } from '../../protocol/judge-result-transfer-protocal.js';
-import { EventType, type EventMessage } from '../events/index.js';
+import { EventType, type IEventMessage } from '../events/index.js';
 import { defineTestHandler, getExposePage, System } from '../lib/system.js';
 import { TaskSchema } from '../schemas/task.js';
 import { Singleton } from '../utils/singleton.js';
@@ -33,7 +33,7 @@ export class JudgeService extends Singleton {
       });
    }
 
-   async handleTask(options: EventMessage['MESSAGE']) {
+   async handleTask(options: IEventMessage['MESSAGE']) {
       const { ws } = options;
 
       let data: Record<string, any>;

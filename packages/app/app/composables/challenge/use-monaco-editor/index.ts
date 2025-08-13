@@ -1,0 +1,192 @@
+import type { editor } from 'monaco-editor';
+import { createHighlighter } from 'shiki';
+import { shikiToMonaco } from '@shikijs/monaco';
+import { registerLanguageWorkers } from './workers';
+import * as editorActions from './editor-actions';
+import { useEventEmitter } from '~/composables/utils/use-event-emitter';
+
+export type MonacoEditor = typeof import('monaco-editor');
+
+const attachHighligher = async (monaco: MonacoEditor) => {
+   const langs = ['javascript', 'typescript', 'html', 'css', 'json', 'vue'];
+   const highlighter = await createHighlighter({
+      themes: ['ayu-dark'],
+      langs,
+   });
+   langs.forEach((lang) => {
+      monaco.languages.register({ id: lang });
+   });
+   shikiToMonaco(highlighter, monaco);
+};
+
+interface IUseMonacoEditorOptions {
+   options?: editor.IStandaloneEditorConstructionOptions;
+}
+
+type MonacoReadyCallback = (monaco: MonacoEditor) => void;
+type EditorInstanceReadyCallback = (
+   editor: editor.IStandaloneCodeEditor,
+   monaco: MonacoEditor
+) => void;
+type EditorDisposedCallback = (editor: editor.IStandaloneCodeEditor) => void;
+
+export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
+   const containerKey = 'monaco-editor-container';
+   const container = useTemplateRef<HTMLDivElement>(containerKey);
+
+   let monaco: MonacoEditor | null = null;
+   let editorInstance: editor.IStandaloneCodeEditor | null = null;
+
+   // 编辑器准备回调
+   const monacoReadyCallbacks = new Set<MonacoReadyCallback>();
+   const onMonacoReady = (callback: MonacoReadyCallback) => {
+      if (monaco) {
+         return callback(monaco);
+      }
+      monacoReadyCallbacks.add(callback);
+   };
+
+   // 编辑器实例准备回调
+   const editorInstanceReadyCallbacks = new Set<EditorInstanceReadyCallback>();
+   const onEditorInstanceReady = (callback: EditorInstanceReadyCallback) => {
+      if (editorInstance && monaco) {
+         return callback(editorInstance, monaco);
+      }
+      editorInstanceReadyCallbacks.add(callback);
+   };
+
+   // 编辑器销毁前回调
+   const editorBeforeDisposedCallbacks = new Set<EditorDisposedCallback>();
+   const onBeforeEditorDisposed = (callback: EditorDisposedCallback) => {
+      editorBeforeDisposedCallbacks.add(callback);
+   };
+
+   // 使用文件系统创建模型
+   const createModels = (fs: Record<string, string>) => {
+      if (!monaco) {
+         throw new Error('Monaco is not ready yet');
+      }
+      Object.entries(fs).forEach(([filePath, content]) => {
+         if (monaco!.editor.getModel(monaco!.Uri.file(filePath))) {
+            return;
+         }
+         monaco!.editor.createModel(
+            content,
+            void 0,
+            monaco!.Uri.file(filePath)
+         );
+      });
+   };
+
+   // 监听模型变化
+   const onModelContentChange = (
+      path: string,
+      callback: (content: string) => void
+   ) => {
+      if (!monaco) {
+         throw new Error('Monaco is not ready yet');
+      }
+      const model = monaco.editor.getModel(monaco.Uri.file(path));
+      model?.onDidChangeContent(() => {
+         const content = model.getValue();
+         callback(content);
+      });
+   };
+
+   const emitterKey = Symbol('editor-emitter');
+   type ModelChangeEvent = { path: string };
+   const { event } = useEventEmitter<ModelChangeEvent>(
+      emitterKey,
+      'model-change'
+   );
+   const onModelChange = (callback: (newPath: string) => void) => {
+      watch(event, (event) => {
+         event && callback(event.path);
+      });
+   };
+
+   // 销毁模型
+   const disposeModel = (filePath: string) => {
+      if (!monaco) {
+         throw new Error('Monaco is not ready yet');
+      }
+      const model = monaco.editor.getModel(monaco.Uri.file(filePath));
+      model && model.dispose();
+   };
+
+   // 添加额外的类型文件
+   const addExtraLibs = (dts: Record<string, string>) => {
+      if (!monaco) {
+         throw new Error('Monaco is not ready yet');
+      }
+      Object.entries(dts).forEach(([filePath, content]) => {
+         monaco!.languages.typescript.typescriptDefaults.addExtraLib(
+            content,
+            filePath
+         );
+      });
+   };
+
+   onMounted(async () => {
+      if (!container.value) {
+         throw new Error('Monaco editor container is not defined');
+      }
+      // 加载 Monaco 编辑器
+      const monacoModule = await import('monaco-editor').catch((error) => {
+         throw error;
+      });
+      monaco = monacoModule;
+      monacoReadyCallbacks.forEach((callback) => callback(monaco!));
+
+      // 附加高亮器
+      await attachHighligher(monaco);
+
+      // 创建编辑器实例
+      const instance = monaco.editor.create(container.value, {
+         theme: 'ayu-dark',
+         automaticLayout: true,
+         fontSize: 14,
+         autoClosingBrackets: 'languageDefined',
+         tabSize: 2,
+         minimap: { enabled: false },
+         cursorSmoothCaretAnimation: 'on',
+         autoClosingQuotes: 'always',
+         stickyScroll: {
+            enabled: false,
+         },
+         ...options?.options,
+      });
+      editorInstance = instance;
+      editorInstanceReadyCallbacks.forEach((callback) =>
+         callback(editorInstance!, monaco!)
+      );
+
+      // 自定义编辑器打开器
+      editorActions.customizeEditorOpener(monaco, instance, emitterKey);
+
+      // 注册语言服务
+      registerLanguageWorkers(monaco);
+   });
+
+   onUnmounted(() => {
+      // 销毁
+      editorInstance &&
+         editorBeforeDisposedCallbacks.forEach((callback) =>
+            callback(editorInstance!)
+         );
+      monaco && monaco.editor.getModels().forEach((model) => model.dispose());
+      editorInstance?.dispose();
+   });
+
+   return {
+      containerKey,
+      createModels,
+      disposeModel,
+      addExtraLibs,
+      onMonacoReady,
+      onModelChange,
+      onModelContentChange,
+      onEditorInstanceReady,
+      onBeforeEditorDisposed,
+   };
+};

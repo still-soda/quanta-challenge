@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { createNodeWebSocket } from '@hono/node-ws';
 import { EventEmitterService } from '../services/event-emitter.js';
-import { EventType, type EventMessage } from '../events/index.js';
+import { EventType, type IEventMessage } from '../events/index.js';
 
 const app = new Hono();
 
@@ -15,25 +15,25 @@ app.get(
             if (data === 'ping') {
                return;
             }
-            EventEmitterService.instance.emit<[EventMessage['MESSAGE']]>(
+            EventEmitterService.instance.emit<[IEventMessage['MESSAGE']]>(
                EventType.MESSAGE,
                { data, ws }
             );
          },
          onClose(evt, ws) {
-            EventEmitterService.instance.emit<[EventMessage['CLOSE']]>(
+            EventEmitterService.instance.emit<[IEventMessage['CLOSE']]>(
                EventType.CLOSE,
                { data: evt, ws }
             );
          },
          onError(evt, ws) {
-            EventEmitterService.instance.emit<[EventMessage['ERROR']]>(
+            EventEmitterService.instance.emit<[IEventMessage['ERROR']]>(
                EventType.ERROR,
                { event: evt, ws }
             );
          },
          onOpen(evt, ws) {
-            EventEmitterService.instance.emit<[EventMessage['OPEN']]>(
+            EventEmitterService.instance.emit<[IEventMessage['OPEN']]>(
                EventType.OPEN,
                {
                   event: evt,

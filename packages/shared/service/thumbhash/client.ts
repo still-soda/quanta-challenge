@@ -4,7 +4,7 @@ import WorkerConstructor from './worker?worker';
 
 const workerPool = new WorkerPool<ThumbHashWorker>(WorkerConstructor);
 
-interface ThumbHashResult {
+interface IThumbHashResult {
    imageUrl: string;
    width: number;
    height: number;
@@ -12,7 +12,7 @@ interface ThumbHashResult {
 
 export const batchConvertHashToImageUrl = async (
    hashList: string[]
-): Promise<ThumbHashResult[]> => {
+): Promise<IThumbHashResult[]> => {
    if (hashList.length === 0) {
       return [];
    }
@@ -28,8 +28,8 @@ export const batchConvertHashToImageUrl = async (
 
    // 为每个chunk创建一个处理任务
    const tasks = chunks.map((chunk) => {
-      return async (): Promise<ThumbHashResult[]> => {
-         const results: ThumbHashResult[] = [];
+      return async (): Promise<IThumbHashResult[]> => {
+         const results: IThumbHashResult[] = [];
          for (const hash of chunk) {
             try {
                const result = await workerPool.runTask((worker) =>

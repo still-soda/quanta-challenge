@@ -3,10 +3,11 @@ import { ref, useTemplateRef } from 'vue';
 
 const props = defineProps<{
    direction: 'horizontal' | 'vertical';
+   startPercent?: number;
 }>();
 
-const startPercentage = ref(50);
-const endPercentage = ref(50);
+const startPercentage = ref(props.startPercent ?? 50);
+const endPercentage = ref(100 - (props.startPercent ?? 50));
 const container = useTemplateRef('container');
 const isDragging = ref(false);
 
@@ -71,7 +72,7 @@ const handleResize = (event: MouseEvent) => {
       <!-- RESIZER -->
       <div
          @mousedown.left="handleResize"
-         class="flex items-center justify-center hover:bg-secondary group transition-colors shrink-0"
+         class="flex items-center justify-center hover:bg-secondary group transition-colors shrink-0 rounded-full"
          :class="{
             'w-1 h-full mx-1 hover:cursor-col-resize':
                direction === 'horizontal',

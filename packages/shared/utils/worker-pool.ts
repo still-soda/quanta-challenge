@@ -1,26 +1,26 @@
 import * as Comlink from 'comlink';
 
-interface Constructor<T> {
+interface IConstructor<T> {
    new (...args: any[]): T;
 }
 
-interface WorkerWithStatus<Processor> {
+interface IWorkerWithStatus<Processor> {
    worker: Worker;
    proxy: Comlink.Remote<Processor>;
    status: 'idle' | 'busy' | 'error';
 }
 
-interface Resolver<Processor> {
+interface IResolver<Processor> {
    resolve: (worker: Comlink.Remote<Processor>) => void;
    reject: (error: Error) => void;
 }
 
 export class WorkerPool<Processor> {
-   private workerWithStatusList: WorkerWithStatus<Processor>[] = [];
-   private getWorkerPromiseResolveList: Resolver<Processor>[] = [];
+   private workerWithStatusList: IWorkerWithStatus<Processor>[] = [];
+   private getWorkerPromiseResolveList: IResolver<Processor>[] = [];
 
    constructor(
-      public readonly WorkerConstructor: Constructor<Worker>,
+      public readonly WorkerConstructor: IConstructor<Worker>,
       public readonly workerCount: number = navigator?.hardwareConcurrency || 4
    ) {}
 

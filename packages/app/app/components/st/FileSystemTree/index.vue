@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { FileSystemItem } from './type';
+import type { IFileSystemItem } from './type';
 
 const props = defineProps<{
-   directory: FileSystemItem[];
+   directory: IFileSystemItem[];
    currentFilePath?: string;
    deep?: number;
    defaultOpened?: boolean;
@@ -17,7 +17,7 @@ const sortedDirectory = computed(() => {
 });
 
 const emits = defineEmits(['file-or-folder-click']);
-const handleFileOrFolderClick = (fileOrFolder: FileSystemItem) => {
+const handleFileOrFolderClick = (fileOrFolder: IFileSystemItem) => {
    emits('file-or-folder-click', fileOrFolder);
 };
 </script>

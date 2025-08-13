@@ -11,12 +11,67 @@ export default defineNuxtConfig({
       ssr: {
          noExternal: ['@prisma/client'],
       },
+      worker: {
+         format: 'es',
+      },
+      optimizeDeps: {
+         exclude: ['monaco-editor'],
+      },
+      server: {
+         headers: {
+            'Cross-Origin-Opener-Policy': 'same-origin',
+            'Cross-Origin-Embedder-Policy': 'require-corp',
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+            'Access-Control-Allow-Origin': '*',
+         },
+      },
+   },
+
+   routeRules: {
+      '/**': {
+         security: {
+            headers: {
+               contentSecurityPolicy: {
+                  'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+               },
+            },
+         },
+      },
+      '/challenge/**': {
+         security: {
+            headers: {
+               crossOriginOpenerPolicy: 'same-origin',
+               crossOriginEmbedderPolicy: 'require-corp',
+            },
+         },
+      },
+      '/_nuxt/**': {
+         security: {
+            headers: {
+               crossOriginOpenerPolicy: 'same-origin',
+               crossOriginEmbedderPolicy: 'require-corp',
+               crossOriginResourcePolicy: 'cross-origin',
+            },
+         },
+      },
+      '/_nuxt/**/*.js': {
+         security: {
+            headers: {
+               crossOriginResourcePolicy: 'cross-origin',
+            },
+         },
+      },
    },
 
    app: {
       pageTransition: {
          name: 'page',
          mode: 'out-in',
+      },
+      head: {
+         meta: [
+            { name: 'referrer', content: 'origin-when-cross-origin' }, // 或 'unsafe-url'
+         ],
       },
    },
 
@@ -26,7 +81,13 @@ export default defineNuxtConfig({
       installStudio: false,
    },
 
-   modules: ['@prisma/nuxt', 'shadcn-nuxt', '@pinia/nuxt', '@vueuse/nuxt'],
+   modules: [
+      '@prisma/nuxt',
+      'shadcn-nuxt',
+      '@pinia/nuxt',
+      '@vueuse/nuxt',
+      'nuxt-security',
+   ],
 
    nitro: {
       externals: {

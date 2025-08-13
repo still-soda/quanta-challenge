@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { IDirectory } from '~/components/st/DropUploader/walk-file-list';
-import type { FileSystemItem } from '~/components/st/FileSystemTree/type';
+import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 
 const props = defineProps<{
    placeholder?: string;
@@ -8,7 +8,7 @@ const props = defineProps<{
 }>();
 
 const directory = ref<IDirectory>();
-const fileSystemItems = ref<FileSystemItem[]>([]);
+const fileSystemItems = ref<IFileSystemItem[]>([]);
 const projectFs = defineModel<Record<string, string>>('projectFs');
 
 const walkDirectory = () => {
@@ -17,7 +17,7 @@ const walkDirectory = () => {
       return;
    }
    const project: Record<string, string> = {};
-   const flatDirectory = (dir: IDirectory, root = ''): FileSystemItem[] => {
+   const flatDirectory = (dir: IDirectory, root = ''): IFileSystemItem[] => {
       const isFolder = (value: any): value is IDirectory => {
          return typeof value !== 'string' && value !== null;
       };
@@ -47,7 +47,7 @@ const previewCode = ref('');
 const previewCodeLang = ref('plaintext');
 const currentFilePath = ref<string>();
 const previewImageBase64 = ref<string>();
-const handleFileOrFolderClick = (target: FileSystemItem) => {
+const handleFileOrFolderClick = (target: IFileSystemItem) => {
    if (target.type === 'folder') return;
    if (target.content?.startsWith('data:image')) {
       previewImageBase64.value = target.content;
@@ -72,15 +72,15 @@ const handleRemoveFile = () => {
 const restoreFileSystemItem = () => {
    if (!projectFs.value) return;
 
-   const filePathsMap = new Map<string, FileSystemItem>();
-   const rootItems: FileSystemItem[] = [];
+   const filePathsMap = new Map<string, IFileSystemItem>();
+   const rootItems: IFileSystemItem[] = [];
 
    // 首先创建所有文件节点
    Object.entries(projectFs.value).forEach(([path, content]) => {
       const segments = path.split('/').filter(Boolean); // 移除空字符串
       const fileName = segments[segments.length - 1] ?? '';
 
-      const fileItem: FileSystemItem = {
+      const fileItem: IFileSystemItem = {
          name: fileName,
          path: segments.join('/'),
          type: 'file',
@@ -102,7 +102,7 @@ const restoreFileSystemItem = () => {
          if (!folderPaths.has(folderPath) && !filePathsMap.has(folderPath)) {
             folderPaths.add(folderPath);
             const folderName = segments[i - 1] ?? '';
-            const folderItem: FileSystemItem = {
+            const folderItem: IFileSystemItem = {
                name: folderName,
                path: folderPath,
                type: 'folder',
