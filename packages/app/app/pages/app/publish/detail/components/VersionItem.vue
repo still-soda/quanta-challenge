@@ -1,4 +1,5 @@
 <script setup lang="tsx">
+import { CheckSmall } from '@icon-park/vue-next';
 import { AuditFail, AuditPending, AuditSuccess } from './AuditStatus';
 import type { VersionsType } from './VersionPreviewDrawer.vue';
 import dayjs from 'dayjs';
@@ -38,7 +39,7 @@ const AuditStatus = () => {
                gap="0.25rem"
                align="center"
                class="text-secondary px-2 py-1 rounded-sm bg-secondary/20">
-               <StIcon name="CheckSmall" size="0.75rem" thickness="1px" />
+               <CheckSmall size="0.75rem" thickness="1px" />
                <div class="st-font-tooltip">当前版本</div>
             </StSpace>
             <div class="text-sm text-accent-300">{{ version.title }}</div>

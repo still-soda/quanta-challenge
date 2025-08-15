@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { StSpace } from '#components';
+import { FingerprintThree } from '@icon-park/vue-next';
 
 const error = useError();
 
@@ -32,7 +33,7 @@ const message = computed(() => {
          </div>
          <NuxtLink to="/app/dashboard" class="animate-pulse">
             <StSpace direction="vertical" gap="0.75rem" align="center">
-               <StIcon name="FingerprintThree" size="2rem" />
+               <FingerprintThree size="2rem" />
                <div class="st-font-caption text-accent-200">点击返回首页</div>
             </StSpace>
          </NuxtLink>

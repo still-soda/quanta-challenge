@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DeleteFour } from '@icon-park/vue-next';
 import type { IDirectory } from '~/components/st/DropUploader/walk-file-list';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 
@@ -174,7 +175,7 @@ restoreFileSystemItem();
                @click="handleRemoveFile"
                class="!rounded-[0.25rem] !bg-transparent border !border-error h-[1.875rem] w-full px-[1.25rem]">
                <StSpace gap="0.375rem" align="center" class="text-error">
-                  <StIcon name="DeleteFour" />
+                  <DeleteFour />
                   <span class="st-font-caption">取消选择</span>
                </StSpace>
             </StButton>

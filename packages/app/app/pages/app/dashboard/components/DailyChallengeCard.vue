@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Calendar } from '@icon-park/vue-next';
 import DailyChallengeSkeleton from './skeleton/DailyChallengeSkeleton.vue';
 </script>
 
 <template>
-   <StCard class="h-full" icon="Calendar" title="每日一题">
+   <StCard :icon="Calendar" class="h-full" title="每日一题">
       <StSpace class="w-full h-full mt-5">
          <StSpace direction="vertical" gap="1rem" class="w-full h-full">
             <StDateIndicator class="w-full" />

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Mail } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegisterAuthn } from '~/composables/auth/use-register-authn';
@@ -42,16 +43,16 @@ const rules: IRule[] = [
                outer-class="bg-accent-700"
                placeholder="请输入邮箱">
                <template #prefix>
-                  <StIcon class="text-2xl" name="Mail" />
+                  <Mail class="text-2xl" />
                </template>
             </StInput>
          </StFormItem>
          <StButton
             @click.prevent="handleRegister"
             :loading="loading"
-            class="w-full"
-            >注册</StButton
-         >
+            class="w-full">
+            注册
+         </StButton>
       </StForm>
    </div>
 </template>

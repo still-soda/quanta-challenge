@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Down, PreviewClose, PreviewOpen, Up } from '@icon-park/vue-next';
 import type { FormItemStatus } from '../Form/type';
 
 const props = defineProps<{
@@ -41,8 +42,8 @@ const decreaseValue = () => {
          v-if="password"
          class="text-2xl hover:cursor-pointer"
          @click="visible = !visible">
-         <StIcon v-if="visible" name="PreviewClose" />
-         <StIcon v-else name="PreviewOpen" />
+         <PreviewClose v-if="visible" />
+         <PreviewOpen v-else />
       </div>
       <div
          v-if="$attrs.type === 'number'"
@@ -50,12 +51,12 @@ const decreaseValue = () => {
          <div
             @click.prevent="increaseValue"
             class="hover:cursor-pointer hover:bg-accent-600 px-1 rounded-sm transition-colors">
-            <StIcon name="Up" />
+            <Up />
          </div>
          <div
             @click.prevent="decreaseValue"
             class="hover:cursor-pointer hover:bg-accent-600 px-1 rounded-sm transition-colors">
-            <StIcon name="Down" />
+            <Down />
          </div>
       </div>
    </div>

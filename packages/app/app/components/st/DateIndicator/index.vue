@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Left, Right } from '@icon-park/vue-next';
 import type { IDateIndicatorProps } from './type';
 
 const recent7days = computed(() => {
@@ -22,8 +23,7 @@ const recent7days = computed(() => {
 
 <template>
    <div class="flex items-center">
-      <StIcon
-         name="Left"
+      <Left
          class="text-accent-400 hover:cursor-pointer hover:text-accent-300 transition-colors" />
       <div class="flex flex-1 items-center justify-between">
          <StDateIndicatorItem
@@ -34,8 +34,7 @@ const recent7days = computed(() => {
             :triggered="day.triggered"
             :checked="day.checked" />
       </div>
-      <StIcon
-         name="Right"
+      <Right
          class="text-accent-400 hover:cursor-pointer hover:text-accent-300 transition-colors" />
    </div>
 </template>

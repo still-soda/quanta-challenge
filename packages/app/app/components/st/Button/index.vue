@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { LoadingFour } from '@icon-park/vue-next';
+
 const props = defineProps<{
    size?: 'default' | 'sm' | 'lg';
    theme?: 'primary' | 'secondary' | 'danger' | 'success';
@@ -75,10 +77,7 @@ const borderedClass = computed(() => {
             '!opacity-50 !cursor-not-allowed': disabled,
          },
       ]">
-      <StIcon
-         v-if="props.loading"
-         name="LoadingFour"
-         class="mr-2 animate-spin text-lg" />
+      <LoadingFour v-if="props.loading" class="mr-2 animate-spin text-lg" />
       <slot></slot>
    </component>
 </template>

@@ -20,6 +20,7 @@ if (!id) {
 const { $trpc } = useNuxtApp();
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
 const fsTree = ref<IFileSystemItem[]>();
+const mounted = Promise.withResolvers<void>();
 const getProject = async () => {
    if (!id || isNaN(Number(id))) {
       throw new Error('Problem ID is required');
@@ -39,7 +40,13 @@ const getProject = async () => {
       ({ value }) => value.content
    );
    fsTree.value = buildFileSystemTree(contentMap);
-   mountFileSystem(contentMap);
+   for (const item of fsTree.value[0]?.children ?? []) {
+      if (item.type === 'file') {
+         selectedFilePath.value = item.path;
+         break;
+      }
+   }
+   mountFileSystem(contentMap).then(mounted.resolve);
    return result;
 };
 onMounted(getProject);
@@ -72,11 +79,71 @@ onMounted(() => {
    });
 });
 
-const { mountFileSystem, runCommand } = useWebContainer();
+const { mountFileSystem, runCommand, getInstance, exposeServer } =
+   useWebContainer({
+      workdirName: 'workspace',
+   });
 const terminal = useTemplateRef('terminal');
-runCommand('sh').then((process) => {
-   terminal.value?.attachProcess(process);
+
+const run = async () => {
+   const installProcess = await runCommand('yarn --cwd ./project install');
+   await mounted.promise;
+   await terminal.value!.attachProcess(installProcess);
+   await installProcess.exit;
+
+   await terminal.value?.writeTerminal('\n');
+   appendNodeModulesFolder();
+
+   const shell = await runCommand('sh');
+   const { writer } = await terminal.value!.attachProcess(shell);
+   writer.write('cd ./project && yarn dev\n');
+};
+run();
+
+const appendNodeModulesFolder = () => {
+   if (!fsTree.value) return;
+   fsTree.value[0]!.children?.unshift({
+      name: 'node_modules',
+      path: '/project/node_modules',
+      type: 'folder',
+      suspense: true,
+   });
+};
+
+const dirLoader = async (dirPath: string) => {
+   const webContainer = await getInstance();
+   const dir = await webContainer.fs.readdir(dirPath, { withFileTypes: true });
+   return dir.map((item) => ({
+      name: item.name,
+      type: (item.isDirectory() ? 'folder' : 'file') as 'file' | 'folder',
+      path: `${dirPath}/${item.name}`,
+   }));
+};
+
+const fileLoader = async (filePath: string) => {
+   const webContainer = await getInstance();
+   const content = await webContainer.fs.readFile(filePath, 'utf-8');
+   if (pathContentMap.value) {
+      pathContentMap.value[filePath] = { content, vid: '' };
+   }
+   return content;
+};
+
+const previewUrl = ref<string>();
+const hostName = ref<string>();
+onMounted(() => {
+   watch(exposeServer, (server) => {
+      if (!server) return;
+      previewUrl.value = server.url;
+      hostName.value = `localhost:${server.port}`;
+   });
 });
+
+// getInstance().then((instance) => {
+//    instance.fs.watch('/project', { recursive: true }, (event, filename) => {
+//       console.log('File system change detected:', event, filename);
+//    });
+// });
 </script>
 
 <template>
@@ -84,9 +151,11 @@ runCommand('sh').then((process) => {
       <StSplitPanel
          direction="horizontal"
          class="size-full"
-         :start-percent="18">
+         :start-percent="23">
          <template #start>
             <FileManagerPanel
+               :dir-loader="dirLoader"
+               :file-loader="fileLoader"
                :fsTree="fsTree"
                v-model:selected-path="selectedPath" />
          </template>
@@ -112,7 +181,9 @@ runCommand('sh').then((process) => {
                   </StSplitPanel>
                </template>
                <template #end>
-                  <PreviewPanel />
+                  <PreviewPanel
+                     :preview-url="previewUrl"
+                     :host-name="hostName" />
                </template>
             </StSplitPanel>
          </template>

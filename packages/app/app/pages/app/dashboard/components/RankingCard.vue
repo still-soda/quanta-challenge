@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Ranking } from '@icon-park/vue-next';
 import MoreOptions from './MoreOptions.vue';
 </script>
 
 <template>
-   <StCard icon="Ranking" title="我的排名" class="w-full h-full">
+   <StCard :icon="Ranking" title="我的排名" class="w-full h-full">
       <template #header-right>
          <MoreOptions />
       </template>

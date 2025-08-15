@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Remind, Search, TableReport } from '@icon-park/vue-next';
 import useAuthStore from '~/stores/auth-store';
 
 const authStore = useAuthStore();
@@ -17,16 +18,16 @@ const handleMyPublish = () => {
             <template #left>
                <StSpace gap="0.75rem" align="center">
                   <StHeaderButton text="搜索">
-                     <StIcon name="Search" class="text-[1.25rem]" />
+                     <Search class="text-[1.25rem]" />
                   </StHeaderButton>
                   <StHeaderButton text="通知">
-                     <StIcon name="Remind" class="text-[1.25rem]" />
+                     <Remind class="text-[1.25rem]" />
                   </StHeaderButton>
                   <StHeaderButton
                      v-if="isAdmin"
                      @click="handleMyPublish"
                      text="我的发布">
-                     <StIcon name="TableReport" class="text-[1.25rem]" />
+                     <TableReport class="text-[1.25rem]" />
                   </StHeaderButton>
                </StSpace>
             </template>

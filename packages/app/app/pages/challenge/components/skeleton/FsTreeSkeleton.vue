@@ -1,5 +1,3 @@
-<script setup lang="ts"></script>
-
 <template>
    <StSpace fill direction="vertical" gap="0.5rem">
       <StSkeletonItem class="h-5 w-[5.5rem]" />

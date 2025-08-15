@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Code } from '@icon-park/vue-next';
 import LazyScriptEditingDrawer from './ScriptEditingDrawer.vue';
 
 const ready = ref(false);
@@ -13,7 +14,8 @@ const script = defineModel<string>('script', { default: '' });
       v-model:script="script" />
    <div
       class="p-[0.375rem] pb-4 border border-accent-300 rounded-lg flex flex-col items-center gap-3">
-      <div class="p-4 rounded-[0.25rem] bg-accent-600 w-full">
+      <div
+         class="p-4 rounded-[0.25rem] bg-accent-600 w-full max-h-[60vh] overflow-auto">
          <StCodePreview
             v-show="ready && script"
             @ready="ready = true"
@@ -27,7 +29,7 @@ const script = defineModel<string>('script', { default: '' });
       <div
          @click="isEditing = true"
          class="flex gap-2 text-accent-100 font-bold items-center hover:text-primary transition-colors hover:cursor-pointer">
-         <StIcon name="Code" class="text-[1.25rem]" />
+         <Code class="text-[1.25rem]" />
          点击进入编辑
       </div>
    </div>

@@ -3,6 +3,7 @@ import { useEmailLogin } from '~/composables/auth/use-login';
 import type { IRule } from '../../../components/st/Form/type';
 import * as clientAuthn from '@simplewebauthn/browser';
 import z from 'zod';
+import { Fingerprint, Lock, Mail } from '@icon-park/vue-next';
 
 const { formdata, formKey, loading, handleLogin, onLoginSuccess } =
    useEmailLogin();
@@ -61,7 +62,7 @@ const gotoWebAuthnLogin = () => {
                   outer-class="bg-accent-700"
                   placeholder="请输入邮箱">
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Mail" />
+                     <Mail class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -74,7 +75,7 @@ const gotoWebAuthnLogin = () => {
                   name="password"
                   password>
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Lock" />
+                     <Lock class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -87,7 +88,7 @@ const gotoWebAuthnLogin = () => {
                @click.self="gotoWebAuthnLogin"
                class="!bg-accent-600 !text-accent-200 w-full">
                <NuxtLink to="/auth/login/authn" class="flex gap-2 items-center">
-                  <StIcon name="Fingerprint" class="text-xl text-[#9D9D9D]" />
+                  <Fingerprint class="text-xl text-[#9D9D9D]" />
                   生物认证
                </NuxtLink>
             </StButton>

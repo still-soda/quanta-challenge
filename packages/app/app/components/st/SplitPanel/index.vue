@@ -65,6 +65,7 @@ const handleResize = (event: MouseEvent) => {
       <div
          :style="{
             flexBasis: `calc(${startPercentage}% - .5rem)`,
+            pointerEvents: isDragging ? 'none' : 'auto',
          }"
          class="flex-shrink-0">
          <slot name="start"></slot>
@@ -91,6 +92,7 @@ const handleResize = (event: MouseEvent) => {
       <div
          :style="{
             flexBasis: `calc(${endPercentage}% - .25rem)`,
+            pointerEvents: isDragging ? 'none' : 'auto',
          }"
          class="flex-shrink-0">
          <slot name="end"></slot>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CheckOne, CloseOne } from '@icon-park/vue-next';
 import type { JudgeResults } from './type';
 
 const props = defineProps<{
@@ -20,8 +21,8 @@ const textColorClass = computed(() => {
 const bgColorClass = computed(() => {
    return props.data.status === 'pass' ? 'bg-success' : 'bg-error';
 });
-const iconName = computed(() => {
-   return props.data.status === 'pass' ? 'CheckOne' : 'CloseOne';
+const icon = computed(() => {
+   return props.data.status === 'pass' ? CheckOne : CloseOne;
 });
 </script>
 
@@ -33,7 +34,7 @@ const iconName = computed(() => {
          align="center"
          gap="0.5rem"
          class="absolute">
-         <StIcon :name="iconName" :class="textColorClass" />
+         <Component :is="icon" :class="textColorClass" />
          <div
             v-if="!props.isLast"
             :class="['w-[1px] flex-1 opacity-50', bgColorClass]"></div>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { useMonacoEditor } from '~/composables/challenge/use-monaco-editor';
 import Tab from './Tab.vue';
+import { MoreOne } from '@icon-park/vue-next';
+import TabSkeleton from './skeleton/TabSkeleton.vue';
+import EditorSkeleton from './skeleton/EditorSkeleton.vue';
 
 const currentFilePath = defineModel<string>('currentFilePath');
 
@@ -39,7 +42,9 @@ const props = defineProps<{
 
 const { containerKey, createModels, onEditorInstanceReady, onModelChange } =
    useMonacoEditor();
+const hasEditorReady = ref(false);
 onEditorInstanceReady(() => {
+   hasEditorReady.value = true;
    const disposeWatcher = watch(
       () => props.defaultFs,
       (fs) => {
@@ -70,6 +75,12 @@ const setModel = (path: string) => {
       if (model) {
          instance.setModel(model);
          currentFilePath.value = path;
+      } else {
+         const content = props.defaultFs?.[path]?.content;
+         if (!content) return;
+         instance.setModel(
+            monaco.editor.createModel(content, void 0, monaco.Uri.file(path))
+         );
       }
    });
 };
@@ -88,25 +99,33 @@ defineExpose({ setModel });
             fill-x
             class="h-[2rem] relative overflow-x-auto mini-scrollbar">
             <StSpace fill-x gap="0.5rem" class="absolute left-0 top-0 p-1">
-               <Tab
-                  v-for="item in openedTabs"
-                  :key="item.path"
-                  :content="item.name"
-                  :class="{
-                     '!bg-primary !text-white': currentFilePath === item.path,
-                  }"
-                  @click="onClickTab(item)"
-                  @remove="onCloseTab(item)" />
+               <StSkeleton :loading="!hasEditorReady">
+                  <template #loading>
+                     <TabSkeleton :count="3" />
+                  </template>
+                  <Tab
+                     v-for="item in openedTabs"
+                     :key="item.path"
+                     :content="item.name"
+                     :class="{
+                        '!bg-primary !text-white':
+                           currentFilePath === item.path,
+                     }"
+                     @click="onClickTab(item)"
+                     @remove="onCloseTab(item)" />
+               </StSkeleton>
             </StSpace>
          </StSpace>
          <StSpace
             center
             class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-200 bg-accent-500">
-            <StIcon name="MoreOne" />
+            <MoreOne />
          </StSpace>
       </StSpace>
       <StSpace fill class="relative bg-[#1C1C1C] border border-[#1F1F1F]">
+         <EditorSkeleton v-if="!hasEditorReady" />
          <main
+            v-show="hasEditorReady"
             :ref="containerKey"
             class="absolute top-0 left-0 size-full"></main>
       </StSpace>

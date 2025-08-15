@@ -1,11 +1,20 @@
 import type { editor } from 'monaco-editor';
-import type { BundledTheme } from 'shiki';
+import type { ThemeRegistrationRaw } from 'shiki';
+import ayuDarkTheme from 'shiki/themes/ayu-dark.mjs';
 
-export const editorTheme: BundledTheme = 'ayu-dark';
+import langVue from 'shiki/langs/vue.mjs';
+import langTsx from 'shiki/langs/tsx.mjs';
+import langJsx from 'shiki/langs/jsx.mjs';
+
+export const langRegistrations = [langVue, langTsx, langJsx];
+
+export const langs = ['javascript', 'typescript', 'html', 'css', 'json', 'vue'];
+
+export const editorThemeRegistration: ThemeRegistrationRaw = ayuDarkTheme;
 
 export const defaultEditorOptions: editor.IStandaloneEditorConstructionOptions =
    {
-      theme: editorTheme,
+      theme: 'ayu-dark',
       automaticLayout: true,
       fontSize: 14,
       autoClosingBrackets: 'languageDefined',

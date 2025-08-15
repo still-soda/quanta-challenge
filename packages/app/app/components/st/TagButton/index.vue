@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import * as Icons from '@icon-park/vue-next';
 import Color from 'color';
+import type { DefineComponent } from 'vue';
 
 const props = defineProps<{
-   iconName?: keyof typeof Icons;
+   icon?: DefineComponent;
    tag: {
       name: string;
       color?: string | null;
@@ -58,7 +58,7 @@ const textColorClass = computed(() => {
          }"
          class="size-7 m-0.5"
          :class="{ 'bg-blend-multiply isolate': props.selected }" />
-      <StIcon v-else-if="iconName" size="1.5rem" :name="iconName" />
+      <Component v-else-if="icon" size="1.5rem" :is="icon" />
       <span class="font-family-manrope font-bold"> {{ tag.name }}</span>
    </StSpace>
 </template>

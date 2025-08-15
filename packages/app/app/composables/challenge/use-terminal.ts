@@ -33,18 +33,31 @@ export const useTerminal = () => {
    const attachProcess = async (process: WebContainerProcess) => {
       const { terminal } = await getInstance();
       const writer = process.input.getWriter();
+      const currentChunk = ref<string>();
+      // terminal.clear();
 
-      terminal.onData((data) => {
+      const dataListener = terminal.onData((data) => {
          writer.write(data);
       });
 
       process.output.pipeTo(
          new WritableStream({
             write(chunk) {
+               currentChunk.value = chunk;
                terminal.write(chunk);
             },
          })
       );
+
+      process.exit.then(() => {
+         dataListener.dispose();
+         writer.close();
+      });
+
+      return {
+         writer,
+         chunk: currentChunk,
+      };
    };
 
    onMounted(async () => {

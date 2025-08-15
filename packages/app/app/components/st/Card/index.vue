@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import * as Icons from '@icon-park/vue-next';
+import type { DefineComponent } from 'vue';
 
 defineProps<{
-   icon?: keyof typeof Icons;
+   icon?: DefineComponent;
    title?: string;
 }>();
 </script>
@@ -14,7 +14,10 @@ defineProps<{
          <StSpace justify="between" align="center" class="h-[1.75rem]">
             <slot name="header-left">
                <StSpace gap="0.5rem">
-                  <StIcon v-if="icon" :name="icon" class="text-[1.5rem]" />
+                  <Component
+                     v-if="icon"
+                     :is="icon"
+                     class="text-[1.5rem]"></Component>
                   <span class="font-bold">{{ title }}</span>
                </StSpace>
             </slot>

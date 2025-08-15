@@ -1,62 +1,26 @@
 <script setup lang="ts">
-import { createHighlighter, type Highlighter } from 'shiki';
 import { useDebounceFn } from '@vueuse/core';
+import { useShiki } from '~/composables/utils/use-shiki';
+import langVue from 'shiki/langs/vue.mjs';
+import langTsx from 'shiki/langs/tsx.mjs';
+import langJsx from 'shiki/langs/jsx.mjs';
 
 const props = defineProps<{
    code: string;
    language?: string;
 }>();
 
-const highlighter = ref<Highlighter>();
-const hasReady = ref(false);
-
 const emits = defineEmits(['ready']);
 
-const init = async () => {
-   try {
-      highlighter.value = await createHighlighter({
-         themes: ['github-dark'],
-         langs: [
-            'typescript',
-            'javascript',
-            'vue',
-            'html',
-            'css',
-            'yaml',
-            'json',
-         ],
-      });
-      hasReady.value = true;
-      rehighlightCode();
-   } catch (error) {
-      console.error('Failed to initialize highlighter:', error);
-   }
-};
-onMounted(init);
-
-const highlightHtml = ref('');
-const rehighlightCode = async () => {
-   if (!hasReady.value) return;
-   if (!highlighter.value) {
-      await init();
-      if (!highlighter.value) return;
-   }
-   highlightHtml.value = highlighter.value.codeToHtml(props.code, {
-      lang: props.language || 'typescript',
-      theme: 'github-dark',
-   });
-   emits('ready');
-};
-
-onUnmounted(() => {
-   highlighter.value?.dispose();
-   highlighter.value = void 0;
+const { highlightHtml, highlightCode, onReady } = useShiki({
+   languages: [langVue, langTsx, langJsx],
 });
+onReady(() => emits('ready'));
 
-const debouncedRehighlight = useDebounceFn(rehighlightCode, 50);
+const debouncedHighlightCode = useDebounceFn(highlightCode, 50);
 watch(
    () => props.code,
-   () => debouncedRehighlight(),
+   (code) => debouncedHighlightCode(code, props.language),
    { immediate: true }
 );
 </script>

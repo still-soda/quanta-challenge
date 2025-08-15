@@ -10,6 +10,14 @@ import dayjs from 'dayjs';
 import { NotPassed, Published, Unpublished } from './components/PublishStatus';
 import VersionPreviewDrawer from './components/VersionPreviewDrawer.vue';
 import SidePopper from './components/SidePopper.vue';
+import {
+   Edit,
+   Flag,
+   HamburgerButton,
+   Lock,
+   Return,
+   Unlock,
+} from '@icon-park/vue-next';
 
 const route = useRoute();
 const id = route.params.id as string;
@@ -147,7 +155,7 @@ const handleSetCurrentProblem = async () => {
 };
 
 const switchButtonIcon = computed(() => {
-   return detail.value?.status === 'published' ? 'Lock' : 'Unlock';
+   return detail.value?.status === 'published' ? Lock : Unlock;
 });
 const showSetCurrentButton = computed(() => {
    return Number(id) !== detail.value?.BaseProblem.currentPid;
@@ -185,13 +193,13 @@ const handlerViewVersion = () => {
             <SidePopper content="审核记录">
                <FixedButton
                   @click="handlerViewVersion"
-                  icon="HamburgerButton" />
+                  :icon="HamburgerButton" />
             </SidePopper>
             <SidePopper v-if="showSetCurrentButton" content="设为当前版本">
                <FixedButton
                   @click="handleSetCurrentProblem"
                   :loading="onSetCurrentProblem"
-                  icon="Flag" />
+                  :icon="Flag" />
             </SidePopper>
             <SidePopper
                v-if="showSwitchButton"
@@ -202,10 +210,10 @@ const handlerViewVersion = () => {
                   :icon="switchButtonIcon" />
             </SidePopper>
             <SidePopper content="编辑">
-               <FixedButton @click="handleEdit" icon="Edit" />
+               <FixedButton @click="handleEdit" :icon="Edit" />
             </SidePopper>
             <SidePopper content="返回">
-               <FixedButton @click="handleReturn" icon="Return" />
+               <FixedButton @click="handleReturn" :icon="Return" />
             </SidePopper>
          </StSpace>
       </StFixed>

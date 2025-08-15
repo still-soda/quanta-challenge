@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import * as Icons from '@icon-park/vue-next';
 import { type IDirectory, walkFileList } from './walk-file-list';
 import { ignores } from './default-ignore';
+import type { DefineComponent } from 'vue';
+import { InboxUploadR } from '@icon-park/vue-next';
 
 const props = defineProps<{
-   icon?: keyof typeof Icons;
+   icon?: DefineComponent;
    placeholder?: string;
    accept?: string;
    multiple?: boolean;
@@ -68,8 +69,9 @@ const onFileSelected = (event: Event) => {
          class="hidden" />
       <div
          class="flex flex-col justify-center items-center gap-3 text-accent-200">
-         <StIcon
-            :name="props.icon ?? 'InboxUploadR'"
+         <slot name="icon"></slot>
+         <Component
+            :is="props.icon ?? InboxUploadR"
             class="font-light"
             size="48px"
             stroke-width="2" />

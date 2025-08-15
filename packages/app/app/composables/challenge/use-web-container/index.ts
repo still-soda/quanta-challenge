@@ -5,11 +5,18 @@ import { convertToPathContentMap } from './convert-to-path-content-map';
 type WebContainerApi = typeof import('@webcontainer/api').WebContainer;
 let instance: WebContainer | null = null;
 
-const initWebContainer = async (WebContainer: WebContainerApi) => {
-   instance = await WebContainer.boot();
+const initWebContainer = async (
+   WebContainer: WebContainerApi,
+   options?: IUseWebContainerOptions
+) => {
+   instance = await WebContainer.boot({
+      workdirName: options?.workdirName,
+   });
 };
 
-export interface IUseWebContainerOptions {}
+export interface IUseWebContainerOptions {
+   workdirName?: string;
+}
 
 type WebContainerReadyCallback = (wc: WebContainer) => void;
 
@@ -99,16 +106,16 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
       return await instance.spawn(command, args);
    };
 
-   const serverExpose = ref<{ port: number; url: string }>();
+   const exposeServer = ref<{ port: number; url: string }>();
    const error = ref<{ message: string }>();
-   const openPort = ref<number>();
+   const openedPort = ref<number>();
    const closePort = ref<number>();
 
    onMounted(async () => {
       const { WebContainer } = await import('@webcontainer/api');
 
       if (!instance) {
-         await initWebContainer(WebContainer);
+         await initWebContainer(WebContainer, options);
          if (!instance) {
             throw new Error('WebContainer 初始化失败');
          }
@@ -116,7 +123,7 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
       }
 
       instance.on('server-ready', (port, url) => {
-         serverExpose.value = { port, url };
+         exposeServer.value = { port, url };
       });
 
       instance.on('error', (err) => {
@@ -125,7 +132,7 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
 
       instance.on('port', (port, type) => {
          if (type === 'open') {
-            openPort.value = port;
+            openedPort.value = port;
          } else {
             closePort.value = port;
          }
@@ -140,8 +147,8 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
       writeFile,
       removeFile,
       runCommand,
-      serverExpose,
-      openPort,
+      exposeServer,
+      openedPort,
       closePort,
       error,
    };

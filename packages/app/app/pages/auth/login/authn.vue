@@ -2,6 +2,7 @@
 import { useWebAuthnLogin } from '~/composables/auth/use-login-authn';
 import type { IRule } from '../../../components/st/Form/type';
 import z from 'zod';
+import { Key, Mail } from '@icon-park/vue-next';
 
 const {
    formdata,
@@ -59,7 +60,7 @@ const gotoPasswordLogin = () => {
                   outer-class="bg-accent-700"
                   placeholder="请输入邮箱">
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Mail" />
+                     <Mail class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -73,7 +74,7 @@ const gotoPasswordLogin = () => {
                @click.self="gotoPasswordLogin"
                class="!bg-accent-600 !text-accent-200 w-full">
                <NuxtLink to="/auth/login" class="flex gap-2 items-center">
-                  <StIcon name="Key" class="text-xl text-[#9D9D9D]" />
+                  <Key class="text-xl text-[#9D9D9D]" />
                   密码登录
                </NuxtLink>
             </StButton>

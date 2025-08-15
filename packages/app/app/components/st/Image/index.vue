@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ErrorPicture } from '@icon-park/vue-next';
+
 const props = defineProps<{
    src: string;
    alt?: string;
@@ -39,7 +41,7 @@ const style = computed(() => {
          center
          class="rounded-lg bg-accent-500 text-accent-400"
          :style="style">
-         <StIcon name="ErrorPicture" size="2rem" />
+         <ErrorPicture size="2rem" />
       </StSpace>
    </slot>
 </template>

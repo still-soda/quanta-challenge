@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { BookOne, SaveOne } from '@icon-park/vue-next';
 import { useSimpleEditor } from '~/composables/utils/use-simple-editor';
 
 const script = defineModel<string>('script');
@@ -30,12 +31,14 @@ onEditorContentChanged((value) => {
                <StButton
                   class="py-[0.375rem] px-[0.75rem] text-accent-100 !bg-accent-600">
                   <div class="flex gap-2 items-center">
-                     <StIcon name="BookOne" class="text-[1.25rem]" />
+                     <BookOne class="text-[1.25rem]" />
                      <span class="font-light">查看文档</span>
                   </div>
                </StButton>
             </StSpace>
-            <main :ref="containerKey" class="flex flex-1 h-full w-full"></main>
+            <main
+               :ref="containerKey"
+               class="flex flex-1 size-full bg-simple-editor-background"></main>
          </StSpace>
          <!-- Bottom -->
          <StSpace justify="end" class="p-4 w-full">
@@ -43,7 +46,7 @@ onEditorContentChanged((value) => {
                @click="opened = false"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                <div class="flex gap-2 items-center">
-                  <StIcon name="SaveOne" class="text-[1.5rem]" />
+                  <SaveOne class="text-[1.5rem]" />
                   <span>保存</span>
                </div>
             </StButton>

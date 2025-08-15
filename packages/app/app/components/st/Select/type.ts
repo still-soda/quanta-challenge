@@ -1,10 +1,10 @@
-import * as Icons from '@icon-park/vue-next';
+import type { DefineComponent } from 'vue';
 
 export interface ISelectOption {
    label: string;
    value: any;
    disabled?: boolean;
-   icon?: keyof typeof Icons;
+   icon?: DefineComponent;
    imageUrl?: string;
 }
 

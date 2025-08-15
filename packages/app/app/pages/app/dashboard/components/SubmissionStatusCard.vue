@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Fire } from '@icon-park/vue-next';
+
 const card = useTemplateRef('card');
 
 const width = ref(0);
@@ -14,8 +16,8 @@ onMounted(() => {
 
 <template>
    <StCard
+      :icon="Fire"
       ref="card"
-      icon="Fire"
       title="提交情况"
       class="w-full !h-fit mt-4 relative overflow-clip">
       <div

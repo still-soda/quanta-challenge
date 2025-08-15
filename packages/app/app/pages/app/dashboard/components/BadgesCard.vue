@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { FiveStarBadge } from '@icon-park/vue-next';
 import MoreOptions from './MoreOptions.vue';
 </script>
 
 <template>
    <StCard
-      icon="FiveStarBadge"
+      :icon="FiveStarBadge"
       title="徽章墙"
       class="w-full h-full !pb-0 overflow-hidden">
       <template #header-right>

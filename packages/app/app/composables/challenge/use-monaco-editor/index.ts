@@ -1,18 +1,23 @@
 import type { editor } from 'monaco-editor';
-import { createHighlighter } from 'shiki';
+import { createHighlighterCoreSync, createJavaScriptRegexEngine } from 'shiki';
 import { shikiToMonaco } from '@shikijs/monaco';
 import { registerLanguageWorkers } from './workers';
 import * as editorActions from './editor-actions';
 import { useEventEmitter } from '~/composables/utils/use-event-emitter';
-import { defaultEditorOptions, editorTheme } from './config';
+import {
+   defaultEditorOptions,
+   editorThemeRegistration,
+   langRegistrations,
+   langs,
+} from './config';
 
 export type MonacoEditor = typeof import('monaco-editor');
 
-const attachHighligher = async (monaco: MonacoEditor) => {
-   const langs = ['javascript', 'typescript', 'html', 'css', 'json', 'vue'];
-   const highlighter = await createHighlighter({
-      themes: [editorTheme],
-      langs,
+const registerHighligher = (monaco: MonacoEditor) => {
+   const highlighter = createHighlighterCoreSync({
+      themes: [editorThemeRegistration],
+      langs: langRegistrations,
+      engine: createJavaScriptRegexEngine(),
    });
    langs.forEach((lang) => {
       monaco.languages.register({ id: lang });
@@ -140,7 +145,7 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       monacoReadyCallbacks.forEach((callback) => callback(monaco!));
 
       // 附加高亮器
-      await attachHighligher(monaco);
+      registerHighligher(monaco);
 
       // 创建编辑器实例
       const instance = monaco.editor.create(container.value, {

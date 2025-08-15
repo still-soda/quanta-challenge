@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SaveOne } from '@icon-park/vue-next';
 import { useMarkdown } from '~/composables/utils/use-markdown';
 import { useSimpleEditor } from '~/composables/utils/use-simple-editor';
 
@@ -43,7 +44,8 @@ update(script.value ?? '');
                direction="horizontal"
                class="max-h-[calc(100vh-13rem)]">
                <template #start>
-                  <div class="h-full w-full relative">
+                  <div
+                     class="h-full w-full relative bg-simple-editor-background">
                      <div
                         :ref="containerKey"
                         class="flex flex-1 h-full w-full absolute left-0 top-0"></div>
@@ -62,7 +64,7 @@ update(script.value ?? '');
                @click="opened = false"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                <div class="flex gap-2 items-center">
-                  <StIcon name="SaveOne" class="text-[1.5rem]" />
+                  <SaveOne class="text-[1.5rem]" />
                   <span>保存</span>
                </div>
             </StButton>

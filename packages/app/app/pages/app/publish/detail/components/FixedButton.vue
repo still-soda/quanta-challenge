@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import * as Icons from '@icon-park/vue-next';
+import { LoadingFour } from '@icon-park/vue-next';
+import type { DefineComponent } from 'vue';
 
 const props = defineProps<{
-   icon: keyof typeof Icons;
+   icon: DefineComponent;
    loading?: boolean;
 }>();
 
@@ -17,9 +18,9 @@ defineEmits(['click']);
          'outline-transparent hover:outline-secondary hover:text-white transition-all cursor-pointer',
       ]"
       @click="$emit('click')">
-      <StIcon
+      <Component
          size="2rem"
-         :name="props.loading ? 'LoadingFour' : icon"
+         :is="props.loading ? LoadingFour : icon"
          :class="{ 'animate-spin text-accent-400': props.loading }" />
    </StSpace>
 </template>

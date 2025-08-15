@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Lock, Mail, User } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegister } from '~/composables/auth/use-register';
@@ -62,7 +63,7 @@ const getStatus = (
                   outer-class="bg-accent-700"
                   placeholder="请输入用户名">
                   <template #prefix>
-                     <StIcon class="text-2xl" name="User" />
+                     <User class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -73,7 +74,7 @@ const getStatus = (
                   outer-class="bg-accent-700"
                   placeholder="请输入邮箱">
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Mail" />
+                     <Mail class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -87,7 +88,7 @@ const getStatus = (
                   name="password"
                   password>
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Lock" />
+                     <Lock class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>
@@ -103,7 +104,7 @@ const getStatus = (
                   name="confirm-password"
                   password>
                   <template #prefix>
-                     <StIcon class="text-2xl" name="Lock" />
+                     <Lock class="text-2xl" />
                   </template>
                </StInput>
             </StFormItem>

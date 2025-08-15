@@ -2,6 +2,7 @@
 import type { IRule } from '~/components/st/Form/type';
 import UploadImage from './UploadImage.vue';
 import type { StForm } from '#components';
+import { Box } from '@icon-park/vue-next';
 
 const opened = defineModel<boolean>('opened', { default: false });
 
@@ -123,7 +124,7 @@ const enableSubmit = computed(() => {
                :disabled="!enableSubmit"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                <div class="flex gap-2 items-center">
-                  <StIcon name="Box" class="text-[1.25rem]" />
+                  <Box class="text-[1.25rem]" />
                   <span>创建</span>
                </div>
             </StButton>

@@ -2,9 +2,14 @@
 import type { Component } from 'vue';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FsTreeSkeleton from './skeleton/FsTreeSkeleton.vue';
+import { FileAdditionOne, FolderFailedOne } from '@icon-park/vue-next';
 
 defineProps<{
    fsTree?: IFileSystemItem[];
+   fileLoader?: (path: string) => Promise<string>;
+   dirLoader?: (
+      path: string
+   ) => Promise<{ name: string; type: 'file' | 'folder' }[]>;
 }>();
 
 const selectedPath = defineModel<string>('selectedPath');
@@ -39,10 +44,10 @@ const Operation: Component = (_, { slots }) => {
          </h2>
          <StSpace gap="0.25rem">
             <Operation @click="$emit('addFile')">
-               <StIcon name="FileAdditionOne" />
+               <FileAdditionOne />
             </Operation>
             <Operation @click="$emit('addFolder')">
-               <StIcon name="FolderFailedOne" />
+               <FolderFailedOne />
             </Operation>
          </StSpace>
       </StSpace>
@@ -55,6 +60,8 @@ const Operation: Component = (_, { slots }) => {
                v-if="fsTree"
                class="absolute top-0 left-0"
                @file-or-folder-click="onFileOrFolderClick"
+               :dir-loader="dirLoader"
+               :file-loader="fileLoader"
                :current-file-path="selectedPath"
                :default-opened="true"
                :directory="fsTree" />

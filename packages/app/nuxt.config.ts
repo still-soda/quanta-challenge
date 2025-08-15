@@ -75,19 +75,7 @@ export default defineNuxtConfig({
       },
    },
 
-   prisma: {
-      prismaRoot: '../database/prisma/',
-      prismaSchemaPath: '../database/prisma/schema.prisma',
-      installStudio: false,
-   },
-
-   modules: [
-      '@prisma/nuxt',
-      'shadcn-nuxt',
-      '@pinia/nuxt',
-      '@vueuse/nuxt',
-      'nuxt-security',
-   ],
+   modules: ['@pinia/nuxt', '@vueuse/nuxt', 'nuxt-security'],
 
    nitro: {
       externals: {

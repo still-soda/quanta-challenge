@@ -5,4 +5,5 @@ export interface IFileSystemItem {
    mimeType?: string;
    content?: string;
    children?: IFileSystemItem[];
+   suspense?: boolean;
 }

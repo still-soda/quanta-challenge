@@ -10,8 +10,7 @@
       "postinstall": "nuxt prepare",
       "prisma:migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
       "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
-      "prisma:update": "prisma migrate dev --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma",
-      "cn:add": "bunx --bun shadcn-vue@latest add"
+      "prisma:update": "prisma migrate dev --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma"
    },
    "dependencies": {
       "@challenge/database": "workspace:^",
@@ -22,7 +21,6 @@
       "@pinia/nuxt": "^0.11.1",
       "@popperjs/core": "^2.11.8",
       "@prisma/client": "^6.12.0",
-      "@prisma/nuxt": "^0.3.0",
       "@simonwep/pickr": "^1.9.1",
       "@simplewebauthn/browser": "^13.1.2",
       "@simplewebauthn/server": "^13.1.2",
@@ -55,7 +53,6 @@
       "pinia": "^3.0.3",
       "prisma": "^6.12.0",
       "reka-ui": "^2.3.2",
-      "shadcn-nuxt": "^2.2.0",
       "tailwind-merge": "^3.3.1",
       "trpc-nuxt": "^1.2.0",
       "tw-animate-css": "^1.3.5",

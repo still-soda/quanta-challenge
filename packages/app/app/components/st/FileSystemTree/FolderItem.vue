@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FolderClose, FolderOpen } from '@icon-park/vue-next';
 import type { IFileSystemItem } from './type';
 
 const props = defineProps<{
@@ -31,12 +32,16 @@ const selected = computed(() => {
          class="flex items-center gap-1 font-family-fira-code py-1 px-2 hover:cursor-pointer hover:bg-accent-600 w-full"
          :class="{ 'bg-accent-600': selected }"
          @click.stop="handleOpenedChange() && handleFileOrFolderClick(folder)">
-         <StIcon
+         <FolderOpen
+            v-show="opened"
             theme="filled"
-            :name="opened ? 'FolderOpen' : 'FolderClose'"
             size="1rem"
-            class="text-secondary"
-            :class="[!opened && 'icon']" />
+            class="text-secondary" />
+         <FolderClose
+            v-show="!opened"
+            theme="filled"
+            size="1rem"
+            class="text-secondary icon" />
          <div class="text-sm text-nowrap whitespace-nowrap">
             {{ folder.name }}
          </div>
@@ -45,7 +50,7 @@ const selected = computed(() => {
          v-if="opened"
          @file-or-folder-click="handleFileOrFolderClick"
          :current-file-path="props.currentFilePath"
-         :directory="folder.children!"
+         :directory="folder.children ?? []"
          :deep="deep + 1" />
    </div>
 </template>

@@ -7,6 +7,7 @@ import TagsPicker from './components/TagsPicker.vue';
 import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
 import { usePublishForm } from '~/composables/app/publish/use-publish-form';
+import { UploadTwo } from '@icon-park/vue-next';
 
 const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
 let storageName = 'publishFormdata';
@@ -190,7 +191,7 @@ const handleSubmit = async () => {
                   @click="handleSubmit"
                   class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
                   <div class="flex gap-2 items-center">
-                     <StIcon name="UploadTwo" class="text-[1.5rem]" />
+                     <UploadTwo class="text-[1.5rem]" />
                      <span>提交审核</span>
                   </div>
                </StButton>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ISelectOption } from '~/components/st/Select/type';
 import TagEditingDrawer from './TagEditingDrawer.vue';
+import { Plus, RobotOne } from '@icon-park/vue-next';
 
 const { $trpc } = useNuxtApp();
 
@@ -76,7 +77,7 @@ const onTagCreated = async () => {
       <template #options-empty>
          <div
             class="w-fit mx-auto flex justify-center text-sm text-accent-300 h-10 items-center relative">
-            <StIcon name="RobotOne" class="text-base absolute -left-5" />
+            <RobotOne class="text-base absolute -left-5" />
             <StSpace no-wrap no-shrink gap="0">
                暂时没有题目标签，
                <div
@@ -116,7 +117,7 @@ const onTagCreated = async () => {
                      'st-font-caption text-primary',
                      'cursor-pointer hover:opacity-75 transition-opacity',
                   ]">
-                  <StIcon name="Plus" class="text-base absolute -left-5" />
+                  <Plus class="text-base absolute -left-5" />
                   添加新标签
                </StSpace>
             </div>

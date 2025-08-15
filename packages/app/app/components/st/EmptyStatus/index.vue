@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Box } from '@icon-park/vue-next';
+
 const props = defineProps<{
    content: string;
 }>();
@@ -11,7 +13,7 @@ const props = defineProps<{
          gap="1.5rem"
          align="center"
          class="text-accent-300">
-         <StIcon size="4rem" name="Box" />
+         <Box size="4rem" />
          <div class="text-center text-muted">{{ props.content }}</div>
       </StSpace>
    </StSpace>

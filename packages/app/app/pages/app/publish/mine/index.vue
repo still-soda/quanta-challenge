@@ -3,6 +3,7 @@ import { StSpace } from '#components';
 import { $Enums } from '@prisma/client';
 import { useViewTransition } from '~/composables/utils/use-view-transition';
 import Divider from '../components/Divider.vue';
+import { ThreeHexagons } from '@icon-park/vue-next';
 
 const { $trpc } = useNuxtApp();
 
@@ -111,7 +112,7 @@ const showEmptyStatus = computed(() => {
                <StTagButton
                   @click="selectAll"
                   :selected="selectedTags.length === 0"
-                  icon-name="ThreeHexagons"
+                  :icon="ThreeHexagons"
                   :tag="{ name: '全部' }" />
                <StTagButton
                   v-for="(tag, idx) in tags"

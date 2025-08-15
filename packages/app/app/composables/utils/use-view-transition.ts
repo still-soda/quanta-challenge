@@ -1,4 +1,10 @@
-export const useViewTransition = () => {
+interface IUseViewTransitionOptions {
+   delay?: number;
+}
+
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const useViewTransition = (options?: IUseViewTransitionOptions) => {
    let _startViewTransition = (callback: Function) => callback();
 
    const startViewTransition = (callback: Function) => {
@@ -13,6 +19,7 @@ export const useViewTransition = () => {
          _startViewTransition = (callback: Function) => {
             document.startViewTransition(async () => {
                callback();
+               options?.delay && (await delay(options.delay));
                await nextTick();
             });
          };

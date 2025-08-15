@@ -1,4 +1,13 @@
 <script setup lang="ts">
+import {
+   DashboardTwo,
+   Plus,
+   Ranking,
+   SettingTwo,
+   TableReport,
+   Trophy,
+   UploadTwo,
+} from '@icon-park/vue-next';
 import Logo from '~/components/icon/Logo.vue';
 import useAuthStore from '~/stores/auth-store';
 
@@ -21,37 +30,37 @@ const role = computed(() => authStore.user?.role ?? 'USER');
             class="h-full">
             <StSidebarSidePopper content="仪表盘">
                <StSidebarNavigationButton to="/app/dashboard">
-                  <StIcon name="DashboardTwo" />
+                  <DashboardTwo />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper content="排行榜">
                <StSidebarNavigationButton to="#">
-                  <StIcon name="Ranking" />
+                  <Ranking />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper content="题目">
                <StSidebarNavigationButton to="/app/problems">
-                  <StIcon name="TableReport" />
+                  <TableReport />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper v-if="role !== 'USER'" content="发布题目">
                <StSidebarNavigationButton to="/app/publish">
-                  <StIcon name="UploadTwo" />
+                  <UploadTwo />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper content="成就">
                <StSidebarNavigationButton to="#">
-                  <StIcon name="Trophy" />
+                  <Trophy />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper content="设置">
                <StSidebarNavigationButton to="/app/settings">
-                  <StIcon name="SettingTwo" />
+                  <SettingTwo />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
          </StSpace>
          <StSidebarNavigationButton to="#">
-            <StIcon name="Plus" />
+            <Plus />
          </StSidebarNavigationButton>
       </StSpace>
    </aside>

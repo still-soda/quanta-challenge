@@ -7,6 +7,7 @@ import {
    type ISelectOption,
    type ToggleOption,
 } from './type';
+import { Down, LoadingFour, RobotOne } from '@icon-park/vue-next';
 
 const props = defineProps<{
    outerClass?: string;
@@ -115,10 +116,7 @@ const optionEmptyText = computed(() => {
          </slot>
       </div>
       <slot name="suffix"></slot>
-      <StIcon
-         name="Down"
-         class="text-xl transition-all"
-         :class="{ 'rotate-180': opened }" />
+      <Down class="text-xl transition-all" :class="{ 'rotate-180': opened }" />
 
       <Component
          :is="props.attachToBody ? Teleport : 'div'"
@@ -147,9 +145,7 @@ const optionEmptyText = computed(() => {
                <slot v-if="!props.options.length" name="options-empty">
                   <div
                      class="w-fit mx-auto flex justify-center text-sm text-accent-300 h-10 items-center relative">
-                     <StIcon
-                        name="RobotOne"
-                        class="text-base absolute -left-5" />
+                     <RobotOne class="text-base absolute -left-5" />
                      <span>{{ optionEmptyText }}</span>
                   </div>
                </slot>
@@ -160,7 +156,7 @@ const optionEmptyText = computed(() => {
                   :value="item.value"
                   :selected="selectedSet.has(item.value)">
                   <div class="flex gap-2 items-center">
-                     <StIcon v-if="item.icon" :name="item.icon" />
+                     <Component v-if="item.icon" :is="item.icon" />
                      <img
                         class="size-6 rounded-md overflow-hidden object-contain"
                         v-else-if="item.imageUrl"
@@ -174,9 +170,7 @@ const optionEmptyText = computed(() => {
             <div
                v-else-if="props.loading"
                class="flex items-center justify-center h-10">
-               <StIcon
-                  name="LoadingFour"
-                  class="animate-spin text-primary text-base" />
+               <LoadingFour class="animate-spin text-primary text-base" />
             </div>
          </div>
       </Component>

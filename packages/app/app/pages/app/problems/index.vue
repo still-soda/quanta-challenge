@@ -3,6 +3,7 @@ import type { $Enums } from '@prisma/client';
 import SlideMask from './components/SlideMask.vue';
 import Divider from './components/Divider.vue';
 import { useViewTransition } from '~/composables/utils/use-view-transition';
+import { ThreeHexagons } from '@icon-park/vue-next';
 
 const { $trpc } = useNuxtApp();
 
@@ -103,7 +104,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                      <StTagButton
                         @click="selectAll"
                         :selected="selectedTags.length === 0"
-                        icon-name="ThreeHexagons"
+                        :icon="ThreeHexagons"
                         :tag="{ name: '全部' }" />
                      <StTagButton
                         v-for="(tag, idx) in tags"

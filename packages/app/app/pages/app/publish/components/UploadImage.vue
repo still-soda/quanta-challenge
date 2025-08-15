@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DeleteFour, ImageFiles, LoadingFour } from '@icon-park/vue-next';
 import { ref } from 'vue';
 import { arrayBufferToBase64 } from '~/components/st/DropUploader/walk-file-list';
 import type { FormItemStatus } from '~/components/st/Form/type';
@@ -70,7 +71,7 @@ const cleanup = () => {
       <StDropUploader
          v-if="!imageUrl"
          :placeholder="props.placeholder"
-         icon="ImageFiles"
+         :icon="ImageFiles"
          type="file"
          accept="image/*"
          @update:files="imageFile = $event?.[0] || null" />
@@ -88,12 +89,12 @@ const cleanup = () => {
                @click="cleanup"
                center
                class="text-error size-5 rounded-md hover:bg-error/30 hover:cursor-pointer transition-all absolute -right-7 mt-0.5">
-               <StIcon name="DeleteFour" size="0.75rem" />
+               <DeleteFour size="0.75rem" />
             </StSpace>
          </div>
       </StSpace>
       <StSpace v-else-if="uploading" fill center>
-         <StIcon name="LoadingFour" class="animate-spin text-primary" />
+         <LoadingFour class="animate-spin text-primary" />
       </StSpace>
    </div>
 </template>

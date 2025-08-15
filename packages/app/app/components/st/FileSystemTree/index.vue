@@ -6,6 +6,10 @@ const props = defineProps<{
    currentFilePath?: string;
    deep?: number;
    defaultOpened?: boolean;
+   fileLoader?: (path: string) => Promise<string>;
+   dirLoader?: (
+      path: string
+   ) => Promise<{ name: string; type: 'file' | 'folder' }[]>;
 }>();
 
 const sortedDirectory = computed(() => {
@@ -17,14 +21,32 @@ const sortedDirectory = computed(() => {
 });
 
 const emits = defineEmits(['file-or-folder-click']);
-const handleFileOrFolderClick = (fileOrFolder: IFileSystemItem) => {
+const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
+   if (fileOrFolder.suspense) {
+      if (fileOrFolder.type === 'folder' && props.dirLoader) {
+         const dir = await props.dirLoader(fileOrFolder.path);
+         const dirPath = fileOrFolder.path.endsWith('/')
+            ? fileOrFolder.path.slice(0, -1)
+            : fileOrFolder.path;
+         fileOrFolder.children = dir.map((item) => ({
+            name: item.name,
+            type: item.type,
+            path: `${dirPath}/${item.name}`,
+            suspense: true,
+         }));
+         fileOrFolder.suspense = false;
+      } else if (fileOrFolder.type === 'file' && props.fileLoader) {
+         fileOrFolder.content = await props.fileLoader(fileOrFolder.path);
+         fileOrFolder.suspense = false;
+      }
+   }
    emits('file-or-folder-click', fileOrFolder);
 };
 </script>
 
 <template>
    <div class="w-full">
-      <div v-for="(item, idx) in sortedDirectory" :key="idx" class="w-full">
+      <div v-for="item in sortedDirectory" :key="item.path" class="w-full">
          <StFileSystemTreeFileItem
             v-if="item.type === 'file'"
             @click="handleFileOrFolderClick(item)"

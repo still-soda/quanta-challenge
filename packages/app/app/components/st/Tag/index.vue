@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CloseSmall } from '@icon-park/vue-next';
+
 const props = defineProps<{
    content: string;
    color?: string;
@@ -40,7 +42,7 @@ const size = computed(() => props.size ?? 'base');
          no-shrink
          @click="$emit('close')"
          class="size-5 rounded-full hover:bg-white/20 hover:cursor-pointer">
-         <StIcon name="CloseSmall" />
+         <CloseSmall />
       </StSpace>
    </StSpace>
 </template>

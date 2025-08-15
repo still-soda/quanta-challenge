@@ -1,10 +1,17 @@
 import {
-   createHighlighter,
-   type Highlighter,
    type BundledHighlighterOptions,
    type BundledLanguage,
    type BundledTheme,
+   type ThemeRegistrationRaw,
+   type LanguageRegistration,
+   type HighlighterCore,
+   createHighlighterCoreSync,
+   createJavaScriptRegexEngine,
 } from 'shiki';
+
+import ayuDarkTheme from 'shiki/themes/ayu-dark.mjs';
+
+import langTsx from 'shiki/langs/tsx.mjs';
 
 type HighlighterOptions = BundledHighlighterOptions<
    BundledLanguage,
@@ -12,12 +19,12 @@ type HighlighterOptions = BundledHighlighterOptions<
 >;
 
 export interface IUseShikiOptions {
-   languages?: HighlighterOptions['langs'];
-   theme?: HighlighterOptions['themes'];
+   languages?: LanguageRegistration[][];
+   theme?: ThemeRegistrationRaw;
 }
 
 export const useShiki = (options?: IUseShikiOptions) => {
-   const highlighter = ref<Highlighter>();
+   const highlighter = ref<HighlighterCore>();
    const hasReady = ref(false);
 
    const readyCallbacks = new Set<() => void>();
@@ -29,20 +36,12 @@ export const useShiki = (options?: IUseShikiOptions) => {
       readyCallbacks.add(callback);
    };
 
-   const init = async () => {
+   const init = () => {
       try {
-         highlighter.value = await createHighlighter({
-            themes: [options?.theme || ('github-dark' as any)],
-            langs: [
-               'typescript',
-               'javascript',
-               'vue',
-               'html',
-               'css',
-               'yaml',
-               'json',
-               ...(options?.languages ?? []),
-            ],
+         highlighter.value = createHighlighterCoreSync({
+            themes: [options?.theme || ayuDarkTheme],
+            langs: [langTsx, ...(options?.languages ?? [])],
+            engine: createJavaScriptRegexEngine(),
          });
          hasReady.value = true;
       } catch (error) {
@@ -59,12 +58,12 @@ export const useShiki = (options?: IUseShikiOptions) => {
    ) => {
       if (!hasReady.value) return;
       if (!highlighter.value) {
-         await init();
+         init();
          if (!highlighter.value) return;
       }
       highlightHtml.value = highlighter.value.codeToHtml(code, {
          lang: lang || ('typescript' as any),
-         theme: options?.theme || ('github-dark' as any),
+         theme: options?.theme || ('ayu-dark' as any),
       });
       if (!firstTimeReady) {
          readyCallbacks.forEach((cb) => cb());
