@@ -16,7 +16,6 @@ const openedTabs = ref<ITab[]>([]);
 watch(
    currentFilePath,
    (newPath) => {
-      console.log(newPath);
       newPath &&
          !openedTabs.value.find((tab) => tab.path === newPath) &&
          openedTabs.value.push({

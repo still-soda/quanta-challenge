@@ -3,7 +3,6 @@ import { loadEnv } from '../middlewares/env.js';
 import taskRoute from './task.js';
 import codeRoute from './code.js';
 import { globalExpectionFilter } from '../filters/gloabl-expection-filter.js';
-import { DockerService } from '../services/docker.js';
 
 const app = new Hono();
 
@@ -14,15 +13,8 @@ app.onError(globalExpectionFilter);
 app.route('/task', taskRoute);
 app.route('/code', codeRoute);
 
-app.get('/', async (c) => {
-   const result = await DockerService.instance.startLiveServerContainer({
-      '/index.html': '<h1>Welcome to the Judge Service</h1>',
-      '/src/index.ts': 'console.log("Judge Service is running");',
-   });
-   result.waitForReady.then(() => {
-      console.log('Live server container is ready');
-   });
-   return c.text('Judge Service is running');
+app.get('/health', (c) => {
+   return c.json({ status: 'ok' });
 });
 
 export default app;
