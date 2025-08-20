@@ -75,8 +75,6 @@ defineExpose({
    </StSpace>
 </template>
 
-<style lang="css" src="xterm/css/xterm.css" />
-
 <style lang="css">
 .xterm-viewport {
    background: transparent !important;

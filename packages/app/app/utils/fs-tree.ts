@@ -8,6 +8,8 @@ import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 export const buildFileSystemTree = (fs: Record<string, string>) => {
    const filePathsMap = new Map<string, IFileSystemItem>();
    const rootItems: IFileSystemItem[] = [];
+   const fileNodes: IFileSystemItem[] = [];
+   const folderNodes: IFileSystemItem[] = [];
 
    // 首先创建所有文件节点
    Object.entries(fs).forEach(([path, content]) => {
@@ -20,6 +22,7 @@ export const buildFileSystemTree = (fs: Record<string, string>) => {
          type: 'file',
          content,
       };
+      fileNodes.push(fileItem);
 
       filePathsMap.set(segments.join('/'), fileItem);
    });
@@ -42,6 +45,7 @@ export const buildFileSystemTree = (fs: Record<string, string>) => {
                type: 'folder',
                children: [],
             };
+            folderNodes.push(folderItem);
             filePathsMap.set(folderPath, folderItem);
          }
       }
@@ -65,7 +69,11 @@ export const buildFileSystemTree = (fs: Record<string, string>) => {
       }
    });
 
-   return rootItems;
+   return {
+      rootNodes: rootItems,
+      fileNodes,
+      folderNodes,
+   };
 };
 
 /**

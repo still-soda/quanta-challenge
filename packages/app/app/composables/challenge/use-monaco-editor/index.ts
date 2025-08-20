@@ -84,21 +84,32 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       });
    };
 
-   // 监听模型变化
-   const onModelContentChange = (
+   // 监听特定模型内容修改
+   type ContentChangeListener = (content: string) => void;
+   const contentChangeListeners = new Map<string, Set<ContentChangeListener>>();
+   const onModelSpecificContentChange = (
       path: string,
-      callback: (content: string) => void
+      callback: ContentChangeListener
    ) => {
-      if (!monaco) {
-         throw new Error('Monaco is not ready yet');
-      }
-      const model = monaco.editor.getModel(monaco.Uri.file(path));
-      model?.onDidChangeContent(() => {
-         const content = model.getValue();
-         callback(content);
-      });
+      !contentChangeListeners.has(path) &&
+         contentChangeListeners.set(path, new Set());
+      contentChangeListeners.get(path)!.add(callback);
+      return () => {
+         contentChangeListeners.get(path)?.delete(callback);
+      };
    };
 
+   // 监听模型内容修改
+   type GeneralContentChangeListener = (path: string, content: string) => void;
+   const generalContentChangeListener = new Set<GeneralContentChangeListener>();
+   const onModelContentChange = (callback: GeneralContentChangeListener) => {
+      generalContentChangeListener.add(callback);
+      return () => {
+         generalContentChangeListener.delete(callback);
+      };
+   };
+
+   // 监听模型切换
    const emitterKey = Symbol('editor-emitter');
    type ModelChangeEvent = { path: string };
    const { event } = useEventEmitter<ModelChangeEvent>(
@@ -144,6 +155,20 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       monaco = monacoModule;
       monacoReadyCallbacks.forEach((callback) => callback(monaco!));
 
+      // 监听所有模型的修改
+      monaco.editor.onDidCreateModel((model) => {
+         model.onDidChangeContent(() => {
+            const content = model.getValue();
+            const path = model.uri.path;
+            generalContentChangeListener.forEach((callback) =>
+               callback(path, content)
+            );
+            contentChangeListeners
+               .get(path)
+               ?.forEach((callback) => callback(content));
+         });
+      });
+
       // 附加高亮器
       registerHighligher(monaco);
 
@@ -181,6 +206,7 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       addExtraLibs,
       onMonacoReady,
       onModelChange,
+      onModelSpecificContentChange,
       onModelContentChange,
       onEditorInstanceReady,
       onBeforeEditorDisposed,

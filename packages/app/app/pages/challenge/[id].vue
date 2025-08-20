@@ -6,6 +6,7 @@ import CodeEditorPanel from './components/CodeEditorPanel.vue';
 import TerminalPanel from './components/TerminalPanel.vue';
 import PreviewPanel from './components/PreviewPanel.vue';
 import { useWebContainer } from '~/composables/challenge/use-web-container';
+import { useDepsLoader } from '~/composables/challenge/use-deps-loader';
 
 definePageMeta({
    layout: 'challenge-layout',
@@ -19,6 +20,7 @@ if (!id) {
 
 const { $trpc } = useNuxtApp();
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
+const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
 const fsTree = ref<IFileSystemItem[]>();
 const mounted = Promise.withResolvers<void>();
 const getProject = async () => {
@@ -39,13 +41,21 @@ const getProject = async () => {
       pathContentMap.value,
       ({ value }) => value.content
    );
-   fsTree.value = buildFileSystemTree(contentMap);
+
+   const buildResult = buildFileSystemTree(contentMap);
+   fsTree.value = buildResult.rootNodes;
    for (const item of fsTree.value[0]?.children ?? []) {
       if (item.type === 'file') {
          selectedFilePath.value = item.path;
          break;
       }
    }
+   pathTreeNodeMap.value = {};
+   buildResult.fileNodes.forEach((file) => {
+      const path = `/${file.path}`;
+      pathTreeNodeMap.value![path] = file;
+   });
+
    mountFileSystem(contentMap).then(mounted.resolve);
    return result;
 };
@@ -77,19 +87,31 @@ onMounted(() => {
    watch(selectedPath, (newPath) => {
       newPath && codeEditor.value?.setModel(newPath);
    });
+
+   const contentChangeCallback = (path: string, content: string) => {
+      if (!pathContentMap.value?.[path] || !pathTreeNodeMap.value?.[path])
+         return;
+      pathContentMap.value[path].content = content;
+      pathTreeNodeMap.value[path].content = content;
+      writeFile(path, content);
+   };
+   const debounceCallback = useDebounceFn(contentChangeCallback, 300);
+   codeEditor.value?.onModelContentChange(debounceCallback);
 });
 
-const { mountFileSystem, runCommand, getInstance, exposeServer } =
+const { mountFileSystem, runCommand, getInstance, exposeServer, writeFile } =
    useWebContainer({
       workdirName: 'workspace',
    });
 const terminal = useTemplateRef('terminal');
 
+const { promise: installDone, resolve } = Promise.withResolvers<void>();
 const run = async () => {
    const installProcess = await runCommand('yarn --cwd ./project install');
    await mounted.promise;
    await terminal.value!.attachProcess(installProcess);
    await installProcess.exit;
+   resolve();
 
    await terminal.value?.writeTerminal('\n');
    appendNodeModulesFolder();
@@ -139,11 +161,25 @@ onMounted(() => {
    });
 });
 
-// getInstance().then((instance) => {
-//    instance.fs.watch('/project', { recursive: true }, (event, filename) => {
-//       console.log('File system change detected:', event, filename);
-//    });
-// });
+const depsLoader = useDepsLoader({
+   getInstance,
+   moduleBase: '/project',
+});
+const loadDeps = async () => {
+   if (!codeEditor.value) return;
+   const result = await depsLoader.load();
+   const pathContentMap = objectMap(
+      result.pathContentMap,
+      ({ value }) => value,
+      ({ key }) => `/${key}`
+   );
+   console.log({ pathContentMap });
+   codeEditor.value?.addExtraLibs(pathContentMap);
+};
+onMounted(async () => {
+   await installDone;
+   loadDeps();
+});
 </script>
 
 <template>

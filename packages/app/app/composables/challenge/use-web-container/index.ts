@@ -139,6 +139,10 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
       });
    });
 
+   onUnmounted(() => {
+      instance?.teardown();
+   });
+
    return {
       onWebContainerReady,
       mountFileSystem,

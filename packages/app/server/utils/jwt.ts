@@ -33,7 +33,10 @@ export const renewTokens = (refreshToken: string) => {
 
    try {
       const payload = jwt.verify(refreshToken, refreshSecret) as ITokenPayload;
-      return generateTokens(payload);
+      return generateTokens({
+         role: payload.role,
+         userId: payload.userId,
+      });
    } catch (error) {
       throw new Error('Invalid or expired refresh token');
    }

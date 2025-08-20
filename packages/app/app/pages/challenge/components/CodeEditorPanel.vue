@@ -5,7 +5,7 @@ import { MoreOne } from '@icon-park/vue-next';
 import TabSkeleton from './skeleton/TabSkeleton.vue';
 import EditorSkeleton from './skeleton/EditorSkeleton.vue';
 
-const currentFilePath = defineModel<string>('currentFilePath');
+const currentFilePath = defineModel<string>('');
 
 interface ITab {
    path: string;
@@ -27,6 +27,19 @@ watch(
 );
 
 const onCloseTab = (tab: ITab) => {
+   const idx = openedTabs.value.indexOf(tab);
+   if (tab.path === currentFilePath.value) {
+      if (idx > 0) {
+         currentFilePath.value = openedTabs.value[idx - 1]?.path;
+         setModel(currentFilePath.value!);
+      } else if (openedTabs.value.length > 1) {
+         currentFilePath.value = openedTabs.value[idx + 1]?.path;
+         setModel(currentFilePath.value!);
+      } else {
+         currentFilePath.value = '';
+         setModel(null);
+      }
+   }
    openedTabs.value.splice(openedTabs.value.indexOf(tab), 1);
 };
 
@@ -39,8 +52,14 @@ const props = defineProps<{
    defaultFs?: Record<string, { vid: string; content: string }>;
 }>();
 
-const { containerKey, createModels, onEditorInstanceReady, onModelChange } =
-   useMonacoEditor();
+const {
+   containerKey,
+   createModels,
+   onEditorInstanceReady,
+   onModelChange,
+   onModelContentChange,
+   addExtraLibs,
+} = useMonacoEditor();
 const hasEditorReady = ref(false);
 onEditorInstanceReady(() => {
    hasEditorReady.value = true;
@@ -68,8 +87,12 @@ onModelChange((path) => {
    currentFilePath.value = path;
 });
 
-const setModel = (path: string) => {
+const setModel = (path: string | null) => {
    onEditorInstanceReady((instance, monaco) => {
+      if (!path) {
+         instance.setModel(null);
+         return;
+      }
       const model = monaco.editor.getModel(monaco.Uri.file(path));
       if (model) {
          instance.setModel(model);
@@ -83,7 +106,7 @@ const setModel = (path: string) => {
       }
    });
 };
-defineExpose({ setModel });
+defineExpose({ setModel, onModelContentChange, addExtraLibs });
 </script>
 
 <template>

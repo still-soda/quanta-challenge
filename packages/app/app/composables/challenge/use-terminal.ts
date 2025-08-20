@@ -30,7 +30,12 @@ export const useTerminal = () => {
       });
    };
 
-   const attachProcess = async (process: WebContainerProcess) => {
+   const attachProcess = async (
+      process: WebContainerProcess
+   ): Promise<{
+      writer: WritableStreamDefaultWriter<string>;
+      chunk: globalThis.Ref<string | undefined, string | undefined>;
+   }> => {
       const { terminal } = await getInstance();
       const writer = process.input.getWriter();
       const currentChunk = ref<string>();
@@ -67,6 +72,7 @@ export const useTerminal = () => {
       const [{ Terminal }, { FitAddon }] = await Promise.all([
          import('xterm'),
          import('xterm-addon-fit'),
+         import('xterm/css/xterm.css'),
       ]);
       terminalInstance = new Terminal({
          convertEol: true,

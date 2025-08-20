@@ -9,9 +9,9 @@ import type { MonacoEditor } from '.';
 // 导入 worker 文件
 import vueWorkerUrl from './vue.worker?worker&url';
 import jsonWorkerUrl from 'monaco-editor/esm/vs/language/json/json.worker?worker&url';
-import cssWorkerUrl from 'monaco-editor/esm/vs/language/css/css.worker?worker&url';
-import htmlWorkerUrl from 'monaco-editor/esm/vs/language/html/html.worker?worker&url';
-import tsWorkerUrl from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&url';
+// import cssWorkerUrl from 'monaco-editor/esm/vs/language/css/css.worker?worker&url';
+// import htmlWorkerUrl from 'monaco-editor/esm/vs/language/html/html.worker?worker&url';
+// import tsWorkerUrl from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&url';
 import editorWorkerUrl from 'monaco-editor/esm/vs/editor/editor.worker?worker&url';
 
 const createWorker = async (workerPath: string) => {
@@ -24,16 +24,15 @@ export const registerLanguageWorkers = (monaco: MonacoEditor) => {
          if (label === 'json') {
             return await createWorker(jsonWorkerUrl);
          }
-         if (label === 'css' || label === 'scss' || label === 'less') {
-            return await createWorker(cssWorkerUrl);
-         }
-         if (label === 'html') {
-            return await createWorker(htmlWorkerUrl);
-         }
-         if (label === 'typescript' || label === 'javascript') {
-            return await createWorker(tsWorkerUrl);
-         }
-         if (label === 'vue') {
+         if (
+            label === 'vue' ||
+            label === 'typescript' ||
+            label === 'javascript' ||
+            label === 'css' ||
+            label === 'scss' ||
+            label === 'less' ||
+            label === 'html'
+         ) {
             return await createWorker(vueWorkerUrl);
          }
          return await createWorker(editorWorkerUrl);
