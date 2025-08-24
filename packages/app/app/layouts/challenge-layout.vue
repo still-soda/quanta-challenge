@@ -8,6 +8,14 @@ import {
    StopwatchStart,
    UploadWeb,
 } from '@icon-park/vue-next';
+import { usePreventLeave } from '~/composables/utils/use-prevent-leave';
+
+const store = useEditorStore();
+const toggleDetailWindow = () => {
+   store.detailWindowOpened = !store.detailWindowOpened;
+};
+
+usePreventLeave();
 </script>
 
 <template>
@@ -22,7 +30,10 @@ import {
                <StHeaderButton text="提交记录">
                   <History class="text-[1.25rem]" />
                </StHeaderButton>
-               <StHeaderButton text="题目" class="!text-primary">
+               <StHeaderButton
+                  @click="toggleDetailWindow"
+                  text="题目"
+                  class="!text-primary">
                   <AlignTextLeftOne class="text-[1.25rem]" />
                </StHeaderButton>
             </StSpace>

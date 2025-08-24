@@ -59,6 +59,26 @@ const getOrForkProject = protectedProcedure
       return result;
    });
 
+const GetProblemDetailSchema = z.object({
+   problemId: z.number('Problem ID must be a number'),
+});
+
+const getProblemDetail = protectedProcedure
+   .input(GetProblemDetailSchema)
+   .query(async ({ input }) => {
+      const problem = await prisma.problems.findUnique({
+         where: {
+            pid: input.problemId,
+            isDeprecated: false,
+         },
+      });
+      if (!problem) {
+         throw new Error('Problem not found');
+      }
+      return problem;
+   });
+
 export const problemRouter = router({
    getOrForkProject: getOrForkProject,
+   getProblemDetail: getProblemDetail,
 });

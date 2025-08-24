@@ -15,43 +15,42 @@
    background-color: var(--bg);
    color: var(--text);
    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', sans-serif;
-   font-size: 16px;
    line-height: 1.75;
    margin: 0 auto;
 }
 
 .markdown-body h1 {
-   font-size: 2rem !important;
+   font-size: 2em !important;
    font-weight: bold;
    border-bottom: 2px solid var(--border);
-   padding-bottom: 0.4rem;
-   margin: 0 0 0.75rem;
+   padding-bottom: 0.4em;
+   margin: 0 0 0.75em;
 }
 
 .markdown-body h2 {
-   font-size: 1.75rem;
+   font-size: 1.75em;
    font-weight: bold;
    border-bottom: 1px solid var(--border);
-   padding-bottom: 0.3rem;
-   margin: 1.2rem 0 0.6rem;
+   padding-bottom: 0.3em;
+   margin: 1.2em 0 0.6em;
 }
 
 .markdown-body h3 {
-   font-size: 1.5rem;
+   font-size: 1.5em;
    font-weight: bold;
-   margin: 1rem 0 0.5rem;
+   margin: 1em 0 0.5em;
 }
 
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-   font-size: 1.2rem;
+   font-size: 1.2em;
    font-weight: 600;
-   margin: 0.8rem 0 0.4rem;
+   margin: 0.8em 0 0.4em;
 }
 
 .markdown-body p {
-   margin: 1rem 0;
+   margin: 1em 0;
    color: var(--text-muted);
 }
 
@@ -67,8 +66,8 @@
 
 .markdown-body ul,
 .markdown-body ol {
-   margin: 1rem 0;
-   padding-left: 2rem;
+   margin: 1em 0;
+   padding-left: 2em;
 }
 
 .markdown-body ol {
@@ -80,7 +79,7 @@
 }
 
 .markdown-body li {
-   margin: 0.5rem 0;
+   margin: 0.5em 0;
 }
 
 .markdown-body ul li::before {
@@ -88,8 +87,8 @@
    color: var(--link);
    font-weight: bold;
    display: inline-block;
-   width: 1rem;
-   margin-left: -1.5rem;
+   width: 1em;
+   margin-left: -1.5em;
 }
 
 .markdown-body ol li::before {
@@ -99,14 +98,14 @@
    color: var(--link);
    font-weight: bold;
    display: inline-block;
-   width: 1.5rem;
-   margin-left: -1.5rem;
+   width: 1.5em;
+   margin-left: -1.5em;
 }
 
 .markdown-body blockquote {
    border-left: 4px solid var(--quote-border);
-   padding-left: 1rem;
-   margin: 1rem 0;
+   padding-left: 1em;
+   margin: 1em 0;
    color: var(--text-muted);
    font-style: italic;
    background: var(--quote-bg);
@@ -115,21 +114,21 @@
 .markdown-body code {
    background-color: var(--code-bg);
    color: var(--code-color);
-   padding: 0.2rem 0.4rem;
+   padding: 0.2em 0.4em;
    border-radius: 4px;
    font-family: 'FiraCode Nerd Font Mono', 'Microsoft YaHei', monospace;
-   font-size: 0.95rem;
+   font-size: 0.95em;
 }
 
 .markdown-body pre {
    background-color: var(--pre-bg);
    color: var(--text-muted);
-   padding: 1rem;
+   padding: 1em;
    overflow-x: auto;
    border-radius: 6px;
-   margin: 1rem 0;
+   margin: 1em 0;
    font-family: 'JetBrains Mono', monospace;
-   font-size: 0.9rem;
+   font-size: 0.9em;
    border: 1px solid var(--border);
 }
 
@@ -143,14 +142,14 @@
 .markdown-body table {
    border-collapse: collapse;
    width: 100%;
-   margin: 1.5rem 0;
+   margin: 1.5em 0;
    border: 1px solid var(--border);
 }
 
 .markdown-body th,
 .markdown-body td {
    border: 1px solid var(--border);
-   padding: 0.6rem 1rem;
+   padding: 0.6em 1em;
    text-align: left;
 }
 
@@ -163,18 +162,18 @@
 .markdown-body img {
    max-width: 100%;
    border-radius: 8px;
-   margin: 1rem 0;
+   margin: 1em 0;
 }
 
 .markdown-body hr {
    border: none;
    border-top: 1px solid var(--border);
-   margin: 2rem 0;
+   margin: 2em 0;
 }
 
 .markdown-body input[type='checkbox'] {
    accent-color: var(--link);
-   margin-right: 0.5rem;
+   margin-right: 0.5em;
    transform: scale(1.2);
 }
 

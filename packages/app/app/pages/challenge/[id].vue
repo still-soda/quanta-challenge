@@ -7,6 +7,8 @@ import TerminalPanel from './components/TerminalPanel.vue';
 import PreviewPanel from './components/PreviewPanel.vue';
 import { useWebContainer } from '~/composables/challenge/use-web-container';
 import { useDepsLoader } from '~/composables/challenge/use-deps-loader';
+import { useMarkdown } from '~/composables/utils/use-markdown';
+import DetailWindow from './components/DetailWindow.vue';
 
 definePageMeta({
    layout: 'challenge-layout',
@@ -19,6 +21,8 @@ if (!id) {
 }
 
 const { $trpc } = useNuxtApp();
+
+// get and parse project file system
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
 const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
 const fsTree = ref<IFileSystemItem[]>();
@@ -61,7 +65,7 @@ const getProject = async () => {
 };
 onMounted(getProject);
 
-const codeEditor = useTemplateRef('code-editor');
+// file manager
 const selectedPath = ref<string>();
 const selectedFilePath = ref<string>();
 
@@ -83,6 +87,8 @@ watch(selectedPath, (newPath) => {
    }
 });
 
+// code editor
+const codeEditor = useTemplateRef('code-editor');
 onMounted(() => {
    watch(selectedPath, (newPath) => {
       newPath && codeEditor.value?.setModel(newPath);
@@ -99,14 +105,25 @@ onMounted(() => {
    codeEditor.value?.onModelContentChange(debounceCallback);
 });
 
+// terminal
 const { mountFileSystem, runCommand, getInstance, exposeServer, writeFile } =
    useWebContainer({
       workdirName: 'workspace',
    });
 const terminal = useTemplateRef('terminal');
 
+// run project
 const { promise: installDone, resolve } = Promise.withResolvers<void>();
-const run = async () => {
+const appendNodeModulesFolder = () => {
+   if (!fsTree.value) return;
+   fsTree.value[0]!.children?.unshift({
+      name: 'node_modules',
+      path: '/project/node_modules',
+      type: 'folder',
+      suspense: true,
+   });
+};
+const runProject = async () => {
    const installProcess = await runCommand('yarn --cwd ./project install');
    await mounted.promise;
    await terminal.value!.attachProcess(installProcess);
@@ -120,18 +137,9 @@ const run = async () => {
    const { writer } = await terminal.value!.attachProcess(shell);
    writer.write('cd ./project && yarn dev\n');
 };
-run();
+runProject();
 
-const appendNodeModulesFolder = () => {
-   if (!fsTree.value) return;
-   fsTree.value[0]!.children?.unshift({
-      name: 'node_modules',
-      path: '/project/node_modules',
-      type: 'folder',
-      suspense: true,
-   });
-};
-
+// file system loader
 const dirLoader = async (dirPath: string) => {
    const webContainer = await getInstance();
    const dir = await webContainer.fs.readdir(dirPath, { withFileTypes: true });
@@ -151,6 +159,7 @@ const fileLoader = async (filePath: string) => {
    return content;
 };
 
+// preview
 const previewUrl = ref<string>();
 const hostName = ref<string>();
 onMounted(() => {
@@ -161,6 +170,7 @@ onMounted(() => {
    });
 });
 
+// deps loader
 const depsLoader = useDepsLoader({
    getInstance,
    moduleBase: '/project',
@@ -173,16 +183,30 @@ const loadDeps = async () => {
       ({ value }) => value,
       ({ key }) => `/${key}`
    );
-   console.log({ pathContentMap });
    codeEditor.value?.addExtraLibs(pathContentMap);
 };
 onMounted(async () => {
    await installDone;
    loadDeps();
 });
+
+// get and parse problem detail
+const problem = ref<Awaited<ReturnType<typeof getProblemDetail>>>();
+const getProblemDetail = async () => {
+   if (!id || isNaN(Number(id))) {
+      throw new Error('Problem ID is required');
+   }
+   const result = await $trpc.protected.problem.getProblemDetail.query({
+      problemId: Number(id),
+   });
+   problem.value = result;
+   return result;
+};
+onMounted(getProblemDetail);
 </script>
 
 <template>
+   <DetailWindow :markdown="problem?.detail" />
    <StSpace fill class="p-4 pt-0">
       <StSplitPanel
          direction="horizontal"
@@ -226,3 +250,5 @@ onMounted(async () => {
       </StSplitPanel>
    </StSpace>
 </template>
+
+<style src="@/assets/css/utils.css" />

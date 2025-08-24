@@ -32,6 +32,14 @@ const leaveFullScreenMode = () => {
       fullScreenMode.value = false;
    });
 };
+
+const refreshKey = ref(0);
+const previewUrl = computed(() => {
+   return props.previewUrl ? `${props.previewUrl}?v=${refreshKey.value}` : '';
+});
+const refresh = () => {
+   refreshKey.value++;
+};
 </script>
 
 <template>
@@ -66,9 +74,10 @@ const leaveFullScreenMode = () => {
             <FullScreenTwo />
          </StSpace>
          <StSpace
+            @click="refresh"
             center
             no-shrink
-            class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-500 bg-secondary">
+            class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-500 bg-secondary cursor-pointer">
             <Refresh />
          </StSpace>
       </StSpace>

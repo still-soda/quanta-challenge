@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
+import { useDefaultCursor } from '~/composables/utils/use-default-cursor';
 
 const props = defineProps<{
    direction: 'horizontal' | 'vertical';
@@ -51,6 +52,15 @@ const handleResize = (event: MouseEvent) => {
    document.addEventListener('mousemove', onMouseMove);
    document.addEventListener('mouseup', onMouseUp);
 };
+
+const { set, reset } = useDefaultCursor({ el: container });
+watch(isDragging, (val) => {
+   if (val) {
+      set(props.direction === 'horizontal' ? 'col-resize' : 'row-resize');
+   } else {
+      reset();
+   }
+});
 </script>
 
 <template>
