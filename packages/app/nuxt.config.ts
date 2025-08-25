@@ -69,9 +69,7 @@ export default defineNuxtConfig({
          mode: 'out-in',
       },
       head: {
-         meta: [
-            { name: 'referrer', content: 'origin-when-cross-origin' }, // 或 'unsafe-url'
-         ],
+         meta: [{ name: 'referrer', content: 'origin-when-cross-origin' }],
       },
    },
 

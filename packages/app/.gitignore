@@ -4,6 +4,7 @@
 .nuxt
 .nitro
 .cache
+.local
 dist
 
 local_store

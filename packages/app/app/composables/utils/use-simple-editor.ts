@@ -14,6 +14,7 @@ type EditorReadyCallback = (
 type EditorDisposedCallback = (
    editor: monaco.editor.IStandaloneCodeEditor
 ) => void;
+
 type EditorContentChangedCallback = (content: string) => void;
 
 const setEnvironment = () => {

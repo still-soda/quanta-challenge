@@ -7,6 +7,7 @@ import {
 const props = defineProps<{
    content?: string;
    placement?: NonNullable<IUsePopperOptions['options']>['placement'];
+   zIndex?: number;
 }>();
 
 const { containerKey, popperKey, container, popperInstance } = usePopper({
@@ -17,6 +18,7 @@ const { containerKey, popperKey, container, popperInstance } = usePopper({
 
 const triggered = ref(false);
 const onMouseEnter = () => {
+   popperInstance.value?.update();
    triggered.value = true;
 };
 const onMouseLeave = () => {
@@ -49,8 +51,9 @@ onUnmounted(() => {
    <Teleport to="body">
       <div
          :ref="popperKey"
-         class="absolute transition-opacity z-[9998] !w-fit"
-         :class="[triggered ? 'opacity-100' : 'opacity-0']">
+         class="absolute transition-opacity !w-fit"
+         :class="[triggered ? 'opacity-100' : 'opacity-0 pointer-events-none']"
+         :style="{ zIndex: props.zIndex ?? 9998 }">
          <slot name="popper" :triggered>
             <div class="px-2 py-1 rounded-lg bg-accent-600 text-white">
                {{ content }}

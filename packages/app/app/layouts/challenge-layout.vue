@@ -5,7 +5,7 @@ import {
    LayoutFour,
    Return,
    SettingOne,
-   StopwatchStart,
+   Timer,
    UploadWeb,
 } from '@icon-park/vue-next';
 import { usePreventLeave } from '~/composables/utils/use-prevent-leave';
@@ -44,7 +44,7 @@ usePreventLeave();
                   <UploadWeb class="text-[1.25rem]" />
                </StHeaderButton>
                <StHeaderButton class="!px-4 !text-warning">
-                  <StopwatchStart class="text-[1.25rem]" />
+                  <Timer class="text-[1.25rem]" />
                </StHeaderButton>
                <StHeaderButton class="!px-4">
                   <LayoutFour class="text-[1.25rem]" />

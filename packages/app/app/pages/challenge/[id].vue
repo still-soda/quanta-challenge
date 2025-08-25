@@ -7,7 +7,6 @@ import TerminalPanel from './components/TerminalPanel.vue';
 import PreviewPanel from './components/PreviewPanel.vue';
 import { useWebContainer } from '~/composables/challenge/use-web-container';
 import { useDepsLoader } from '~/composables/challenge/use-deps-loader';
-import { useMarkdown } from '~/composables/utils/use-markdown';
 import DetailWindow from './components/DetailWindow.vue';
 
 definePageMeta({
@@ -207,6 +206,7 @@ onMounted(getProblemDetail);
 
 <template>
    <DetailWindow :markdown="problem?.detail" />
+   <StModal />
    <StSpace fill class="p-4 pt-0">
       <StSplitPanel
          direction="horizontal"
