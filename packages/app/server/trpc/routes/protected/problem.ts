@@ -80,7 +80,7 @@ const getProblemDetail = protectedProcedure
       return problem;
    });
 
-//
+// 提交答案
 const CommitAnswerSchema = z.object({
    problemId: z.number('Problem ID must be a number'),
    snapshot: z.record(z.string(), z.string(), 'Invalid snapshot format'),
@@ -143,8 +143,79 @@ const commitAnswer = protectedProcedure
       return { success: true };
    });
 
+// 获取所有提交记录
+const GetAllCommitRecordsSchema = z.object({
+   problemId: z.number('Problem ID must be a number'),
+});
+
+const getAllCommitRecords = protectedProcedure
+   .input(GetAllCommitRecordsSchema)
+   .query(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const records = await prisma.judgeRecords.findMany({
+         where: {
+            userId: userId,
+            problemId: input.problemId,
+            type: 'judge',
+         },
+         select: {
+            id: true,
+            result: true,
+            createdAt: true,
+         },
+         orderBy: {
+            createdAt: 'desc',
+         },
+      });
+      return records;
+   });
+
+// 获取详情
+const GetCommitRecordDetailSchema = z.object({
+   judgeRecordId: z.number('Judge Record ID must be a number'),
+});
+
+const getCommitRecordDetail = protectedProcedure
+   .input(GetCommitRecordDetailSchema)
+   .query(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const record = await prisma.judgeRecords.findFirst({
+         where: {
+            id: input.judgeRecordId,
+            userId: userId,
+         },
+         select: {
+            id: true,
+            result: true,
+            info: true,
+            judgingTime: true,
+            score: true,
+            pendingTime: true,
+            createdAt: true,
+            problem: {
+               select: {
+                  pid: true,
+                  title: true,
+               },
+            },
+            user: {
+               select: {
+                  name: true,
+                  avatar: true,
+               },
+            },
+         },
+      });
+      if (!record) {
+         throw new Error('Record not found');
+      }
+      return record;
+   });
+
 export const problemRouter = router({
    getOrForkProject: getOrForkProject,
    getProblemDetail: getProblemDetail,
    commitAnswer: commitAnswer,
+   getAllCommitRecords: getAllCommitRecords,
+   getCommitRecordDetail: getCommitRecordDetail,
 });

@@ -74,7 +74,7 @@ watch(isDragging, (val) => {
       <!-- START -->
       <div
          :style="{
-            flexBasis: `calc(${startPercentage}% - .5rem)`,
+            flexBasis: `${startPercentage}%`,
             pointerEvents: isDragging ? 'none' : 'auto',
          }"
          class="flex-shrink-0">
