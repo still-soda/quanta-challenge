@@ -27,6 +27,7 @@ const registerHighligher = (monaco: MonacoEditor) => {
 
 interface IUseMonacoEditorOptions {
    options?: editor.IStandaloneEditorConstructionOptions;
+   getWorker?: (label: string) => Promise<Worker | undefined>;
 }
 
 type MonacoReadyCallback = (monaco: MonacoEditor) => void;
@@ -132,11 +133,12 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
    };
 
    // 添加额外的类型文件
-   const addExtraLibs = (dts: Record<string, string>) => {
+   const addExtraLibs = (dts: Record<string, string> | [string, string][]) => {
       if (!monaco) {
          throw new Error('Monaco is not ready yet');
       }
-      Object.entries(dts).forEach(([filePath, content]) => {
+      const entries = Array.isArray(dts) ? dts : Object.entries(dts);
+      entries.forEach(([filePath, content]) => {
          monaco!.languages.typescript.typescriptDefaults.addExtraLib(
             content,
             filePath
@@ -154,6 +156,22 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       });
       monaco = monacoModule;
       monacoReadyCallbacks.forEach((callback) => callback(monaco!));
+
+      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+         target: monaco.languages.typescript.ScriptTarget.ES2020,
+         allowNonTsExtensions: true,
+         moduleResolution:
+            monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+         module: monaco.languages.typescript.ModuleKind.ESNext,
+         noEmit: true,
+         esModuleInterop: true,
+         jsx: monaco.languages.typescript.JsxEmit.React,
+         allowJs: true,
+         typeRoots: ['node_modules/@types'],
+         paths: {
+            '*': ['*', 'node_modules/*'], // 模块查找路径映射
+         },
+      });
 
       // 监听所有模型的修改
       monaco.editor.onDidCreateModel((model) => {
@@ -186,7 +204,7 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       editorActions.customizeEditorOpener(monaco, instance, emitterKey);
 
       // 注册语言服务
-      registerLanguageWorkers(monaco);
+      registerLanguageWorkers(monaco, options?.getWorker);
    });
 
    onUnmounted(() => {

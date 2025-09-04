@@ -77,6 +77,7 @@ export class System {
    _checkPoints: Array<{
       name: string;
       totalScore: number;
+      passScore: number;
       handler: (
          ctx: IDefineCheckPointCtx
       ) => Promise<number | void> | number | void;
@@ -92,7 +93,8 @@ export class System {
 
    constructor(
       public readonly mode: 'audit' | 'judge',
-      public readonly info: Record<string, string> = {}
+      public readonly info: Record<string, string> = {},
+      public readonly resourceBaseUrl: string = ''
    ) {}
 
    async saveOrCompare(type: SaveType) {
@@ -108,9 +110,20 @@ export class System {
       totalScore: number,
       handler: (
          ctx: IDefineCheckPointCtx
-      ) => Promise<number | void> | number | void
+      ) => Promise<number | void> | number | void,
+      options?: {
+         passScore?: number;
+         passScoreRate?: number;
+      }
    ) {
-      this._checkPoints.push({ name, totalScore, handler });
+      let passScore = totalScore;
+      if (options?.passScore) {
+         passScore = options.passScore;
+      } else if (options?.passScoreRate) {
+         passScore = options.passScoreRate * totalScore;
+      }
+
+      this._checkPoints.push({ name, passScore, handler, totalScore });
    }
 
    expect(expression: any | (() => any), desc: string) {
@@ -121,16 +134,23 @@ export class System {
       }
    }
 
+   private async fetchFile(name: string): Promise<ArrayBuffer> {
+      return await fetch(`${this.resourceBaseUrl}/${name}`)
+         .then((res) => res.arrayBuffer())
+         .catch(() => {
+            throw new Error(`Failed to fetch file: ${name}`);
+         });
+   }
+
    async compareImage(buffer: Buffer, name: `${string}.png`) {
       const templateImgUrl = this.info[name];
-      const templateImage = await fetch(templateImgUrl).then((res) =>
-         res.arrayBuffer()
-      );
+      const templateImage = await this.fetchFile(templateImgUrl);
 
       const templateData = await Jimp.read(templateImage);
       const providedImage = await Jimp.read(buffer);
       const { percent } = diff(templateData, providedImage);
 
+      this.files[name] = buffer;
       return 1 - percent;
    }
 
@@ -208,8 +228,8 @@ export const defineTestHandler = (
             results.push({
                score,
                totalScore: checkPoint.totalScore,
-               details: `测试点“${checkPoint.name}”分数为 ${score}，得分为 ${checkPoint.totalScore} 。`,
-               status: score === checkPoint.totalScore ? 'pass' : 'fail',
+               details: `测试点“${checkPoint.name}”分数为 ${checkPoint.totalScore}，得分为 ${score} 。`,
+               status: score >= checkPoint.passScore ? 'pass' : 'fail',
                cacheFiles: system.getAndCleanupFiles(),
             });
          } catch (error: any) {

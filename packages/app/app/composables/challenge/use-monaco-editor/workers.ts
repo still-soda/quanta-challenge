@@ -8,31 +8,38 @@ import type { MonacoEditor } from '.';
 
 // 导入 worker 文件
 import vueWorkerUrl from './vue.worker?worker&url';
+import tsWorkerUrl from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&url';
 import jsonWorkerUrl from 'monaco-editor/esm/vs/language/json/json.worker?worker&url';
-// import cssWorkerUrl from 'monaco-editor/esm/vs/language/css/css.worker?worker&url';
-// import htmlWorkerUrl from 'monaco-editor/esm/vs/language/html/html.worker?worker&url';
-// import tsWorkerUrl from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker&url';
+import cssWorkerUrl from 'monaco-editor/esm/vs/language/css/css.worker?worker&url';
+import htmlWorkerUrl from 'monaco-editor/esm/vs/language/html/html.worker?worker&url';
 import editorWorkerUrl from 'monaco-editor/esm/vs/editor/editor.worker?worker&url';
 
 const createWorker = async (workerPath: string) => {
    return new Worker(workerPath, { type: 'module' });
 };
 
-export const registerLanguageWorkers = (monaco: MonacoEditor) => {
+export const registerLanguageWorkers = (
+   monaco: MonacoEditor,
+   getWorker?: (label: string) => Promise<Worker | undefined>
+) => {
    self.MonacoEnvironment = {
       getWorker: async (_, label) => {
+         const worker = getWorker ? await getWorker(label) : undefined;
+         if (worker) return worker;
+
          if (label === 'json') {
             return await createWorker(jsonWorkerUrl);
          }
-         if (
-            label === 'vue' ||
-            label === 'typescript' ||
-            label === 'javascript' ||
-            label === 'css' ||
-            label === 'scss' ||
-            label === 'less' ||
-            label === 'html'
-         ) {
+         if (label === 'typescript' || label === 'javascript') {
+            return await createWorker(vueWorkerUrl);
+         }
+         if (label === 'css' || label === 'scss' || label === 'less') {
+            return await createWorker(cssWorkerUrl);
+         }
+         if (label === 'html') {
+            return await createWorker(htmlWorkerUrl);
+         }
+         if (label === 'vue') {
             return await createWorker(vueWorkerUrl);
          }
          return await createWorker(editorWorkerUrl);
@@ -69,16 +76,7 @@ export const registerLanguageWorkers = (monaco: MonacoEditor) => {
       label: 'vue',
    });
 
-   const languageId = [
-      'vue',
-      'javascript',
-      'typescript',
-      'javascriptreact',
-      'typescriptreact',
-      'html',
-      'css',
-      'json',
-   ];
+   const languageId = ['vue', 'typescript', 'javascript'];
 
    const getSyncUris = () => {
       const res = monaco.editor.getModels().map((model) => model.uri);

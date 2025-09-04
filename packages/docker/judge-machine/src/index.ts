@@ -3,7 +3,7 @@ import { app, injectWebSocket } from './controllers/index.js';
 import { JudgeService } from './services/judge.js';
 import { PlaywrightService } from './services/playwright.js';
 
-JudgeService.instance.init();
+JudgeService.instance.init('http://host.docker.internal:3000/api/static');
 PlaywrightService.instance.init(1);
 
 const server = serve(

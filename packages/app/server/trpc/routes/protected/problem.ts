@@ -4,6 +4,7 @@ import prisma from '@challenge/database';
 import { projectService } from '../../services/project';
 import { router } from '../../trpc';
 
+// 获取或创建项目
 const GetOrForkProjectSchema = z.object({
    problemId: z.number('Project ID must be a number'),
 });
@@ -59,6 +60,7 @@ const getOrForkProject = protectedProcedure
       return result;
    });
 
+// 获取问题详情
 const GetProblemDetailSchema = z.object({
    problemId: z.number('Problem ID must be a number'),
 });
@@ -78,7 +80,71 @@ const getProblemDetail = protectedProcedure
       return problem;
    });
 
+//
+const CommitAnswerSchema = z.object({
+   problemId: z.number('Problem ID must be a number'),
+   snapshot: z.record(z.string(), z.string(), 'Invalid snapshot format'),
+});
+
+const commitAnswer = protectedProcedure
+   .input(CommitAnswerSchema)
+   .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+      const { judge } = useRuntimeConfig();
+
+      await prisma.$transaction(async (tx) => {
+         // 创建判题记录
+         const { id: judgeRecordId } = await tx.judgeRecords.create({
+            data: {
+               type: 'judge',
+               problemId: input.problemId,
+               userId: userId,
+               info: {},
+            },
+            select: {
+               id: true,
+            },
+         });
+
+         const { JudgeFile } = await tx.problems.findUniqueOrThrow({
+            where: {
+               pid: input.problemId,
+            },
+            select: {
+               JudgeFile: {
+                  select: {
+                     judgeScript: true,
+                  },
+               },
+            },
+         });
+         const judgeScript = JudgeFile[0].judgeScript;
+
+         await fetch(`${judge.serverUrl}/task/create`, {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+               userId: userId,
+               judgeRecordId: judgeRecordId,
+               judgeScript: judgeScript,
+               fsSnapshot: input.snapshot,
+               problemId: input.problemId,
+               mode: 'judge',
+            }),
+         }).then((res: any) => {
+            if (!res.ok) {
+               throw new Error(`Failed to create task: ${res.message}`);
+            }
+         });
+      });
+
+      return { success: true };
+   });
+
 export const problemRouter = router({
    getOrForkProject: getOrForkProject,
    getProblemDetail: getProblemDetail,
+   commitAnswer: commitAnswer,
 });

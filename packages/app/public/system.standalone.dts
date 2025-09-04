@@ -524,7 +524,14 @@ declare class System {
       /** 检查点处理函数 */
       handler: (
          ctx: IDefineCheckPointCtx
-      ) => Promise<number | void> | number | void
+      ) => Promise<number | void> | number | void,
+      /** 可选项 */
+      options?: {
+         /** 指定最低通过分数 */
+         passScore?: number;
+         /** 指定总分的特定比例为最低通过分数 */
+         passScoreRate?: number;
+      }
    ): void;
 
    /** 验证期望条件 */
@@ -548,11 +555,21 @@ declare const getExposeSystem: (sys: System) => {
    saveOrCompare(type: SaveType): Promise<number>;
    score: (totalScore: number, rating: () => number) => Promise<number>;
    defineCheckPoint: (
+      /** 检查点名称 */
       name: string,
+      /** 检查点总分 */
       totalScore: number,
+      /** 检查点处理函数 */
       handler: (
          ctx: IDefineCheckPointCtx
-      ) => Promise<number | void> | number | void
+      ) => Promise<number | void> | number | void,
+      /** 可选项 */
+      options?: {
+         /** 指定最低通过分数 */
+         passScore?: number;
+         /** 指定总分的特定比例为最低通过分数 */
+         passScoreRate?: number;
+      }
    ) => void;
    expect: (
       expression: any | (() => Promise<any> | any),

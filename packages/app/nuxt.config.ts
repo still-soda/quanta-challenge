@@ -24,7 +24,17 @@ export default defineNuxtConfig({
             'Cross-Origin-Resource-Policy': 'cross-origin',
             'Access-Control-Allow-Origin': '*',
          },
+         allowedHosts: ['host.docker.internal'],
       },
+      resolve: {
+         alias: {
+            path: 'path-browserify',
+         },
+      },
+   },
+
+   security: {
+      xssValidator: false,
    },
 
    routeRules: {

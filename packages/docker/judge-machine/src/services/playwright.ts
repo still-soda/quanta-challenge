@@ -45,12 +45,6 @@ export class PlaywrightService extends Singleton {
       return this.browsers[0];
    }
 
-   private async checkUrlAccessible(url: string) {
-      return await fetch(url)
-         .then(() => true)
-         .catch(() => false);
-   }
-
    private sanitizeUrl(input: string): string {
       return input
          .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '')
@@ -67,9 +61,6 @@ export class PlaywrightService extends Singleton {
       close: () => Promise<void>;
    }> {
       url = this.sanitizeUrl(url);
-      if (!(await this.checkUrlAccessible(url))) {
-         throw new Error(`URL is not accessible: ${url}`);
-      }
 
       try {
          const browser = await this.pickAliveBrowser();

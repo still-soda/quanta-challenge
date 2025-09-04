@@ -18,6 +18,11 @@ const sendTaskToJudgeMachine = async (options: {
 }) => {
    const { job, networkUrl } = options;
 
+   const cacheFiles =
+      job.data.mode === 'audit'
+         ? undefined
+         : await db.getTemplateJudgeRecordCacheFiles(job.data.problemId);
+
    type TaskType = z.infer<typeof TaskSchema>;
    DockerService.instance.judgeMachineWs!.send(
       JSON.stringify({
@@ -25,10 +30,11 @@ const sendTaskToJudgeMachine = async (options: {
          judgeScript: job.data.judgeScript,
          mode: job.data.mode,
          url: networkUrl,
+         info: cacheFiles,
       } satisfies TaskType)
    );
 
-   const reuslt = await new Promise<JudgeResultType>((resolve, reject) => {
+   const result = await new Promise<JudgeResultType>((resolve, reject) => {
       const off = () => {
          EventEmitterService.instance.off(
             EventType.JUDGE_FINISHED,
@@ -51,7 +57,7 @@ const sendTaskToJudgeMachine = async (options: {
       }, 30 * 1000); // 超时处理
    });
 
-   return reuslt;
+   return result;
 };
 
 const processResult = async (
@@ -154,7 +160,7 @@ export const judgeProcessor: Processor<JobType> = async (job) => {
    } catch (error: any) {
       // 处理错误
       await db.saveErrorRecord({ error, pendingTime, startTime, job });
-      cleanup && cleanup();
+      // cleanup && cleanup();
 
       return {
          judgeRecordId: job.data.judgeRecordId,

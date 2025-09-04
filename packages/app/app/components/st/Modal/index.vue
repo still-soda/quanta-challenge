@@ -20,11 +20,14 @@ const opened = defineModel<boolean>('opened', {
             'pointer-events-auto opacity-100': opened,
             'pointer-events-none opacity-0': !opened,
          }">
-         <slot>
-            <StSpace
-               class="w-40 h-32 bg-accent-600 rounded-xl shadow-lg shadow-background">
-            </StSpace>
-         </slot>
+         <div
+            class="transition-all"
+            :class="{
+               'scale-100 opacity-100': opened,
+               'scale-95 opacity-0': !opened,
+            }">
+            <slot> </slot>
+         </div>
       </StSpace>
    </Teleport>
 </template>

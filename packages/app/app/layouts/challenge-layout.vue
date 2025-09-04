@@ -8,6 +8,7 @@ import {
    Timer,
    UploadWeb,
 } from '@icon-park/vue-next';
+import { useEventEmitter } from '~/composables/utils/use-event-emitter';
 import { usePreventLeave } from '~/composables/utils/use-prevent-leave';
 
 const store = useEditorStore();
@@ -16,6 +17,8 @@ const toggleDetailWindow = () => {
 };
 
 usePreventLeave();
+
+const { emit: emitCommitEvent } = useEventEmitter('challenge-layout', 'commit');
 </script>
 
 <template>
@@ -24,9 +27,11 @@ usePreventLeave();
          <template #left>
             <StSpace gap="0.75rem" align="center">
                <IconLogo class="mx-4" />
-               <StHeaderButton class="!px-4">
-                  <Return class="text-[1.25rem]" />
-               </StHeaderButton>
+               <a href="/app/problems">
+                  <StHeaderButton class="!px-4">
+                     <Return class="text-[1.25rem]" />
+                  </StHeaderButton>
+               </a>
                <StHeaderButton text="提交记录">
                   <History class="text-[1.25rem]" />
                </StHeaderButton>
@@ -40,7 +45,11 @@ usePreventLeave();
          </template>
          <template #right>
             <StSpace gap="0.75rem" align="center">
-               <StHeaderButton text="提交" class="!text-success">
+               <StHeaderButton
+                  @click="emitCommitEvent"
+                  :disabled="!store.hasProjectInitialized"
+                  text="提交"
+                  class="!text-success">
                   <UploadWeb class="text-[1.25rem]" />
                </StHeaderButton>
                <StHeaderButton class="!px-4 !text-warning">

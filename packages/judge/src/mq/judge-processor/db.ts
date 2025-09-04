@@ -23,6 +23,30 @@ export const getProblemInfoByRecordId = async (judgeRecordId: number) => {
    };
 };
 
+export const getTemplateJudgeRecordCacheFiles = async (problemId: number) => {
+   const result = await prisma.templateJudgeRecords.findFirstOrThrow({
+      where: {
+         problemId: problemId,
+      },
+      select: {
+         judgeRecord: {
+            select: {
+               info: true,
+            },
+         },
+      },
+   });
+
+   const info = result.judgeRecord.info as Record<string, any>[];
+   const cacheFiles: Record<string, string> = info
+      .map((item) => item.cacheFiles)
+      .reduce((prev, curr) => {
+         return { ...prev, ...curr };
+      }, {});
+
+   return cacheFiles;
+};
+
 export const saveFirstScreen = async (options: {
    store: IStoreService;
    firstScreen: Buffer;

@@ -23,7 +23,10 @@ export class JudgeService extends Singleton {
       super();
    }
 
-   async init() {
+   private resourceBaseUrl: string | undefined;
+
+   async init(resourceBaseUrl: string) {
+      this.resourceBaseUrl = resourceBaseUrl;
       const listenMessage = () => {
          this.eventEmitter.on(EventType.MESSAGE, (msg) => this.handleTask(msg));
       };
@@ -80,7 +83,11 @@ export class JudgeService extends Singleton {
             });
          })();
 
-         const system = new System(payload.mode, payload.info);
+         const system = new System(
+            payload.mode,
+            payload.info,
+            this.resourceBaseUrl
+         );
          const vm = new VM({
             sandbox: {
                defineTestHandler,

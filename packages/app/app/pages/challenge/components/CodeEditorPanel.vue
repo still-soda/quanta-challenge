@@ -4,8 +4,9 @@ import Tab from './Tab.vue';
 import { MoreOne } from '@icon-park/vue-next';
 import TabSkeleton from './skeleton/TabSkeleton.vue';
 import EditorSkeleton from './skeleton/EditorSkeleton.vue';
+import type { WebContainer } from '@webcontainer/api';
 
-const currentFilePath = defineModel<string>('');
+const currentFilePath = defineModel<string>('currentFilePath');
 
 interface ITab {
    path: string;
@@ -49,6 +50,7 @@ const onClickTab = (tab: ITab) => {
 };
 
 const props = defineProps<{
+   getWcInstance: () => Promise<WebContainer>;
    defaultFs?: Record<string, { vid: string; content: string }>;
 }>();
 
@@ -60,6 +62,7 @@ const {
    onModelContentChange,
    addExtraLibs,
 } = useMonacoEditor();
+
 const hasEditorReady = ref(false);
 onEditorInstanceReady(() => {
    hasEditorReady.value = true;
@@ -106,6 +109,7 @@ const setModel = (path: string | null) => {
       }
    });
 };
+
 defineExpose({ setModel, onModelContentChange, addExtraLibs });
 </script>
 

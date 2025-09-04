@@ -16,9 +16,9 @@ ws.onmessage = async (event) => {
    const message = jrtp.unpack(event.data);
    console.log('Received message:', message);
 
-   const buffer: Buffer =
-      message.results[0].cacheFiles['button-click-increment.png'];
-   await fs.writeFile('button-click-increment.png', buffer);
+   // const buffer: Buffer =
+   //    message.results[0].cacheFiles['button-click-increment.png'];
+   // await fs.writeFile('button-click-increment.png', buffer);
 
    process.exit(0);
 };
@@ -37,9 +37,10 @@ const script = `export default defineTestHandler(async ({ page, $ }) => {
 
 ws.send(
    JSON.stringify({
-      judgeRecordId: 0,
+      judgeRecordId: 128,
       judgeScript: script,
-      mode: 'audit',
-      url: 'http://2b9b5283-eb1a-41d8-aca5-7c73c9bb9d82:3000/',
+      mode: 'judge',
+      url: 'http://9803b872-81b5-4bdf-8d9c-3cc16f949c67:3000/',
+      info: {},
    } satisfies z.infer<typeof TaskSchema>)
 );

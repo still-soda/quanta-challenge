@@ -64,7 +64,7 @@ defineExpose({
             </StSpace>
          </StSpace>
       </StSpace>
-      <StSpace fill class="relativec overflow-hidden">
+      <StSpace fill class="relative overflow-hidden">
          <StSpace fill class="relative my-2 mx-3">
             <main
                v-show="hasProcessReady"

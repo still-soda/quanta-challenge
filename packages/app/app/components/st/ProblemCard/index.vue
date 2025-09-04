@@ -13,7 +13,7 @@ defineProps<{
          :src="`/api/static/${coverImageName}`"
          height="9.76rem"
          alt="Cover Image" />
-      <StSpace direction="vertical" gap="0.8rem" class="px-2">
+      <StSpace fill-x direction="vertical" gap="0.8rem" class="px-2">
          <slot></slot>
       </StSpace>
    </StSpace>

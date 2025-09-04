@@ -7,7 +7,8 @@ export const initTaskResultHandlers = () => {
 
    const setStatus = async (
       judgeRecordId: number,
-      status: 'ready' | 'invalid'
+      status: 'ready' | 'invalid',
+      mode: 'judge' | 'audit'
    ) => {
       const { problemId } = await prisma.judgeRecords.findUniqueOrThrow({
          where: {
@@ -15,12 +16,14 @@ export const initTaskResultHandlers = () => {
          },
          select: { problemId: true },
       });
-      await prisma.problems.update({
-         where: {
-            pid: problemId,
-         },
-         data: { status },
-      });
+      if (mode === 'audit') {
+         await prisma.problems.update({
+            where: {
+               pid: problemId,
+            },
+            data: { status },
+         });
+      }
    };
 
    EventEmitterService.instance.on<ITaskCompletedPayload>(
@@ -33,7 +36,7 @@ export const initTaskResultHandlers = () => {
                : result.status === 'completed'
                ? 'ready'
                : 'invalid';
-         await setStatus(job.data.judgeRecordId, status);
+         await setStatus(job.data.judgeRecordId, status, job.data.mode);
       }
    );
 
@@ -41,7 +44,7 @@ export const initTaskResultHandlers = () => {
       EventType.TASK_FAILED,
       async ({ job, error }) => {
          console.error(`Task failed for job ${job.id}:`, error);
-         await setStatus(job.data.judgeRecordId, 'invalid');
+         await setStatus(job.data.judgeRecordId, 'invalid', job.data.mode);
       }
    );
 
@@ -49,7 +52,7 @@ export const initTaskResultHandlers = () => {
       EventType.TASK_ERROR,
       async ({ job, error }) => {
          console.error(`Task error for job ${job.id}:`, error);
-         await setStatus(job.data.judgeRecordId, 'invalid');
+         await setStatus(job.data.judgeRecordId, 'invalid', job.data.mode);
       }
    );
 };

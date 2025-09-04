@@ -1,6 +1,7 @@
 import z from 'zod';
 
 export const CreateTaskSchema = z.object({
+   problemId: z.int().min(1, 'Problem ID must be a positive integer'),
    judgeRecordId: z.int().min(1, 'Judge Record ID must be a positive integer'),
    userId: z
       .string('User ID must be a string')

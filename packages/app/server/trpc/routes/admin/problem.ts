@@ -107,6 +107,7 @@ const handleCreateVersion = async (options: {
       },
       body: JSON.stringify({
          userId: userId,
+         problemId: problemId,
          judgeRecordId: templateJudgeRecord.judgeRecordId,
          judgeScript: judgeScript,
          fsSnapshot: input.referenceAnswerSnapshot,
@@ -592,6 +593,7 @@ const getVersionsProcedure = protectedAdminProcedure
       };
    });
 
+// 设置当前版本
 const SetCurrentProblemSchema = z.object({
    problemId: z.number('Problem ID must be a number').int(),
 });

@@ -1,17 +1,4 @@
 import type { WebContainer } from '@webcontainer/api';
-import { DependencyDtsFileLoader } from './deps-loader';
-
-class WebContainerDepsLoader extends DependencyDtsFileLoader {
-   constructor(moduleBase: string, private readonly instance: WebContainer) {
-      super(moduleBase);
-   }
-   override readFile(filePath: string): Promise<string> {
-      return this.instance.fs.readFile(filePath, 'utf-8');
-   }
-   override readDir(dirPath: string): Promise<string[]> {
-      return this.instance.fs.readdir(dirPath);
-   }
-}
 
 export interface IUseDepsLoaderOptions {
    getInstance: () => Promise<WebContainer> | WebContainer;
@@ -21,25 +8,50 @@ export interface IUseDepsLoaderOptions {
 export const useDepsLoader = (options: IUseDepsLoaderOptions) => {
    const instancePromise = Promise.try(options.getInstance);
    const nodeModulesBase = `${options.moduleBase}/node_modules`;
-   const depsLoaderPromise = instancePromise.then(
-      (instance) => new WebContainerDepsLoader(nodeModulesBase, instance)
-   );
 
    const load = async () => {
-      const entryPath = options.moduleBase;
       const instance = await instancePromise;
-      const pkgJsonPath = `${entryPath}/package.json`;
-      const pkgJsonText = await instance.fs.readFile(pkgJsonPath, 'utf-8');
+      const result: Record<string, string> = {};
 
-      let pkgJson: Record<string, any>;
-      try {
-         pkgJson = JSON.parse(pkgJsonText);
-      } catch {
-         throw new Error('Failed to parse package.json');
-      }
+      const traverseInNextIdleCallback = async (
+         dirPath: string = nodeModulesBase
+      ) => {
+         return await new Promise((resolve) =>
+            requestIdleCallback(
+               async (deadline) => {
+                  await traverse(dirPath, deadline);
+                  resolve(null);
+               },
+               { timeout: 1000 }
+            )
+         );
+      };
 
-      const depsLoader = await depsLoaderPromise;
-      return depsLoader.loadDependencies(pkgJson);
+      const traverse = async (
+         dirPath = nodeModulesBase,
+         deadline: IdleDeadline
+      ) => {
+         const dir = await instance.fs.readdir(dirPath, {
+            withFileTypes: true,
+         });
+         for (const item of dir) {
+            const itemPath = `${dirPath}/${item.name}`;
+            if (item.isDirectory()) {
+               if (deadline.timeRemaining() < 1) {
+                  await traverseInNextIdleCallback(itemPath);
+               } else {
+                  await traverse(itemPath, deadline);
+               }
+            } else {
+               const content = await instance.fs.readFile(itemPath, 'utf-8');
+               const path = `${dirPath}/${item.name}`;
+               result[path] = content;
+            }
+         }
+      };
+
+      await traverseInNextIdleCallback();
+      return result;
    };
 
    return { load };

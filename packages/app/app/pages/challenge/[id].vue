@@ -6,18 +6,19 @@ import CodeEditorPanel from './components/CodeEditorPanel.vue';
 import TerminalPanel from './components/TerminalPanel.vue';
 import PreviewPanel from './components/PreviewPanel.vue';
 import { useWebContainer } from '~/composables/challenge/use-web-container';
-import { useDepsLoader } from '~/composables/challenge/use-deps-loader';
 import DetailWindow from './components/DetailWindow.vue';
+import CommitModal from './components/CommitModal.vue';
+import { useParam } from '~/composables/utils/use-param';
 
 definePageMeta({
    layout: 'challenge-layout',
 });
 
-const route = useRoute();
-const id = route.params.id as string;
-if (!id) {
-   navigateTo('/app/problems');
-}
+const id = useParam('id', {
+   required: true,
+   parse: (v) => Number(v),
+   onError: () => navigateTo('/app/problems'),
+});
 
 const { $trpc } = useNuxtApp();
 
@@ -27,11 +28,11 @@ const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
 const fsTree = ref<IFileSystemItem[]>();
 const mounted = Promise.withResolvers<void>();
 const getProject = async () => {
-   if (!id || isNaN(Number(id))) {
+   if (!id.value || isNaN(id.value)) {
       throw new Error('Problem ID is required');
    }
    const result = await $trpc.protected.problem.getOrForkProject.query({
-      problemId: Number(id),
+      problemId: id.value,
    });
    pathContentMap.value = {};
    result.FileSystem[0]!.files.forEach((file) => {
@@ -112,7 +113,7 @@ const { mountFileSystem, runCommand, getInstance, exposeServer, writeFile } =
 const terminal = useTemplateRef('terminal');
 
 // run project
-const { promise: installDone, resolve } = Promise.withResolvers<void>();
+const editorStore = useEditorStore();
 const appendNodeModulesFolder = () => {
    if (!fsTree.value) return;
    fsTree.value[0]!.children?.unshift({
@@ -123,11 +124,12 @@ const appendNodeModulesFolder = () => {
    });
 };
 const runProject = async () => {
+   editorStore.hasProjectInitialized = false;
    const installProcess = await runCommand('yarn --cwd ./project install');
    await mounted.promise;
    await terminal.value!.attachProcess(installProcess);
    await installProcess.exit;
-   resolve();
+   editorStore.hasProjectInitialized = true;
 
    await terminal.value?.writeTerminal('\n');
    appendNodeModulesFolder();
@@ -169,34 +171,14 @@ onMounted(() => {
    });
 });
 
-// deps loader
-const depsLoader = useDepsLoader({
-   getInstance,
-   moduleBase: '/project',
-});
-const loadDeps = async () => {
-   if (!codeEditor.value) return;
-   const result = await depsLoader.load();
-   const pathContentMap = objectMap(
-      result.pathContentMap,
-      ({ value }) => value,
-      ({ key }) => `/${key}`
-   );
-   codeEditor.value?.addExtraLibs(pathContentMap);
-};
-onMounted(async () => {
-   await installDone;
-   loadDeps();
-});
-
 // get and parse problem detail
 const problem = ref<Awaited<ReturnType<typeof getProblemDetail>>>();
 const getProblemDetail = async () => {
-   if (!id || isNaN(Number(id))) {
+   if (!id.value || isNaN(id.value)) {
       throw new Error('Problem ID is required');
    }
    const result = await $trpc.protected.problem.getProblemDetail.query({
-      problemId: Number(id),
+      problemId: id.value,
    });
    problem.value = result;
    return result;
@@ -206,7 +188,10 @@ onMounted(getProblemDetail);
 
 <template>
    <DetailWindow :markdown="problem?.detail" />
-   <StModal />
+   <CommitModal
+      :run-commands="runCommand"
+      :get-wc-instance="getInstance"
+      :problem-id="id!" />
    <StSpace fill class="p-4 pt-0">
       <StSplitPanel
          direction="horizontal"
@@ -233,6 +218,7 @@ onMounted(getProblemDetail);
                         <CodeEditorPanel
                            ref="code-editor"
                            v-model:current-file-path="selectedFilePath"
+                           :get-wc-instance="getInstance"
                            :default-fs="pathContentMap" />
                      </template>
                      <template #end>

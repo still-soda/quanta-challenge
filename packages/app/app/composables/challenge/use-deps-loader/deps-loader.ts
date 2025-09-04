@@ -84,8 +84,7 @@ export abstract class DependencyDtsFileLoader {
       if (idxType) {
          const dtsPath = idxType[1]!;
          const dtsContent = await this.readFile(dtsPath);
-         const indexDts = `declare module '${moduleName}' { ${dtsContent} }`;
-         this.seenContents.set(dtsPath, indexDts);
+         this.seenContents.set(dtsPath, dtsContent);
       } else {
          const indexDts = types
             .map(([key, value]: any) => {
@@ -159,8 +158,22 @@ export abstract class DependencyDtsFileLoader {
       const imports = await this.getImports(entryContent);
       const transformedImports = imports.map((imp) => {
          const len = this.getJsExtLength(imp);
-         return len ? `${imp.slice(0, -len)}.d.ts` : imp;
+         console.log(
+            imp,
+            len,
+            !imp.endsWith('.d.ts'),
+            imp.startsWith('./'),
+            imp.startsWith('../')
+         );
+         return len
+            ? `${imp.slice(0, -len)}.d.ts`
+            : !imp.endsWith('.d.ts') &&
+              (imp.startsWith('./') || imp.startsWith('../'))
+            ? `${imp}.d.ts`
+            : imp;
       });
+
+      console.log(entry, entryPath, imports, transformedImports);
 
       await Promise.all(
          transformedImports.map((imp) =>
