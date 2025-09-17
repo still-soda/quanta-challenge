@@ -7,6 +7,8 @@ import {
    BadgesCard,
    RankingCard,
 } from './components';
+
+useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
 </script>
 
 <template>

@@ -21,7 +21,8 @@ usePreventLeave();
 
 const { emit: emitCommitEvent } = useEventEmitter('challenge-layout', 'commit');
 
-const id = useParam<number>('id', { parse: (v) => Number(v) });
+const path = useParam<string[]>('path', { required: true });
+const id = computed(() => Number(path.value?.[1] ?? 0));
 const navigateToCommitRecords = () => {
    navigateTo(`/challenge/record/${id.value}`);
 };
@@ -41,7 +42,7 @@ const mode = computed<'problem' | 'record'>(() => {
                <IconLogo class="mx-4" />
 
                <template v-if="mode === 'record'">
-                  <NuxtLink :to="`/challenge/${id}`">
+                  <NuxtLink :to="`/challenge/editor/${id}`">
                      <StHeaderButton class="!px-4" text="返回题目">
                         <Return class="text-[1.25rem]" />
                      </StHeaderButton>
@@ -94,8 +95,6 @@ const mode = computed<'problem' | 'record'>(() => {
             </StSpace>
          </template>
       </StHeader>
-      <KeepAlive>
-         <slot></slot>
-      </KeepAlive>
+      <slot></slot>
    </StSpace>
 </template>

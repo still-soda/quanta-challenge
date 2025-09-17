@@ -4,6 +4,8 @@ import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegister } from '~/composables/auth/use-register';
 
+useSeoMeta({ title: '注册 - Quanta Challenge' });
+
 const { formdata, formKey, loading, handleRegister } = useRegister();
 
 const rules: IRule[] = [

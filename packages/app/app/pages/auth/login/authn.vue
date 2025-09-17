@@ -4,6 +4,8 @@ import type { IRule } from '../../../components/st/Form/type';
 import z from 'zod';
 import { Key, Mail } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '生物认证 - Quanta Challenge' });
+
 const {
    formdata,
    formKey,

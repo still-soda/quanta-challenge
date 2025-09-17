@@ -32,7 +32,11 @@ defineExpose({
 </script>
 
 <template>
-   <StSpace fill direction="vertical" gap="0" class="bg-[#181818] rounded-xl">
+   <StSpace
+      fill-x
+      direction="vertical"
+      gap="0"
+      class="bg-[#181818] rounded-xl h-[calc(100%-0.5rem)]">
       <StSpace
          fill-x
          class="p-1 rounded-t-xl bg-accent-600"

@@ -9,6 +9,8 @@ import type { StForm } from '#components';
 import { usePublishForm } from '~/composables/app/publish/use-publish-form';
 import { UploadTwo } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '发布题目 - Quanta Challenge' });
+
 const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
 let storageName = 'publishFormdata';
 let fromId: number | undefined = undefined;

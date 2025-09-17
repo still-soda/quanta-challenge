@@ -25,6 +25,8 @@ if (!id) {
    navigateTo('/app/publish');
 }
 
+useSeoMeta({ title: computed(() => `发布详情 #${id} - Quanta Challenge`) });
+
 const { $trpc } = useNuxtApp();
 type DataType = Awaited<
    ReturnType<typeof $trpc.admin.problem.getAuditDetail.query>

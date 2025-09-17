@@ -5,6 +5,8 @@ import * as clientAuthn from '@simplewebauthn/browser';
 import z from 'zod';
 import { Fingerprint, Lock, Mail } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '登录 - Quanta Challenge' });
+
 const { formdata, formKey, loading, handleLogin, onLoginSuccess } =
    useEmailLogin();
 const supportWebAuthn = ref(false);

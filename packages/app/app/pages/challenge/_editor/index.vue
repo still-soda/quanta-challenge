@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { buildFileSystemTree } from '../../utils/fs-tree';
+import { buildFileSystemTree } from '../../../utils/fs-tree';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FileManagerPanel from './components/FileManagerPanel.vue';
 import CodeEditorPanel from './components/CodeEditorPanel.vue';
@@ -8,17 +8,10 @@ import PreviewPanel from './components/PreviewPanel.vue';
 import { useWebContainer } from '~/composables/challenge/use-web-container';
 import DetailWindow from './components/DetailWindow.vue';
 import CommitModal from './components/CommitModal.vue';
-import { useParam } from '~/composables/utils/use-param';
 
-definePageMeta({
-   layout: 'challenge-layout',
-});
+definePageMeta({ layout: 'challenge-layout' });
 
-const id = useParam('id', {
-   required: true,
-   parse: (v) => Number(v),
-   onError: () => navigateTo('/app/problems'),
-});
+const props = defineProps<{ id: number }>();
 
 const { $trpc } = useNuxtApp();
 
@@ -28,11 +21,11 @@ const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
 const fsTree = ref<IFileSystemItem[]>();
 const mounted = Promise.withResolvers<void>();
 const getProject = async () => {
-   if (!id.value || isNaN(id.value)) {
+   if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
    }
    const result = await $trpc.protected.problem.getOrForkProject.query({
-      problemId: id.value,
+      problemId: props.id,
    });
    pathContentMap.value = {};
    result.FileSystem[0]!.files.forEach((file) => {
@@ -174,11 +167,11 @@ onMounted(() => {
 // get and parse problem detail
 const problem = ref<Awaited<ReturnType<typeof getProblemDetail>>>();
 const getProblemDetail = async () => {
-   if (!id.value || isNaN(id.value)) {
+   if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
    }
    const result = await $trpc.protected.problem.getProblemDetail.query({
-      problemId: id.value,
+      problemId: props.id,
    });
    problem.value = result;
    return result;
@@ -187,53 +180,55 @@ onMounted(getProblemDetail);
 </script>
 
 <template>
-   <DetailWindow :markdown="problem?.detail" />
-   <CommitModal
-      :run-commands="runCommand"
-      :get-wc-instance="getInstance"
-      :problem-id="id!" />
-   <StSpace fill class="p-4 pt-0">
-      <StSplitPanel
-         direction="horizontal"
-         class="size-full"
-         :start-percent="23">
-         <template #start>
-            <FileManagerPanel
-               :dir-loader="dirLoader"
-               :file-loader="fileLoader"
-               :fsTree="fsTree"
-               v-model:selected-path="selectedPath" />
-         </template>
-         <template #end>
-            <StSplitPanel
-               direction="horizontal"
-               class="size-full"
-               :start-percent="55">
-               <template #start>
-                  <StSplitPanel
-                     direction="vertical"
-                     class="size-full"
-                     :start-percent="65">
-                     <template #start>
-                        <CodeEditorPanel
-                           ref="code-editor"
-                           v-model:current-file-path="selectedFilePath"
-                           :get-wc-instance="getInstance"
-                           :default-fs="pathContentMap" />
-                     </template>
-                     <template #end>
-                        <TerminalPanel ref="terminal" />
-                     </template>
-                  </StSplitPanel>
-               </template>
-               <template #end>
-                  <PreviewPanel
-                     :preview-url="previewUrl"
-                     :host-name="hostName" />
-               </template>
-            </StSplitPanel>
-         </template>
-      </StSplitPanel>
+   <StSpace fill class="pr-4">
+      <DetailWindow :markdown="problem?.detail" />
+      <CommitModal
+         :run-commands="runCommand"
+         :get-wc-instance="getInstance"
+         :problem-id="id!" />
+      <StSpace fill class="p-4 pt-0">
+         <StSplitPanel
+            direction="horizontal"
+            class="size-full"
+            :start-percent="23">
+            <template #start>
+               <FileManagerPanel
+                  :dir-loader="dirLoader"
+                  :file-loader="fileLoader"
+                  :fsTree="fsTree"
+                  v-model:selected-path="selectedPath" />
+            </template>
+            <template #end>
+               <StSplitPanel
+                  direction="horizontal"
+                  class="size-full"
+                  :start-percent="55">
+                  <template #start>
+                     <StSplitPanel
+                        direction="vertical"
+                        class="size-full"
+                        :start-percent="65">
+                        <template #start>
+                           <CodeEditorPanel
+                              ref="code-editor"
+                              v-model:current-file-path="selectedFilePath"
+                              :get-wc-instance="getInstance"
+                              :default-fs="pathContentMap" />
+                        </template>
+                        <template #end>
+                           <TerminalPanel ref="terminal" />
+                        </template>
+                     </StSplitPanel>
+                  </template>
+                  <template #end>
+                     <PreviewPanel
+                        :preview-url="previewUrl"
+                        :host-name="hostName" />
+                  </template>
+               </StSplitPanel>
+            </template>
+         </StSplitPanel>
+      </StSpace>
    </StSpace>
 </template>
 

@@ -34,16 +34,16 @@ const decreaseValue = () => {
       <slot name="prefix"></slot>
       <input
          v-model="value"
-         :type="password ? (visible ? 'text' : 'password') : ''"
          v-bind="$attrs"
+         :type="password ? (visible ? 'text' : 'password') : ''"
          class="bg-transparent border-none outline-none placeholder:text-accent-300 text-white flex-1" />
       <slot name="suffix"></slot>
       <div
          v-if="password"
          class="text-2xl hover:cursor-pointer"
          @click="visible = !visible">
-         <PreviewClose v-if="visible" />
-         <PreviewOpen v-else />
+         <PreviewOpen v-if="visible" />
+         <PreviewClose v-else />
       </div>
       <div
          v-if="$attrs.type === 'number'"

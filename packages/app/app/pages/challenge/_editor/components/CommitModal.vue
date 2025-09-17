@@ -41,8 +41,8 @@ watch(event, async () => {
       try {
          await runBuildStep();
          const pack = await runPackStep();
-         await runUploadStep(pack);
-         close();
+         const recordId = await runUploadStep(pack);
+         close(recordId);
       } catch (e) {
          console.error(e);
          steps.value.find((step) => step.status === 'inProgress')!.status =
@@ -106,7 +106,7 @@ const runPackStep = async () => {
 
 const { $trpc } = useNuxtApp();
 const runUploadStep = async (pack: Record<string, string>) => {
-   await atLeastTime(
+   const { judgeRecordId } = await atLeastTime(
       500,
       $trpc.protected.problem.commitAnswer.mutate({
          problemId: props.problemId,
@@ -114,11 +114,14 @@ const runUploadStep = async (pack: Record<string, string>) => {
       })
    );
    steps.value[2]!.status = 'completed';
+
+   return judgeRecordId;
 };
 
-const close = () => {
+const close = (recordId: number) => {
    runningProcess?.kill();
    opened.value = false;
+   navigateTo(`/challenge/record/${recordId}`);
 };
 
 const closable = computed(() => {

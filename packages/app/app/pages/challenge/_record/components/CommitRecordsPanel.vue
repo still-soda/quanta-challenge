@@ -2,15 +2,10 @@
 import { StSpace } from '#components';
 import { CheckOne, CloseOne, LoadingFour } from '@icon-park/vue-next';
 import dayjs from 'dayjs';
-import { useParam } from '~/composables/utils/use-param';
 import CommitRecordSkeleton from './skeleton/CommitRecordSkeleton.vue';
 import type { CommitRecordType } from './shared-types';
 
-const id = useParam('id', {
-   required: true,
-   parse: (v) => Number(v),
-   onError: () => navigateTo('/app/problems'),
-});
+const props = defineProps<{ id: number }>();
 
 const { $trpc } = useNuxtApp();
 
@@ -18,13 +13,13 @@ const records = ref<CommitRecordType[]>([]);
 const loading = ref(false);
 const getRecords = async () => {
    loading.value = true;
-   if (!id.value || isNaN(id.value)) {
+   if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
    }
    const records = await atLeastTime(
       500,
       $trpc.protected.problem.getAllCommitRecords.query({
-         problemId: id.value,
+         problemId: props.id,
       })
    );
    loading.value = false;

@@ -5,6 +5,8 @@ import Divider from './components/Divider.vue';
 import { useViewTransition } from '~/composables/utils/use-view-transition';
 import { ThreeHexagons } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '题目 - Quanta Challenge' });
+
 const { $trpc } = useNuxtApp();
 
 type TagsType = Awaited<ReturnType<typeof $trpc.public.tag.list.query>>;
@@ -140,7 +142,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                   class="h-fit"
                   :style="{ viewTransitionName: `card-${problem.pid}` }"
                   :key="idx"
-                  :href="`/challenge/${problem.pid}`">
+                  :href="`/challenge/editor/${problem.pid}`">
                   <StProblemCard
                      class="w-[14.5rem] h-fit"
                      :cover-image-name="problem.imageName">

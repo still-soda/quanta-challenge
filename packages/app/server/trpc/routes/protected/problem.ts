@@ -92,6 +92,7 @@ const commitAnswer = protectedProcedure
       const { userId } = ctx.user;
       const { judge } = useRuntimeConfig();
 
+      let createdJudgeRecordId: number = -1;
       await prisma.$transaction(async (tx) => {
          // 创建判题记录
          const { id: judgeRecordId } = await tx.judgeRecords.create({
@@ -105,6 +106,7 @@ const commitAnswer = protectedProcedure
                id: true,
             },
          });
+         createdJudgeRecordId = judgeRecordId;
 
          const { JudgeFile } = await tx.problems.findUniqueOrThrow({
             where: {
@@ -140,7 +142,10 @@ const commitAnswer = protectedProcedure
          });
       });
 
-      return { success: true };
+      return {
+         success: true,
+         judgeRecordId: createdJudgeRecordId,
+      };
    });
 
 // 获取所有提交记录

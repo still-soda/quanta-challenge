@@ -5,6 +5,8 @@ import { useViewTransition } from '~/composables/utils/use-view-transition';
 import Divider from '../components/Divider.vue';
 import { ThreeHexagons } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '我的发布 - Quanta Challenge' });
+
 const { $trpc } = useNuxtApp();
 
 // 获取我的发布题目
