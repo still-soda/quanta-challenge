@@ -1,7 +1,7 @@
-import { StSpace } from '#components';
+import StSpace from '~/components/st/Space/index.vue';
 import { LoadingFour, CloseOne, CheckOne } from '@icon-park/vue-next';
 import type { $Enums } from '@prisma/client';
-import type { VNode, FunctionalComponent } from 'vue';
+import type { FunctionalComponent } from 'vue';
 
 export const DataBlock: FunctionalComponent<{ title: string }> = (
    { title },

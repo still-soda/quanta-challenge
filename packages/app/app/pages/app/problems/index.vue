@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import type { $Enums } from '@prisma/client';
-import SlideMask from './components/SlideMask.vue';
-import Divider from './components/Divider.vue';
+import SlideMask from './_components/SlideMask.vue';
+import Divider from './_components/Divider.vue';
 import { useViewTransition } from '~/composables/utils/use-view-transition';
 import { ThreeHexagons } from '@icon-park/vue-next';
 

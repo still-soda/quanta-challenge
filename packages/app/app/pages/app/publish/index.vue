@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import JudgeScript from './components/JudgeScript.vue';
-import UploadProject from './components/UploadProject.vue';
-import UploadImage from './components/UploadImage.vue';
-import LazyMarkdownEditingDrawer from './components/MarkdownEditingDrawer.vue';
-import TagsPicker from './components/TagsPicker.vue';
+import JudgeScript from './_components/JudgeScript.vue';
+import UploadProject from './_components/UploadProject.vue';
+import UploadImage from './_components/UploadImage.vue';
+import LazyMarkdownEditingDrawer from './_components/MarkdownEditingDrawer.vue';
+import TagsPicker from './_components/TagsPicker.vue';
 import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
 import { usePublishForm } from '~/composables/app/publish/use-publish-form';

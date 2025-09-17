@@ -3,13 +3,13 @@ import {
    AuditFail,
    AuditPending,
    AuditSuccess,
-} from './components/AuditStatus';
-import DataItem from './components/DataItem.vue';
-import FixedButton from './components/FixedButton.vue';
+} from './_components/AuditStatus';
+import DataItem from './_components/DataItem.vue';
+import FixedButton from './_components/FixedButton.vue';
 import dayjs from 'dayjs';
-import { NotPassed, Published, Unpublished } from './components/PublishStatus';
-import VersionPreviewDrawer from './components/VersionPreviewDrawer.vue';
-import SidePopper from './components/SidePopper.vue';
+import { NotPassed, Published, Unpublished } from './_components/PublishStatus';
+import VersionPreviewDrawer from './_components/VersionPreviewDrawer.vue';
+import SidePopper from './_components/SidePopper.vue';
 import {
    Edit,
    Flag,

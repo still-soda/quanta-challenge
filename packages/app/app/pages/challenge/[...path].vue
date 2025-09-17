@@ -6,8 +6,12 @@ definePageMeta({
    key: 'challenge-detail',
 });
 
-const LazyEditor = defineAsyncComponent(() => import('./_editor/index.vue'));
-const LazyRecord = defineAsyncComponent(() => import('./_record/index.vue'));
+const LazyEditor = defineAsyncComponent(
+   () => import('./_subpages/editor/index.vue')
+);
+const LazyRecord = defineAsyncComponent(
+   () => import('./_subpages/record/index.vue')
+);
 
 const path = useParam<string[]>('path', {
    required: true,

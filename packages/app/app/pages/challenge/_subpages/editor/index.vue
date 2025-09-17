@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { buildFileSystemTree } from '../../../utils/fs-tree';
+import { buildFileSystemTree } from '../../../../utils/fs-tree';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FileManagerPanel from './components/FileManagerPanel.vue';
 import CodeEditorPanel from './components/CodeEditorPanel.vue';

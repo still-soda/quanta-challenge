@@ -1,5 +1,5 @@
 <script setup lang="tsx">
-import { StSpace } from '#components';
+import StSpace from '~/components/st/Space/index.vue';
 import { CheckOne, CloseOne, LoadingFour } from '@icon-park/vue-next';
 import dayjs from 'dayjs';
 import CommitRecordSkeleton from './skeleton/CommitRecordSkeleton.vue';
