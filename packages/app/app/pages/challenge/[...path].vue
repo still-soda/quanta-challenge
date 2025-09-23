@@ -24,6 +24,8 @@ const componentLoaded = reactive({
 });
 const currentComponent = ref<'editor' | 'record'>();
 
+provide('currentComponent', currentComponent);
+
 watch(
    path,
    (newPath) => {

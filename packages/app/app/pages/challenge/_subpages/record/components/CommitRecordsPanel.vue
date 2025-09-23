@@ -28,7 +28,20 @@ const getRecords = async () => {
 onMounted(async () => {
    records.value = await getRecords();
    selectedRecord.value = records.value[0] ?? null;
-   emits('select', selectedRecord.value!);
+   emits('select', selectedRecord.value!, true);
+});
+
+const currentComponent = inject<Ref<'editor' | 'record'> | undefined>(
+   'currentComponent',
+   undefined
+)!;
+watch(currentComponent, async (newVal) => {
+   const opened = newVal === 'record';
+   if (opened && !loading.value) {
+      records.value = await getRecords();
+      selectedRecord.value = records.value[0] ?? null;
+      emits('select', selectedRecord.value!, true);
+   }
 });
 
 const CommitRecord = ({
@@ -87,7 +100,7 @@ const selectRecord = (record: CommitRecordType) => {
 };
 
 const emits = defineEmits<{
-   select: [record: CommitRecordType];
+   select: [record: CommitRecordType, isInit?: boolean];
 }>();
 watch(selectedRecord, (newRecord) => {
    if (newRecord) {

@@ -28,6 +28,8 @@ const selected = computed(() => {
 <template>
    <div class="flex flex-col w-full">
       <div
+         data-type="folder"
+         :data-path="props.folder.path"
          :style="{ paddingLeft: `${props.deep * 1 + 0.5}rem` }"
          class="flex items-center gap-1 font-family-fira-code py-1 px-2 hover:cursor-pointer hover:bg-accent-600 w-full"
          :class="{ 'bg-accent-600': selected }"
@@ -36,13 +38,13 @@ const selected = computed(() => {
             v-show="opened"
             theme="filled"
             size="1rem"
-            class="text-secondary" />
+            class="text-secondary pointer-events-none" />
          <FolderClose
             v-show="!opened"
             theme="filled"
             size="1rem"
-            class="text-secondary icon" />
-         <div class="text-sm text-nowrap whitespace-nowrap">
+            class="text-secondary icon pointer-events-none" />
+         <div class="text-sm text-nowrap whitespace-nowrap pointer-events-none">
             {{ folder.name }}
          </div>
       </div>

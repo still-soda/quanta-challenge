@@ -3,6 +3,7 @@ import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import type { IProgressStep } from '~/components/st/Progress/type';
 import { useTerminal } from '~/composables/challenge/use-terminal';
 import { useEventEmitter } from '~/composables/utils/use-event-emitter';
+import { useParam } from '~/composables/utils/use-param';
 import { acceptedBinaryExtensions } from '~/configs/accepted-pack-extension';
 
 const props = defineProps<{
@@ -118,10 +119,16 @@ const runUploadStep = async (pack: Record<string, string>) => {
    return judgeRecordId;
 };
 
+
+const path = useParam<string[]>('path', {
+   required: true,
+   onError: () => navigateTo('/app/problems'),
+});
+const id = computed(() => Number(path.value?.[1] ?? 0));
 const close = (recordId: number) => {
    runningProcess?.kill();
    opened.value = false;
-   navigateTo(`/challenge/record/${recordId}`);
+   navigateTo(`/challenge/record/${id.value}?id=${recordId}`);
 };
 
 const closable = computed(() => {

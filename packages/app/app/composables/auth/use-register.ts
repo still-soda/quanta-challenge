@@ -46,6 +46,7 @@ export const useRegister = () => {
             updatedAt: new Date(),
             lastLogin: new Date(),
             imageId: null,
+            role: 'USER',
          };
          getCallback('success').forEach((cb) => cb());
       } catch (error) {

@@ -1,4 +1,4 @@
-import { StSpace } from '#components';
+import StSpace from '../../../../../components/st/Space/index.vue';
 import { Forbid, Lock, Unlock } from '@icon-park/vue-next';
 
 export const NotPassed = () => {

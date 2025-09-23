@@ -56,15 +56,28 @@ const Operation: Component = (_, { slots }) => {
             <template #loading>
                <FsTreeSkeleton />
             </template>
-            <StFileSystemTree
-               v-if="fsTree"
-               class="absolute top-0 left-0"
-               @file-or-folder-click="onFileOrFolderClick"
-               :dir-loader="dirLoader"
-               :file-loader="fileLoader"
-               :current-file-path="selectedPath"
-               :default-opened="true"
-               :directory="fsTree" />
+            <StContextMenuProvider>
+               <template #menu>
+                  <StContextMenuRoot v-slot="{ target }">
+                     <StContextMenuList class="!text-white">
+                        <StContextMenuItem>
+                           {{ target?.getAttribute('data-path') }}
+                        </StContextMenuItem>
+                        <StContextMenuItem>新建文件</StContextMenuItem>
+                     </StContextMenuList>
+                  </StContextMenuRoot>
+               </template>
+               <StFileSystemTree
+                  v-if="fsTree"
+                  class="absolute top-0 left-0"
+                  @contextmenu.prevent
+                  @file-or-folder-click="onFileOrFolderClick"
+                  :dir-loader="dirLoader"
+                  :file-loader="fileLoader"
+                  :current-file-path="selectedPath"
+                  :default-opened="true"
+                  :directory="fsTree" />
+            </StContextMenuProvider>
          </StSkeleton>
       </StSpace>
    </StSpace>
