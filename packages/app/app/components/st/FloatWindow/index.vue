@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useResizable } from '~/composables/utils/use-resizable';
+import { useResizable } from '~/composables/use-resizable';
 
 const props = defineProps<{
    initialSize?: {

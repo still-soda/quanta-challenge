@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useColorPicker } from '~/composables/utils/use-color-picker';
+import { useColorPicker } from '~/composables/use-color-picker';
 import '@simonwep/pickr/dist/themes/nano.min.css';
 import type { FormItemStatus } from '../Form/type';
 

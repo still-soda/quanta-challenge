@@ -8,9 +8,9 @@ import {
    Timer,
    UploadWeb,
 } from '@icon-park/vue-next';
-import { useEventEmitter } from '~/composables/utils/use-event-emitter';
-import { useParam } from '~/composables/utils/use-param';
-import { usePreventLeave } from '~/composables/utils/use-prevent-leave';
+import { useEventEmitter } from '~/composables/use-event-emitter';
+import { useParam } from '~/composables/use-param';
+import { usePreventLeave } from '~/composables/use-prevent-leave';
 
 const store = useEditorStore();
 const toggleDetailWindow = () => {

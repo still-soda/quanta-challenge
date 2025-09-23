@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, useTemplateRef } from 'vue';
-import { useDefaultCursor } from '~/composables/utils/use-default-cursor';
+import { useDefaultCursor } from '~/composables/use-default-cursor';
 
 const props = defineProps<{
    direction: 'horizontal' | 'vertical';

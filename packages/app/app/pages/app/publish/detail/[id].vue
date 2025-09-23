@@ -8,7 +8,7 @@ import DataItem from './_components/DataItem.vue';
 import FixedButton from './_components/FixedButton.vue';
 import dayjs from 'dayjs';
 import { NotPassed, Published, Unpublished } from './_components/PublishStatus';
-import VersionPreviewDrawer from './_components/VersionPreviewDrawer.vue';
+import VersionPreviewDrawer from './_drawers/VersionPreviewDrawer.vue';
 import SidePopper from './_components/SidePopper.vue';
 import {
    Edit,

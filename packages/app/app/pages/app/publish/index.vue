@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import JudgeScript from './_components/JudgeScript.vue';
+import JudgeScript from './_modules/JudgeScript.vue';
 import UploadProject from './_components/UploadProject.vue';
 import UploadImage from './_components/UploadImage.vue';
-import LazyMarkdownEditingDrawer from './_components/MarkdownEditingDrawer.vue';
-import TagsPicker from './_components/TagsPicker.vue';
+import LazyMarkdownEditingDrawer from './_drawers/MarkdownEditingDrawer.vue';
+import TagsPicker from './_modules/TagsPicker.vue';
 import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
-import { usePublishForm } from '~/composables/app/publish/use-publish-form';
+import { usePublishForm } from './_composables/use-publish-form';
 import { UploadTwo } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });

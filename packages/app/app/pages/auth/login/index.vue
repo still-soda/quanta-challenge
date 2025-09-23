@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useEmailLogin } from '~/composables/auth/use-login';
-import type { IRule } from '../../../components/st/Form/type';
+import { useEmailLogin } from './_composables/use-login';
+import type { IRule } from '~/components/st/Form/type';
 import * as clientAuthn from '@simplewebauthn/browser';
 import z from 'zod';
 import { Fingerprint, Lock, Mail } from '@icon-park/vue-next';

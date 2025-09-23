@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useParam } from '~/composables/utils/use-param';
+import { useParam } from '~/composables/use-param';
 
 definePageMeta({
    layout: 'challenge-layout',

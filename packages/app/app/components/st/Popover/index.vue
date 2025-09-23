@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-   usePopper,
-   type IUsePopperOptions,
-} from '~/composables/utils/use-popper';
+import { usePopper, type IUsePopperOptions } from '~/composables/use-popper';
 
 const props = defineProps<{
    content?: string;

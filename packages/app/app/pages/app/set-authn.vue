@@ -2,7 +2,7 @@
 import { Mail } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
-import { useRegisterAuthn } from '~/composables/auth/use-register-authn';
+import { useRegisterAuthn } from './_composables/use-register-authn';
 
 const {
    formdata,

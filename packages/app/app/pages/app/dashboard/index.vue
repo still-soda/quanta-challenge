@@ -6,7 +6,7 @@ import {
    SubmissionStatusCard,
    BadgesCard,
    RankingCard,
-} from './_components';
+} from './_modules';
 
 useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
 </script>

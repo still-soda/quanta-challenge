@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import { useShiki } from '~/composables/utils/use-shiki';
+import { useShiki } from '~/composables/use-shiki';
 import langVue from 'shiki/langs/vue.mjs';
 import langTsx from 'shiki/langs/tsx.mjs';
 import langJsx from 'shiki/langs/jsx.mjs';

@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { buildFileSystemTree } from '../../../../utils/fs-tree';
+import { buildFileSystemTree } from '~/utils/fs-tree';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
-import FileManagerPanel from './components/FileManagerPanel.vue';
-import CodeEditorPanel from './components/CodeEditorPanel.vue';
-import TerminalPanel from './components/TerminalPanel.vue';
-import PreviewPanel from './components/PreviewPanel.vue';
-import { useWebContainer } from '~/composables/challenge/use-web-container';
-import DetailWindow from './components/DetailWindow.vue';
-import CommitModal from './components/CommitModal.vue';
+import FileManagerPanel from './_modules/FileManagerPanel.vue';
+import CodeEditorPanel from './_modules/CodeEditorPanel.vue';
+import TerminalPanel from './_modules/TerminalPanel.vue';
+import PreviewPanel from './_modules/PreviewPanel.vue';
+import { useWebContainer } from '../../_composables/use-web-container';
+import DetailWindow from './_components/DetailWindow.vue';
+import CommitModal from './_components/CommitModal.vue';
 
 definePageMeta({ layout: 'challenge-layout' });
 

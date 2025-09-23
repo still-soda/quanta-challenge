@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CommitRecordsPanel from './components/CommitRecordsPanel.vue';
-import CommitDetailPanel from './components/CommitDetailPanel.vue';
-import type { CommitRecordType } from './components/shared-types';
-import { useQuery } from '~/composables/utils/use-query';
+import CommitRecordsPanel from './_modules/CommitRecordsPanel.vue';
+import CommitDetailPanel from './_modules/CommitDetailPanel.vue';
+import type { CommitRecordType } from './_types/shared-types';
+import { useQuery } from '~/composables/use-query';
 
 const props = defineProps<{ id: number }>();
 

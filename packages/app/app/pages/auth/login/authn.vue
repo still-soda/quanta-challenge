@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useWebAuthnLogin } from '~/composables/auth/use-login-authn';
-import type { IRule } from '../../../components/st/Form/type';
+import { useWebAuthnLogin } from './_composables/use-login-authn';
+import type { IRule } from '~/components/st/Form/type';
 import z from 'zod';
 import { Key, Mail } from '@icon-park/vue-next';
 

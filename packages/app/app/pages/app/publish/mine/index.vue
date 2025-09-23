@@ -1,7 +1,7 @@
 <script setup lang="tsx">
 import { StSpace } from '#components';
 import { $Enums } from '@prisma/client';
-import { useViewTransition } from '~/composables/utils/use-view-transition';
+import { useViewTransition } from '~/composables/use-view-transition';
 import Divider from '../_components/Divider.vue';
 import { ThreeHexagons } from '@icon-park/vue-next';
 

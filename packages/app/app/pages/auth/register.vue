@@ -2,7 +2,7 @@
 import { Lock, Mail, User } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
-import { useRegister } from '~/composables/auth/use-register';
+import { useRegister } from './_composables/use-register';
 
 useSeoMeta({ title: '注册 - Quanta Challenge' });
 

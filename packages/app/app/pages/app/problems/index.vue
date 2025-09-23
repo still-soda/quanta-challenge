@@ -2,7 +2,7 @@
 import type { $Enums } from '@prisma/client';
 import SlideMask from './_components/SlideMask.vue';
 import Divider from './_components/Divider.vue';
-import { useViewTransition } from '~/composables/utils/use-view-transition';
+import { useViewTransition } from '~/composables/use-view-transition';
 import { ThreeHexagons } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '题目 - Quanta Challenge' });
