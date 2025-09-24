@@ -1,10 +1,26 @@
 import { EventType, type ITaskCompletedPayload } from '../events/index.js';
 import { EventEmitterService } from '../utils/event-emitter.js';
+import { url } from '@challenge/shared/utils';
 import prisma from '../utils/prisma.js';
 
-export const initTaskResultHandlers = () => {
+const requestWebhook = async (data: {
+   judgeRecordId: number;
+   token: string;
+}) => {
+   const { judgeRecordId, token } = data;
    const appServerUrl = process.env.APP_SERVER_URL || 'http://localhost:3000';
 
+   const callbackUrl = url(appServerUrl, '/api/webhooks/judge-complete', {
+      token,
+      recordId: judgeRecordId,
+   });
+
+   return fetch(callbackUrl).catch((e) =>
+      console.error('💀 Error sending callback:', e)
+   );
+};
+
+export const initTaskResultHandlers = () => {
    const setStatus = async (
       judgeRecordId: number,
       status: 'ready' | 'invalid',
@@ -37,6 +53,7 @@ export const initTaskResultHandlers = () => {
                ? 'ready'
                : 'invalid';
          await setStatus(job.data.judgeRecordId, status, job.data.mode);
+         requestWebhook(job.data);
       }
    );
 
@@ -45,6 +62,7 @@ export const initTaskResultHandlers = () => {
       async ({ job, error }) => {
          console.error(`Task failed for job ${job.id}:`, error);
          await setStatus(job.data.judgeRecordId, 'invalid', job.data.mode);
+         requestWebhook(job.data);
       }
    );
 
@@ -53,6 +71,7 @@ export const initTaskResultHandlers = () => {
       async ({ job, error }) => {
          console.error(`Task error for job ${job.id}:`, error);
          await setStatus(job.data.judgeRecordId, 'invalid', job.data.mode);
+         requestWebhook(job.data);
       }
    );
 };

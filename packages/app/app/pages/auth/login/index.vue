@@ -15,8 +15,9 @@ onBeforeMount(() => {
    supportWebAuthn.value = clientAuthn.browserSupportsWebAuthn();
 });
 
+const redirect = useQuery<string>('redirect');
 onLoginSuccess(() => {
-   navigateTo('/app');
+   navigateTo(redirect.value ?? '/app/dashboard', { replace: true });
 });
 
 const rules: IRule[] = [
@@ -33,7 +34,10 @@ const rules: IRule[] = [
 ];
 
 const gotoWebAuthnLogin = () => {
-   navigateTo('/auth/login/authn');
+   const url = redirect.value
+      ? `/auth/login/authn?redirect=${encodeURIComponent(redirect.value)}`
+      : '/auth/login/authn';
+   navigateTo(url);
 };
 </script>
 

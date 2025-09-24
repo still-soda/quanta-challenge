@@ -12,23 +12,19 @@ useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
 </script>
 
 <template>
-   <StSpace direction="vertical" align="center" gap="0" class="h-full">
-      <StSpace gap="1.5rem" class="w-full h-full px-4 py-6 max-w-[80.68rem]">
-         <StSpace
-            direction="vertical"
-            align="start"
-            gap="1.5rem"
-            class="w-full h-full">
+   <StSpace direction="vertical" align="center" gap="0" fill-y>
+      <StSpace gap="1.5rem" fill class="px-4 py-6 max-w-[80.68rem] shrink-0">
+         <StSpace direction="vertical" align="start" gap="1.5rem" fill>
             <h1 class="st-font-hero-bold">早上好，没有气的汽水</h1>
-            <StSpace gap="1.5rem" class="mt-4 w-full">
+            <StSpace gap="1.5rem" fill-x class="mt-4">
                <RecentSubmissionCard />
                <RecentLearningCard />
             </StSpace>
             <DailyChallengeCard />
          </StSpace>
-         <StSpace direction="vertical" gap="1.5rem" class="w-full h-full">
+         <StSpace direction="vertical" gap="1.5rem" fill>
             <SubmissionStatusCard />
-            <StSpace gap="1.5rem" class="w-full h-full">
+            <StSpace gap="1.5rem" fill>
                <RankingCard />
                <BadgesCard />
             </StSpace>

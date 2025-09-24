@@ -15,8 +15,9 @@ const {
    onAuthenticateError,
 } = useWebAuthnLogin();
 
+const redirect = useQuery<string>('redirect');
 onAuthenticateSuccess(() => {
-   navigateTo('/app/dashboard');
+   navigateTo(redirect.value ?? '/app/dashboard', { replace: true });
 });
 onAuthenticateError(() => {
    alert('Authentication Failed');
@@ -31,7 +32,10 @@ const rules: IRule[] = [
 ];
 
 const gotoPasswordLogin = () => {
-   navigateTo('/auth/login');
+   const url = redirect.value
+      ? `/auth/login?redirect=${encodeURIComponent(redirect.value)}`
+      : '/auth/login';
+   navigateTo(url);
 };
 </script>
 

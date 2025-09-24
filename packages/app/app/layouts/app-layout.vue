@@ -11,7 +11,7 @@ const handleMyPublish = () => {
 </script>
 
 <template>
-   <div class="w-full h-full flex">
+   <div class="w-full h-full flex min-w-[1280px]">
       <StSidebar class="w-[9.3125rem]" />
       <main class="h-screen flex flex-col flex-1">
          <StHeader>

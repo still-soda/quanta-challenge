@@ -118,5 +118,10 @@ export default defineNuxtConfig({
       judge: {
          serverUrl: process.env.JUDGE_SERVER || 'http://localhost:1888',
       },
+      rank: {
+         cacheTTL: process.env.RANKING_CACHE_TTL
+            ? parseInt(process.env.RANKING_CACHE_TTL)
+            : 3600, // 默认缓存1小时
+      },
    },
 });

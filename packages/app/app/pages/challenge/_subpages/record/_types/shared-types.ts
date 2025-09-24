@@ -31,3 +31,9 @@ export type CommitDetailType = {
    pendingTime: number;
    judgingTime: number;
 };
+
+export interface IRank {
+   from: number;
+   to: number;
+   count: number;
+}

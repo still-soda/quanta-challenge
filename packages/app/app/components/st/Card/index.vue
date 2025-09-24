@@ -4,12 +4,13 @@ import type { DefineComponent } from 'vue';
 defineProps<{
    icon?: DefineComponent;
    title?: string;
+   bordered?: boolean;
 }>();
 </script>
 
 <template>
    <div
-      class="p-4 rounded-[1.25rem] bg-accent-600 w-full h-full relative flex flex-col">
+      class="p-4 rounded-[1.25rem] bg-accent-600 ring ring-transparent w-full h-full relative flex flex-col">
       <slot name="header">
          <StSpace justify="between" align="center" class="h-[1.75rem]">
             <slot name="header-left">

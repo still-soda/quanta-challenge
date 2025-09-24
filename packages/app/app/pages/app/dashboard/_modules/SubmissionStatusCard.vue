@@ -12,6 +12,20 @@ onMounted(() => {
       width.value = card.value.$el.getBoundingClientRect().width;
    });
 });
+
+const { $trpc } = useNuxtApp();
+const loading = ref(true);
+const submissionStatusData = ref<Record<string, number>>({});
+const getSubmissionStatusData = async () => {
+   loading.value = true;
+   submissionStatusData.value =
+      await $trpc.protected.dashboard.getSubmissionStatus.query();
+   loading.value = false;
+};
+
+onMounted(() => {
+   getSubmissionStatusData();
+});
 </script>
 
 <template>
@@ -21,13 +35,13 @@ onMounted(() => {
       title="提交情况"
       class="w-full !h-fit mt-4 relative overflow-clip">
       <div
-         class="mt-4 overflow-x-auto flex shrink-0 w-0 hide-scrollbar"
+         class="mt-4 overflow-x-auto flex shrink-0 w-0 hide-scrollbar relative min-w-[36.625rem]"
          :style="{ width: `${width - 34}px` }">
          <StHeatMap
-            loading
+            :loading="loading"
             :current-year="2025"
             :rows="9"
-            :data="[]"
+            :data="submissionStatusData"
             class="mr-4" />
       </div>
       <div

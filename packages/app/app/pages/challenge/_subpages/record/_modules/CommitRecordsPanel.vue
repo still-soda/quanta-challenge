@@ -29,6 +29,20 @@ onMounted(async () => {
    records.value = await getRecords();
    selectedRecord.value = records.value[0] ?? null;
    emits('select', selectedRecord.value!, true);
+
+   let waitTime = 1000;
+   const polling = async () => {
+      records.value = await $trpc.protected.problem.getAllCommitRecords.query({
+         problemId: props.id,
+      });
+      if (records.value.some((record) => record.result === 'pending')) {
+         waitTime *= 1.5;
+         setTimeout(polling, waitTime);
+      }
+   };
+   if (records.value.some((record) => record.result === 'pending')) {
+      setTimeout(polling, waitTime);
+   }
 });
 
 const currentComponent = inject<Ref<'editor' | 'record'> | undefined>(

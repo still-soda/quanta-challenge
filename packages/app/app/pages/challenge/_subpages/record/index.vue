@@ -31,7 +31,9 @@ const handleSelectRecord = (record: CommitRecordType, isInit = false) => {
             <CommitRecordsPanel :id="props.id" @select="handleSelectRecord" />
          </template>
          <template #end>
-            <CommitDetailPanel :record-id="selectedRecordId" />
+            <CommitDetailPanel
+               :problem-id="props.id"
+               :record-id="selectedRecordId" />
          </template>
       </StSplitPanel>
    </StSpace>

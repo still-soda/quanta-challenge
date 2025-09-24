@@ -12,6 +12,9 @@
       },
       "./thumbhash/client": {
          "import": "./service/thumbhash/client.ts"
+      },
+      "./utils": {
+         "import": "./utils/url.ts"
       }
    },
    "main": "index.js",

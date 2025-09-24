@@ -1,11 +1,6 @@
-export interface IHeatMapData {
-   data: string;
-   submissions: number;
-}
-
 export interface IHeatMapProps {
    currentYear: number;
-   data: Array<IHeatMapData>;
+   data: Record<string, number>;
    rows?: number;
    loading?: boolean;
 }

@@ -7,7 +7,7 @@ onBeforeMount(initTokens);
 
 <template>
    <div
-      class="w-screen h-screen bg-background text-white font-family-sans text-base min-w-[1280px] overflow-hidden">
+      class="w-screen h-screen bg-background text-white font-family-sans text-base overflow-hidden">
       <NuxtPage />
    </div>
 </template>

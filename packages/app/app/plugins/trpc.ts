@@ -32,8 +32,7 @@ export default defineNuxtPlugin(() => {
                      }>('/api/refresh', {
                         headers: { refreshToken: authStore.refreshToken },
                      });
-                     authStore.accessToken = refreshRes.accessToken;
-                     authStore.refreshToken = refreshRes.refreshToken;
+                     authStore.setTokens(refreshRes);
 
                      options!.headers = {
                         ...options!.headers,
@@ -41,14 +40,11 @@ export default defineNuxtPlugin(() => {
                      };
                      res = await fetch(url, options);
                   } catch {
-                     navigateTo('/auth/login');
-                     return new Response(
-                        JSON.stringify({ error: 'Unauthorized' }),
-                        {
-                           status: 200,
-                           headers: { 'Content-Type': 'application/json' },
-                        }
+                     location.replace(
+                        '/auth/login?redirect=' +
+                           encodeURIComponent(useRoute().fullPath)
                      );
+                     return res;
                   }
                }
 

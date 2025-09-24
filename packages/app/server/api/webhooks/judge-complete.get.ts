@@ -1,8 +1,15 @@
+import prisma from '@challenge/database';
 import z from 'zod';
+import { rankService } from '~~/server/trpc/services/rank';
 
 const JudgeCompleteSchema = z.object({
    token: z.uuid('Invalid token format'),
-   judgeRecordId: z.number('Invalid judgeRecordId format').int(),
+   recordId: z
+      .string()
+      .transform((val) => parseInt(val, 10))
+      .refine((val) => !isNaN(val) && val > 0, {
+         message: 'recordId must be a positive integer',
+      }),
 });
 
 export default defineEventHandler(async (event) => {
@@ -15,19 +22,26 @@ export default defineEventHandler(async (event) => {
       });
    }
 
-   const { token, judgeRecordId } = parseResult.data;
+   const { token, recordId } = parseResult.data;
    const redis = useRedis();
 
-   const storedToken = await redis.get(`judge_token:${judgeRecordId}`);
+   const storedToken = await redis.get(`judge_token:${recordId}`);
    if (storedToken !== token) {
       throw createError({
          statusCode: 403,
          message: 'Invalid token',
       });
    }
-   await redis.del(`judge_token:${judgeRecordId}`);
+   await redis.del(`judge_token:${recordId}`);
 
-   // TODO
+   const { problemId, score, result } =
+      await prisma.judgeRecords.findUniqueOrThrow({
+         where: { id: recordId },
+         select: { problemId: true, score: true, result: true },
+      });
+   if (result === 'success') {
+      await rankService.pushToRankings(problemId, recordId, score);
+   }
 
    return { message: 'ok' };
 });

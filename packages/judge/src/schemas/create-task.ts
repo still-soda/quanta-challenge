@@ -9,4 +9,5 @@ export const CreateTaskSchema = z.object({
    judgeScript: z.string().nonempty('Judge script cannot be empty'),
    fsSnapshot: z.record(z.string(), z.string()),
    mode: z.enum(['audit', 'judge']),
+   token: z.uuid(),
 });

@@ -122,6 +122,11 @@ const commitAnswer = protectedProcedure
          });
          const judgeScript = JudgeFile[0].judgeScript;
 
+         // 生成回调 token
+         const callbackToken = crypto.randomUUID();
+         const redis = useRedis();
+         redis.set(`judge_token:${judgeRecordId}`, callbackToken);
+
          await fetch(`${judge.serverUrl}/task/create`, {
             method: 'POST',
             headers: {
@@ -133,6 +138,7 @@ const commitAnswer = protectedProcedure
                judgeScript: judgeScript,
                fsSnapshot: input.snapshot,
                problemId: input.problemId,
+               token: callbackToken,
                mode: 'judge',
             }),
          }).then((res: any) => {
