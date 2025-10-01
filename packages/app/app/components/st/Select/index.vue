@@ -21,6 +21,7 @@ const props = defineProps<{
    loading?: boolean;
    optionEmptyText?: string;
    labelClass?: any;
+   closeOnClickOutside?: boolean;
 }>();
 
 const selected = defineModel<any | any[]>('value', {
@@ -39,13 +40,39 @@ const opened = defineModel<boolean>('opened', {
    default: false,
 });
 const toggleSelect = () => {
-   opened.value = !opened.value;
+   setTimeout(() => {
+      opened.value = !opened.value;
+   });
 };
+onMounted(() => {
+   const close = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (popper.value?.contains(target) || container.value?.contains(target))
+         return;
+      opened.value = false;
+   };
+
+   watchEffect(() => {
+      if (props.closeOnClickOutside === false) {
+         document.removeEventListener('click', close);
+      } else {
+         document.addEventListener('click', close);
+      }
+      return () => {
+         document.removeEventListener('click', close);
+      };
+   });
+
+   onUnmounted(() => {
+      document.removeEventListener('click', close);
+   });
+});
 
 const {
    containerKey,
    container,
    popperKey,
+   popper,
    onPopperUpdate,
    onFirstUpdate,
    popperInstance,

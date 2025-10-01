@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { ISelectOption } from '~/components/st/Select/type';
-import { Plus, RobotOne } from '@icon-park/vue-next';
+import { Plus, Record, RobotOne } from '@icon-park/vue-next';
 import DepDataRequestDrawer from '../_drawers/DepDataRequestDrawer.vue';
+import { $Enums } from '@prisma/client';
 
 const { $trpc } = useNuxtApp();
 
@@ -32,12 +33,12 @@ const fetchTags = async (): Promise<ISelectOption[]> => {
          label: dep.name,
          value: dep.id,
          description: dep.description ?? '',
+         type: dep.type,
       }))
       .toSorted((a, b) =>
          a.label.localeCompare(b.label)
       ) satisfies ISelectOption[];
 };
-
 onMounted(async () => {
    if (dependencyData.value.length > 0) {
       dependencyOptions.value = await fetchTags();
@@ -58,6 +59,15 @@ const onSubmitDepDataRequest = async () => {
    tagSelectOpened.value = true;
    dependencyOptions.value = await fetchTags();
 };
+
+const typeToText: Record<string, { text: string; color: string }> = {
+   NUMERIC: { text: '数值型', color: '#FE6603' },
+   BOOLEAN: { text: '布尔型', color: '#fa2f32' },
+   TEXT: { text: '文本型', color: '#2F54EB' },
+} satisfies Record<
+   $Enums.AchievementDepDataType,
+   { text: string; color: string }
+>;
 </script>
 
 <template>
@@ -68,6 +78,7 @@ const onSubmitDepDataRequest = async () => {
    <StSelect
       v-model:value="dependencyData"
       v-model:opened="tagSelectOpened"
+      close-on-click-outside
       attach-to-body
       placeholder="请选择依赖数据"
       multiple
@@ -104,7 +115,13 @@ const onSubmitDepDataRequest = async () => {
          </div>
       </template>
       <template #option-label="{ item }">
-         <span class="font-family-fira-code">{{ item.label }}</span>
+         <StSpace align="center" gap="0.5rem">
+            <StTag
+               :content="typeToText[(item as any).type]!.text"
+               :color="typeToText[(item as any).type]!.color"
+               size="small" />
+            <span class="font-family-fira-code">{{ item.label }}</span>
+         </StSpace>
       </template>
       <template #options-after>
          <div class="flex justify-center border-t border-accent-600 w-full">

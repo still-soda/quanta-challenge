@@ -71,6 +71,7 @@ const onTagCreated = async () => {
       attach-to-body
       placeholder="请选择题目标签"
       multiple
+      close-on-click-outside
       :loading="fetchTagLoading"
       :outer-class="props.outerClass"
       :options="tagOptions">

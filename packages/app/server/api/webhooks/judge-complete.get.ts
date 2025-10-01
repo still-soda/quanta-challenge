@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import z from 'zod';
 import { rankService } from '~~/server/trpc/services/rank';
 

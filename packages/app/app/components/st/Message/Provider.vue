@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AddMessageOptions, Message, MessageOperation } from './type';
-import { addMessageOutsideVueKey, addMessagetKey } from './use-message';
+import { ADD_MESSAGE_OUTSIDE_VUE_KEY, ADD_MESSAGE_KEY } from './use-message';
 
 const messages = ref<Message[]>([]);
 
@@ -40,10 +40,15 @@ const addMessage = (options: AddMessageOptions): MessageOperation => {
    return operation;
 };
 
-provide(addMessagetKey, addMessage);
+provide(ADD_MESSAGE_KEY, addMessage);
 
 onMounted(() => {
-   (globalThis as any)[addMessageOutsideVueKey] = addMessage;
+   Object.defineProperty(globalThis, ADD_MESSAGE_OUTSIDE_VUE_KEY, {
+      value: addMessage,
+      writable: false,
+      configurable: false,
+      enumerable: false,
+   });
 });
 </script>
 

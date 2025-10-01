@@ -78,7 +78,7 @@ const enableSubmit = computed(() => {
 
 <template>
    <StDrawer global v-model:opened="opened" width="35rem">
-      <StSpace direction="vertical" gap="1rem" fill class="text-white">
+      <StSpace direction="vertical" gap="0" fill class="text-white">
          <StSpace direction="vertical" gap="1.5rem" fill class="p-6">
             <!-- Header -->
             <h1 class="st-font-secondary-bold">新建标签</h1>
@@ -118,7 +118,7 @@ const enableSubmit = computed(() => {
             </StSpace>
          </StSpace>
          <!-- Bottom -->
-         <StSpace justify="end" class="p-4 w-full">
+         <StSpace justify="end" class="p-4 pt-0 w-full">
             <StButton
                @click="handleCreate"
                :loading="loading"

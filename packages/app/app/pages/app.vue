@@ -19,3 +19,9 @@ onBeforeMount(checkUserHasLogin);
       </StMessageProvider>
    </NuxtLayout>
 </template>
+
+<style>
+*::selection {
+   background-color: var(--color-primary);
+}
+</style>

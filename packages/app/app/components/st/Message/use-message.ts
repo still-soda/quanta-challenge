@@ -6,12 +6,12 @@ type QuickMessageOptions = {
    loading?: boolean;
 };
 
-export const addMessagetKey = Symbol('st-message');
+export const ADD_MESSAGE_KEY = Symbol('st-message');
 
 export function useMessage() {
    const addMessage = inject<
       ((options: AddMessageOptions) => MessageOperation) | null
-   >(addMessagetKey, null);
+   >(ADD_MESSAGE_KEY, null);
 
    if (!addMessage) {
       throw new Error('useMessage must be used within a MessageProvider');
@@ -78,7 +78,7 @@ export function useMessage() {
    };
 }
 
-export const addMessageOutsideVueKey = Symbol('st-message-outside-vue');
+export const ADD_MESSAGE_OUTSIDE_VUE_KEY = Symbol('st-message-outside-vue');
 
 export function useMessageOutsideVue() {
    if (typeof globalThis === 'undefined') {
@@ -87,7 +87,7 @@ export function useMessageOutsideVue() {
 
    const addMessage: (options: AddMessageOptions) => MessageOperation = (
       globalThis as any
-   )?.[addMessageOutsideVueKey];
+   )?.[ADD_MESSAGE_OUTSIDE_VUE_KEY];
 
    if (!addMessage) {
       throw new Error('useMessageOutsideVue must be used after setup');

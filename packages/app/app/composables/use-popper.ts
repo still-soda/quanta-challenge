@@ -93,6 +93,7 @@ export const usePopper = (options?: IUsePopperOptions) => {
       popperInstance,
       containerKey,
       container,
+      popper,
       popperKey,
       onPopperUpdate,
       onFirstUpdate,

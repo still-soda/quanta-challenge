@@ -5,7 +5,7 @@ import { type IRule } from '~/components/st/Form/type';
 import { useMessage } from '~/components/st/Message/use-message';
 import type { ISelectOption } from '~/components/st/Select/type';
 
-defineProps<{
+const props = defineProps<{
    outerClass?: string;
 }>();
 
@@ -160,10 +160,11 @@ onEditorContentChanged((content) => {
                         <StSelect
                            ref="select"
                            v-model:value="formdata.type"
-                           :outer-class
                            placeholder="请选择数据类型"
                            optionsContainerClass="z-[10000]"
                            attach-to-body
+                           close-on-click-outside
+                           :outer-class
                            :options="typeOptions">
                            <template #selected-preview>
                               <div class="text-white">
@@ -186,9 +187,8 @@ onEditorContentChanged((content) => {
                :loading="loading"
                :disabled="!enableSubmit"
                class="py-[0.375rem] px-[1.25rem] text-accent-100 !rounded-[0.375rem]">
-               <div class="flex gap-2 items-center">
-                  <Box class="text-[1.25rem]" />
-                  <span>创建</span>
+               <div class="flex gap-2 items-center tracking-wider">
+                  <span>申请</span>
                </div>
             </StButton>
          </StSpace>
