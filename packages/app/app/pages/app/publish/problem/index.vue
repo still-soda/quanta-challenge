@@ -99,7 +99,7 @@ const handleSubmit = async () => {
       submitLoading.value = false;
       return;
    });
-   navigateTo(`/app/publish/detail/${result?.problemId}`);
+   navigateTo(`/app/publish/problem/detail/${result?.problemId}`);
 };
 </script>
 

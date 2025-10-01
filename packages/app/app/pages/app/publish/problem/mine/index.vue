@@ -141,7 +141,7 @@ const showEmptyStatus = computed(() => {
                   class="h-fit"
                   :style="{ viewTransitionName: `card-${problem.pid}` }"
                   :key="idx"
-                  :to="`/app/publish/detail/${problem.pid}`">
+                  :to="`/app/publish/problem/detail/${problem.pid}`">
                   <StProblemCard
                      class="w-[14.5rem] h-fit"
                      :cover-image-name="problem.imageName">

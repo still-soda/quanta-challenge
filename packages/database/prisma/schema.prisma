@@ -31,6 +31,7 @@ model User {
   JudgeRecord               JudgeRecords[]
   BaseProblems              BaseProblems[]
   ProblemVersionTransitions ProblemVersionTransitions[]
+  DailyCheckin              DailyCheckin[]
 
   @@map("users")
 }
@@ -175,6 +176,7 @@ model Problems {
   ProblemVersionTransitions   ProblemVersionTransitions[] @relation("FromProblemVersions")
   ProblemVersionTransitionsTo ProblemVersionTransitions[] @relation("ToProblemVersions")
   JudgeStatus                 JudgeStatus?
+  DailyProblem                DailyProblem?
 
   @@map("problems")
 }
@@ -421,4 +423,27 @@ model ShadowFile {
 enum ShadowFileType {
   image
   text
+}
+
+model DailyProblem {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique
+  problemId Int      @unique
+  createdAt DateTime @default(now())
+
+  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+
+  @@map("daily_problems")
+}
+
+model DailyCheckin {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@map("daily_checkins")
 }

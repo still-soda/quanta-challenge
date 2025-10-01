@@ -22,7 +22,7 @@ import {
 const route = useRoute();
 const id = route.params.id as string;
 if (!id) {
-   navigateTo('/app/publish');
+   navigateTo('/app/publish/problem');
 }
 
 useSeoMeta({ title: computed(() => `发布详情 #${id} - Quanta Challenge`) });
@@ -40,7 +40,7 @@ const fetchPublishDetails = async () => {
       });
       detail.value = data;
    } catch (e: any) {
-      navigateTo('/app/publish');
+      navigateTo('/app/publish/problem');
    }
    // 轮询
    if (detail.value?.status === 'draft') {
@@ -171,11 +171,11 @@ const showSwitchButton = computed(() => {
 });
 
 const handleEdit = () => {
-   navigateTo(`/app/publish?fromId=${id}`);
+   navigateTo(`/app/publish/problem?fromId=${id}`);
 };
 
 const handleReturn = () => {
-   navigateTo('/app/publish/mine');
+   navigateTo('/app/publish/problem/mine');
 };
 
 const drawerOpener = ref(false);

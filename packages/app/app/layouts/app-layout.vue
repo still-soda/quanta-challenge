@@ -6,7 +6,7 @@ const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.user?.role !== 'USER');
 
 const handleMyPublish = () => {
-   navigateTo('/app/publish/mine');
+   navigateTo('/app/publish/problem/mine');
 };
 </script>
 

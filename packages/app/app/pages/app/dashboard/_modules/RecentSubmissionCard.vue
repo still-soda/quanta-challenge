@@ -28,6 +28,31 @@ const detailPath = computed(() => {
       ? `/challenge/record/${problemId}?id=${recordId}`
       : '#';
 });
+
+type Payload<T extends string> = {
+   required: T[];
+   condition: (ctx: Record<T, any>) => boolean;
+   progress?: (ctx: Record<T, any>) => number;
+   hintText?: (ctx: Record<T, any>) => string;
+};
+
+function rule<T extends string>(payload: Payload<T>) {
+   return (value: Record<T, any>) => {
+      if (payload.condition(value)) {
+         for (const field of payload.required) {
+            if (value[field] === undefined || value[field] === null) {
+               return false;
+            }
+         }
+      }
+      return true;
+   };
+}
+
+rule({
+   required: ['submissionData'],
+   condition: (ctx) => !!ctx.submissionData,
+});
 </script>
 
 <template>
@@ -64,7 +89,7 @@ const detailPath = computed(() => {
                   <TableReport />
                   <span
                      class="line-clamp-1 overflow-ellipsis st-font-body-normal">
-                     {{ submissionData.title }}
+                     {{ submissionData!.title }}
                   </span>
                </StSpace>
                <StSpace
@@ -82,15 +107,17 @@ const detailPath = computed(() => {
                </StSpace>
             </template>
             <StSpace gap="0.5rem" fill-x align="center">
-               <StSpace gap="1.5rem" fill-x align="center">
+               <StSpace gap="1.5rem" fill-x align="center" justify="center">
                   <StSpace gap="0.25rem" align="start">
                      <span
                         class="text-[4rem] leading-[3.2rem] font-bold text-transparent bg-gradient-to-br from-success via-secondary to-success bg-clip-text font-family-manrope">
-                        {{ submissionData.score || '--' }}
+                        {{ submissionData!.score || '--' }}
                      </span>
                      <span class="st-font-body-normal">分</span>
                   </StSpace>
-                  <StackRank :percent="submissionData.aheadRate" class="w-6" />
+                  <StackRank
+                     :percent="submissionData!.aheadRate"
+                     class="!w-20" />
                </StSpace>
             </StSpace>
          </StSkeleton>
@@ -118,7 +145,7 @@ const detailPath = computed(() => {
                      平均通过
                   </div>
                   <div class="font-bold font-family-manrope leading-[90%]">
-                     {{ (submissionData.passRate * 100).toFixed(2) }} %
+                     {{ (submissionData!.passRate * 100).toFixed(2) }} %
                   </div>
                </StSpace>
                <StSpace direction="vertical" gap="0.5rem">
@@ -127,7 +154,7 @@ const detailPath = computed(() => {
                      等待耗时
                   </div>
                   <div class="font-bold font-family-manrope leading-[90%]">
-                     {{ submissionData.pendingTime }}ms
+                     {{ submissionData!.pendingTime }}ms
                   </div>
                </StSpace>
                <StSpace direction="vertical" gap="0.5rem">
@@ -136,7 +163,7 @@ const detailPath = computed(() => {
                      判题耗时
                   </div>
                   <div class="font-bold font-family-manrope leading-[90%]">
-                     {{ submissionData.judgingTime }}ms
+                     {{ submissionData!.judgingTime }}ms
                   </div>
                </StSpace>
             </StSpace>

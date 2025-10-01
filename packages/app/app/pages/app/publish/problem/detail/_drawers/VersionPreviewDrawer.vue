@@ -63,7 +63,7 @@ defineExpose({ refresh });
                   <NuxtLink
                      v-for="version in versions"
                      :key="version.pid"
-                     :to="`/app/publish/detail/${version.pid}`"
+                     :to="`/app/publish/problem/detail/${version.pid}`"
                      class="w-full">
                      <VersionItem
                         :version="version"

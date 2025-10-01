@@ -43,7 +43,7 @@ const role = computed(() => authStore.user?.role ?? 'USER');
                   <TableReport />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
-            <StSidebarSidePopper v-if="role !== 'USER'" content="发布题目">
+            <StSidebarSidePopper v-if="role !== 'USER'" content="发布">
                <StSidebarNavigationButton to="/app/publish">
                   <UploadTwo />
                </StSidebarNavigationButton>
