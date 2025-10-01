@@ -3,6 +3,7 @@ import { protectedProcedure } from '../../protected-trpc';
 import { publicProcedure, router } from '../../trpc';
 import z from 'zod';
 import * as serverAuthn from '@simplewebauthn/server';
+import { TRPCError } from '@trpc/server';
 
 const RegisterAuthnSchema = z.object({
    email: z.email(),
@@ -24,7 +25,10 @@ const registerAuthnProcedure = protectedProcedure
       });
       if (user.email) {
          if (user.email !== email) {
-            throw new Error('Email already registered');
+            throw new TRPCError({
+               code: 'BAD_REQUEST',
+               message: 'Email already registered',
+            });
          }
       } else {
          await prisma.user.update({
@@ -62,7 +66,10 @@ const verifyAuthnRegistrationProcedure = protectedProcedure
       const redis = useRedis();
       const optionsJSON = await redis.get('webauthn:register:' + userId);
       if (!optionsJSON) {
-         throw new Error('No registration options found');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No registration options found',
+         });
       }
       redis.del('webauthn:register:' + userId);
 
@@ -78,7 +85,10 @@ const verifyAuthnRegistrationProcedure = protectedProcedure
 
       const { registrationInfo } = verification;
       if (!verification.verified || !registrationInfo) {
-         throw new Error('WebAuthn registration verification failed');
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'WebAuthn registration verification failed',
+         });
       }
 
       const { credential } = registrationInfo;
@@ -114,7 +124,10 @@ const authenticateAuthnProcedure = publicProcedure
       });
 
       if (user.WebAuthnCredential.length === 0) {
-         throw new Error('No WebAuthn credentials found for this user');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No WebAuthn credentials found for this user',
+         });
       }
 
       const options = await serverAuthn.generateAuthenticationOptions({
@@ -151,7 +164,10 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
       const { accessResponse, email } = input;
       const optionsJSON = await redis.get('webauthn:authenticate:' + email);
       if (!optionsJSON) {
-         throw new Error('No authentication options found');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No authentication options found',
+         });
       }
       redis.del('webauthn:authenticate:' + email);
 
@@ -178,7 +194,10 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
       });
 
       if (!verification.verified) {
-         throw new Error('WebAuthn authentication verification failed');
+         throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'WebAuthn authentication verification failed',
+         });
       }
 
       const user = await prisma.user.findUniqueOrThrow({

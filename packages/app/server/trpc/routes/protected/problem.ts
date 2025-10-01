@@ -3,6 +3,7 @@ import { protectedProcedure } from '../../protected-trpc';
 import prisma from '@challenge/database';
 import { projectService } from '../../services/project';
 import { router } from '../../trpc';
+import { TRPCError } from '@trpc/server';
 
 // 获取或创建项目
 const GetOrForkProjectSchema = z.object({
@@ -75,7 +76,10 @@ const getProblemDetail = protectedProcedure
          },
       });
       if (!problem) {
-         throw new Error('Problem not found');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Problem not found',
+         });
       }
       return problem;
    });
@@ -143,7 +147,10 @@ const commitAnswer = protectedProcedure
             }),
          }).then((res: any) => {
             if (!res.ok) {
-               throw new Error(`Failed to create task: ${res.message}`);
+               throw new TRPCError({
+                  code: 'INTERNAL_SERVER_ERROR',
+                  message: `Failed to create task: ${res.message}`,
+               });
             }
          });
       });
@@ -218,7 +225,10 @@ const getCommitRecordDetail = protectedProcedure
          },
       });
       if (!record) {
-         throw new Error('Record not found');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Record not found',
+         });
       }
       return record;
    });

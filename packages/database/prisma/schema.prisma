@@ -32,6 +32,7 @@ model User {
   BaseProblems              BaseProblems[]
   ProblemVersionTransitions ProblemVersionTransitions[]
   DailyCheckin              DailyCheckin[]
+  UserAchievement           UserAchievement[]
 
   @@map("users")
 }
@@ -114,6 +115,7 @@ model Image {
   ProblemDefaultCover ProblemDefaultCovers[]
   UserImage           UserImage[]
   Problem             Problems[]
+  Achievement         Achievement[]
 
   @@map("images")
 }
@@ -446,4 +448,91 @@ model DailyCheckin {
 
   @@unique([userId, date])
   @@map("daily_checkins")
+}
+
+model Achievement {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  badgeImageId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  badgeImage                Image                       @relation(fields: [badgeImageId], references: [id])
+  UserAchievement           UserAchievement[]
+  AchievementDependencyData AchievementDependencyData[]
+  AchievementValidateScript AchievementValidateScript?
+
+  @@map("achievements")
+}
+
+model AchievementDependencyDataRequestRecord {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  success   Boolean  @default(false)
+  reason    String?
+  sql       String
+  name      String
+  createdAt DateTime @default(now())
+
+  @@map("achievement_dependency_data_request_records")
+}
+
+model AchievementDependencyData {
+  id                         Int      @id @default(autoincrement())
+  achievementId              Int
+  achievementDepDataLoaderId Int
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  achievementDepDataLoader AchievementDepDataLoader @relation(fields: [achievementDepDataLoaderId], references: [id], onDelete: Cascade)
+  achievement              Achievement              @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([achievementId, achievementDepDataLoaderId])
+  @@map("achievement_dependency_data")
+}
+
+model AchievementValidateScript {
+  id            Int      @id @default(autoincrement())
+  achievementId Int      @unique
+  script        String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@map("achievement_validate_scripts")
+}
+
+enum AchievementDepDataType {
+  NUMERIC
+  BOOLEAN
+  TEXT
+}
+
+model AchievementDepDataLoader {
+  id                        Int                         @id @default(autoincrement())
+  name                      String
+  description               String?
+  sql                       String
+  type                      AchievementDepDataType
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  AchievementDependencyData AchievementDependencyData[]
+
+  @@map("achievement_dep_data_loaders")
+}
+
+model UserAchievement {
+  id            Int      @id @default(autoincrement())
+  userId        String
+  achievementId Int
+  achievedAt    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
 }

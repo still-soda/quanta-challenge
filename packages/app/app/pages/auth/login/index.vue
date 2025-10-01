@@ -22,12 +22,12 @@ onLoginSuccess(() => {
 
 const rules: IRule[] = [
    {
-      name: 'email',
+      field: 'email',
       required: true,
       validator: (value: string) => z.email().safeParse(value).success,
    },
    {
-      name: 'password',
+      field: 'password',
       required: true,
       validator: (value: string) => value.length >= 6,
    },

@@ -2,6 +2,7 @@ import prisma from '@challenge/database';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import dayjs from 'dayjs';
+import { TRPCError } from '@trpc/server';
 
 function hasDailyCheckin(userId: string, date: Date) {
    return prisma.dailyCheckin.findFirst({
@@ -47,7 +48,10 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
 
    const hasCheckin = await hasDailyCheckin(userId, today);
    if (hasCheckin) {
-      throw new Error('Already checked in today');
+      throw new TRPCError({
+         code: 'BAD_REQUEST',
+         message: 'Already checked in today',
+      });
    }
 
    const { problemId: dailyProblemId } =
@@ -64,7 +68,10 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
       },
    });
    if (!existingCompleteRecord) {
-      throw new Error('Please complete the daily challenge before checking in');
+      throw new TRPCError({
+         code: 'BAD_REQUEST',
+         message: 'Please complete the daily challenge before checking in',
+      });
    }
 
    await prisma.dailyCheckin.create({

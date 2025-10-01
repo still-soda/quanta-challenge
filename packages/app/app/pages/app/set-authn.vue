@@ -22,7 +22,7 @@ onRegisterError(() => {
 
 const rules: IRule[] = [
    {
-      name: 'email',
+      field: 'email',
       required: true,
       validator: (value: string) => z.email().safeParse(value).success,
    },

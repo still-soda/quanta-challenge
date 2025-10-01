@@ -8,6 +8,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { useStore } from '../../store';
 import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash/server';
+import { TRPCError } from '@trpc/server';
 
 type TX = Omit<
    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
@@ -121,7 +122,10 @@ const handleCreateVersion = async (options: {
       }),
    }).then((res: any) => {
       if (!res.ok) {
-         throw new Error(`Failed to create task: ${res.message}`);
+         throw new TRPCError({
+            code: 'SERVICE_UNAVAILABLE',
+            message: `Failed to create task: ${res.message}`,
+         });
       }
    });
 
@@ -148,7 +152,10 @@ const uploadProcedure = protectedAdminProcedure
          }
       ).then((res) => res.json());
       if (!judgeScript || typeof judgeScript !== 'string') {
-         throw new Error('Judge script must export a default function');
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Judge script must export a default function',
+         });
       }
 
       // 如果有封面图片，计算其 thumbhash
@@ -160,7 +167,10 @@ const uploadProcedure = protectedAdminProcedure
          const store = useStore();
          const buffer = await store.getBuffer(name);
          if (!buffer) {
-            throw new Error('Cover image not found in storage');
+            throw new TRPCError({
+               code: 'BAD_REQUEST',
+               message: 'Cover image not found in storage',
+            });
          }
          const hash = await generateThumbhashFromBuffer(buffer);
          await prisma.image.update({
@@ -257,10 +267,16 @@ const getAuditDetailProcedure = protectedAdminProcedure
 
       const templateJudgeRecord = result.TemplateJudgeRecord[0]?.judgeRecord;
       if (!templateJudgeRecord) {
-         throw new Error('No template judge record found for this problem');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No template judge record found for this problem',
+         });
       }
       if (templateJudgeRecord.userId !== userId) {
-         throw new Error('You do not have permission to access this problem');
+         throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have permission to access this problem',
+         });
       }
 
       const defaultCover = result.ProblemDefaultCover[0]?.image;
@@ -304,15 +320,19 @@ const setStatusProcedure = protectedAdminProcedure
          problem.BaseProblem.currentPid &&
          problem.BaseProblem.currentPid !== problemId
       ) {
-         throw new Error(
-            'Cannot change publish status of a problem that is not the current version'
-         );
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+               'Cannot change publish status of a problem that is not the current version',
+         });
       }
 
       if (!['ready', 'published'].includes(problem.status)) {
-         throw new Error(
-            'Only problems with status "ready" or "published" can change publish status'
-         );
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+               'Only problems with status "ready" or "published" can change publish status',
+         });
       }
 
       const newStatus = publish ? 'published' : 'ready';
@@ -517,7 +537,10 @@ const reuploadProcedure = protectedAdminProcedure
          }
       ).then((res) => res.json());
       if (!judgeScript || typeof judgeScript !== 'string') {
-         throw new Error('Judge script must export a default function');
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Judge script must export a default function',
+         });
       }
 
       // 创建新问题版本

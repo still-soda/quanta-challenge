@@ -20,6 +20,7 @@ const props = defineProps<{
    multiple?: boolean;
    loading?: boolean;
    optionEmptyText?: string;
+   labelClass?: any;
 }>();
 
 const selected = defineModel<any | any[]>('value', {
@@ -55,6 +56,12 @@ onPopperUpdate('write', ({ state }) => {
 });
 onFirstUpdate((state) => {
    upside.value = state.placement?.startsWith('top') ?? false;
+});
+
+defineExpose({
+   updatePopper: () => {
+      popperInstance.value?.update();
+   },
 });
 
 onMounted(() => {
@@ -155,14 +162,19 @@ const optionEmptyText = computed(() => {
                   :key="key"
                   :value="item.value"
                   :selected="selectedSet.has(item.value)">
-                  <div class="flex gap-2 items-center">
+                  <div class="flex gap-2 items-center w-full">
                      <Component v-if="item.icon" :is="item.icon" />
                      <img
                         class="size-6 rounded-md overflow-hidden object-contain"
                         v-else-if="item.imageUrl"
                         :src="item.imageUrl"
                         :alt="item.label" />
-                     {{ item.label }}
+                     <slot name="option-label" :item="item">
+                        {{ item.label }}
+                     </slot>
+                     <span class="ml-auto text-accent-400">
+                        {{ item.description }}
+                     </span>
                   </div>
                </StSelectOption>
                <slot v-if="props.options.length" name="options-after"></slot>

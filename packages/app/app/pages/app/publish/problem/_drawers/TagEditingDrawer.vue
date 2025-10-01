@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { IRule } from '~/components/st/Form/type';
-import UploadImage from '../_components/UploadImage.vue';
 import type { StForm } from '#components';
 import { Box } from '@icon-park/vue-next';
 
@@ -19,21 +18,21 @@ const formdata = reactive({
 
 const rules: IRule[] = [
    {
-      name: 'tagName',
+      field: 'name',
       required: true,
       validator(value) {
          return !!value;
       },
    },
    {
-      name: 'color',
+      field: 'color',
       required: true,
       validator(value) {
          return !!value;
       },
    },
    {
-      name: 'imageId',
+      field: 'imageId',
       required: true,
       validator(value) {
          return !!value;
@@ -83,38 +82,40 @@ const enableSubmit = computed(() => {
          <StSpace direction="vertical" gap="1.5rem" fill class="p-6">
             <!-- Header -->
             <h1 class="st-font-secondary-bold">新建标签</h1>
-            <StForm
-               ref="form"
-               :formdata="formdata"
-               :rules="rules"
-               class="w-full">
-               <StSpace direction="vertical" gap="1.5rem" fill-x>
-                  <StFormItem name="tagName" label="标签名" required>
-                     <StInput
-                        v-model:value="formdata.name"
-                        placeholder="请输入标签名"
-                        :outer-class />
-                  </StFormItem>
-                  <StFormItem name="color" label="标签颜色" required>
-                     <StColorPicker
-                        v-model:value="formdata.color"
-                        :outer-class />
-                  </StFormItem>
-                  <StFormItem name="imageId" label="标签图标" required>
-                     <UploadImage
-                        v-model:image-id="formdata.imageId"
-                        class="bg-black !max-h-[12rem]"
-                        image-max-height="4rem"
-                        placeholder="请选择标签图标" />
-                  </StFormItem>
-                  <StFormItem name="description" label="标签描述">
-                     <StTextarea
-                        v-model:value="formdata.description"
-                        placeholder="请输入标签描述"
-                        :outer-class />
-                  </StFormItem>
-               </StSpace>
-            </StForm>
+            <StSpace fill class="relative overflow-auto">
+               <StForm
+                  ref="form"
+                  v-model:model-value="formdata"
+                  :rules="rules"
+                  class="w-full absolute top-0 left-0">
+                  <StSpace direction="vertical" gap="1.5rem" fill-x>
+                     <StFormItem name="tagName" label="标签名" required>
+                        <StInput
+                           v-model:value="formdata.name"
+                           placeholder="请输入标签名"
+                           :outer-class />
+                     </StFormItem>
+                     <StFormItem name="color" label="标签颜色" required>
+                        <StColorPicker
+                           v-model:value="formdata.color"
+                           :outer-class />
+                     </StFormItem>
+                     <StFormItem name="imageId" label="标签图标" required>
+                        <StUploadImage
+                           v-model:image-id="formdata.imageId"
+                           class="bg-black !max-h-[12rem]"
+                           image-max-height="4rem"
+                           placeholder="请选择标签图标" />
+                     </StFormItem>
+                     <StFormItem name="description" label="标签描述">
+                        <StTextarea
+                           v-model:value="formdata.description"
+                           placeholder="请输入标签描述"
+                           :outer-class />
+                     </StFormItem>
+                  </StSpace>
+               </StForm>
+            </StSpace>
          </StSpace>
          <!-- Bottom -->
          <StSpace justify="end" class="p-4 w-full">

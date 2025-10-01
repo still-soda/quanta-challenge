@@ -1,6 +1,7 @@
 import prisma from '@challenge/database';
 import { Prisma, PrismaClient, VirtualFiles } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
+import { TRPCError } from '@trpc/server';
 
 type Tx = Omit<
    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
@@ -141,9 +142,11 @@ const fork = async (options: IForkProjectOptions) => {
       `;
 
       if (!newProjectResult || newProjectResult.length === 0) {
-         throw new Error(
-            'Failed to create new project or original project not found'
-         );
+         throw new TRPCError({
+            code: 'SERVICE_UNAVAILABLE',
+            message:
+               'Failed to create new project or original project not found',
+         });
       }
 
       const newProjectId = newProjectResult[0].pid;

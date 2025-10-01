@@ -23,14 +23,13 @@ const validate = () => {
    const rules = props.rules || [];
    const formdataKeySet = new Set(Object.keys(formdata.value));
    const rulesToValidate = rules.filter((rule) => {
-      const options = optionsMap.get(rule.name);
-      return options && formdataKeySet.has(rule.name);
+      return optionsMap.has(rule.field) && formdataKeySet.has(rule.field);
    });
    let success = true;
    for (const rule of rulesToValidate) {
-      const options = optionsMap.get(rule.name);
+      const options = optionsMap.get(rule.field);
       if (options) {
-         const value = formdata.value[rule.name];
+         const value = formdata.value[rule.field];
          if (rule.required && !value) {
             options.setStatus('error');
             success = false;

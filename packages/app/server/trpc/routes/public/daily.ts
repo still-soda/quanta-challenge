@@ -1,6 +1,7 @@
 import prisma from '@challenge/database';
 import { publicProcedure, router } from '../../trpc';
 import dayjs from 'dayjs';
+import { TRPCError } from '@trpc/server';
 
 async function selectDailyProblem() {
    const today = dayjs().startOf('day').toDate();
@@ -19,7 +20,10 @@ async function selectDailyProblem() {
          `
       )[0]?.pid;
       if (unusedProblemId === void 0) {
-         throw new Error('No unused problem available for daily challenge');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'No unused problem available for daily challenge',
+         });
       }
 
       const success = await redis.setnx(key, unusedProblemId.toString());
@@ -37,7 +41,10 @@ async function selectDailyProblem() {
 
       cached = await redis.get(key);
       if (!cached) {
-         throw new Error('Failed to retrieve daily problem');
+         throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to retrieve daily problem',
+         });
       }
    }
 

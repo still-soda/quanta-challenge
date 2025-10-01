@@ -16,7 +16,7 @@ const coverModeOptions: ISlideRadioGroupOption[] = [
    { label: '自定义封面', value: 'custom', color: '#FA7C0E' },
 ];
 
-export const usePublishForm = (storageName: string) => {
+export const useProblemPublicationForm = (storageName: string) => {
    const formdata = useLocalStorage(storageName, {
       title: '',
       detail: '',
@@ -42,63 +42,63 @@ export const usePublishForm = (storageName: string) => {
    // 表单验证器规则
    const rules = ref<IRule[]>([
       {
-         name: 'title',
+         field: 'title',
          required: true,
          validator(value) {
             return value && value.length > 15;
          },
       },
       {
-         name: 'detail',
+         field: 'detail',
          required: true,
          validator(value) {
             return value && value.length > 0;
          },
       },
       {
-         name: 'score',
+         field: 'score',
          required: true,
          validator(value) {
             return value !== undefined && value >= 0;
          },
       },
       {
-         name: 'tags',
+         field: 'tags',
          required: true,
          validator(value) {
             return value.length > 0;
          },
       },
       {
-         name: 'difficulty',
+         field: 'difficulty',
          required: true,
          validator(value) {
             return value !== undefined;
          },
       },
       {
-         name: 'answerTemplate',
+         field: 'answerTemplate',
          required: true,
          validator(value) {
             return Object.keys(value).length > 0;
          },
       },
       {
-         name: 'referenceAnswer',
+         field: 'referenceAnswer',
          required: draft.value.coverMode === 'default',
          validator(value) {
             return Object.keys(value).length > 0;
          },
       },
       {
-         name: 'coverMode',
+         field: 'coverMode',
          required: true,
          validator(value) {
             return value !== undefined;
          },
       },
       {
-         name: 'coverImageId',
+         field: 'coverImageId',
          required: draft.value.coverMode === 'custom',
          validator(value) {
             return draft.value.coverMode === 'default' || value;

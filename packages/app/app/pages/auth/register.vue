@@ -10,22 +10,22 @@ const { formdata, formKey, loading, handleRegister } = useRegister();
 
 const rules: IRule[] = [
    {
-      name: 'username',
+      field: 'username',
       required: true,
       validator: (value: string) => value.length >= 3,
    },
    {
-      name: 'email',
+      field: 'email',
       required: true,
       validator: (value: string) => z.email().safeParse(value).success,
    },
    {
-      name: 'password',
+      field: 'password',
       required: true,
       validator: (value: string) => value.length >= 6,
    },
    {
-      name: 'confirmPassword',
+      field: 'confirmPassword',
       required: true,
       validator: (value: string) => value === formdata.password,
    },

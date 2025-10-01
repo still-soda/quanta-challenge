@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { DeleteFour, ImageFiles, LoadingFour } from '@icon-park/vue-next';
-import { ref } from 'vue';
+import { ref, type DefineComponent } from 'vue';
 import { arrayBufferToBase64 } from '~/components/st/DropUploader/walk-file-list';
 import type { FormItemStatus } from '~/components/st/Form/type';
 
 const props = defineProps<{
    placeholder?: string;
    imageMaxHeight?: string;
+   icon?: DefineComponent;
    status?: FormItemStatus;
 }>();
 
@@ -71,7 +72,7 @@ const cleanup = () => {
       <StDropUploader
          v-if="!imageUrl"
          :placeholder="props.placeholder"
-         :icon="ImageFiles"
+         :icon="icon ?? ImageFiles"
          type="file"
          accept="image/*"
          @update:files="imageFile = $event?.[0] || null" />

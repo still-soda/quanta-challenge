@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import JudgeScript from './_modules/JudgeScript.vue';
 import UploadProject from './_components/UploadProject.vue';
-import UploadImage from './_components/UploadImage.vue';
 import LazyMarkdownEditingDrawer from './_drawers/MarkdownEditingDrawer.vue';
 import TagsPicker from './_modules/TagsPicker.vue';
 import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
-import { usePublishForm } from './_composables/use-publish-form';
+import { useProblemPublicationForm } from './_composables/use-problem-publication-form';
 import { UploadTwo } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });
@@ -24,7 +23,7 @@ if (route.query.fromId) {
 
 const { $trpc } = useNuxtApp();
 const { draft, coverModeOptions, difficultyOptions, formKey, rules } =
-   usePublishForm(storageName);
+   useProblemPublicationForm(storageName);
 
 const imageName = ref('');
 const imageUrl = computed(() => {
@@ -104,7 +103,7 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-   <StSpace justify="center" class="w-full h-full overflow-auto">
+   <StSpace fill justify="center" class="overflow-auto">
       <StSpace
          direction="vertical"
          gap="1.5rem"
@@ -163,7 +162,7 @@ const handleSubmit = async () => {
                   <StSlideRadioGroup
                      v-model:value="draft.coverMode"
                      :options="coverModeOptions" />
-                  <UploadImage
+                  <StUploadImage
                      v-show="draft.coverMode === 'custom'"
                      v-model:image-id="draft.coverImageId"
                      :image-url="imageUrl"

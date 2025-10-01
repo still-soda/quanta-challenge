@@ -14,6 +14,8 @@ onBeforeMount(checkUserHasLogin);
 
 <template>
    <NuxtLayout name="app-layout">
-      <NuxtPage />
+      <StMessageProvider>
+         <NuxtPage />
+      </StMessageProvider>
    </NuxtLayout>
 </template>

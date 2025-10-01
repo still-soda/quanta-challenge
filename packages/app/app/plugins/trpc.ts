@@ -1,6 +1,7 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import type { AppRouter } from '../../server/trpc/routes/index';
 import useAuthStore from '~/stores/auth-store';
+import { useMessageOutsideVue } from '~/components/st/Message/use-message';
 
 export default defineNuxtPlugin(() => {
    const authStore = useAuthStore();
@@ -39,6 +40,11 @@ export default defineNuxtPlugin(() => {
                         Authorization: `Bearer ${refreshRes.accessToken}`,
                      };
                      res = await fetch(url, options);
+
+                     if (res.status.toString().startsWith('5')) {
+                        const message = useMessageOutsideVue();
+                        message.error('服务器错误，请稍后重试');
+                     }
                   } catch {
                      location.replace(
                         '/auth/login?redirect=' +
@@ -46,6 +52,9 @@ export default defineNuxtPlugin(() => {
                      );
                      return res;
                   }
+               } else if (res.status.toString().startsWith('5')) {
+                  const message = useMessageOutsideVue();
+                  message.error('服务器错误，请稍后重试');
                }
 
                return res;

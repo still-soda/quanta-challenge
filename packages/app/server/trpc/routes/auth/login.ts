@@ -3,6 +3,7 @@ import z from 'zod';
 import { publicProcedure, router } from '~~/server/trpc/trpc';
 import { generateTokens } from '~~/server/utils/jwt';
 import { protectedProcedure } from '../../protected-trpc';
+import { TRPCError } from '@trpc/server';
 
 const emailLoginInputSchema = z.object({
    email: z.email(),
@@ -22,7 +23,10 @@ const emailLoginProcedure = publicProcedure
       });
       const { password: pwdHash } = authRecord;
       if (!pwdHash || !comparePassword(password, pwdHash)) {
-         throw new Error('Invalid email or password');
+         throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Invalid email or password',
+         });
       }
 
       const user = await prisma.user.findUniqueOrThrow({
@@ -38,7 +42,10 @@ const emailLoginProcedure = publicProcedure
 
 const getUserByAccessToken = protectedProcedure.query(async ({ ctx }) => {
    if (!ctx.user) {
-      throw new Error('Unauthorized');
+      throw new TRPCError({
+         code: 'UNAUTHORIZED',
+         message: 'Unauthorized',
+      });
    }
    const user = await prisma.user.findUniqueOrThrow({
       where: { id: ctx.user.userId },
