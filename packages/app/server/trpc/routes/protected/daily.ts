@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import dayjs from 'dayjs';
@@ -24,7 +24,7 @@ const hasCompletedDailyProblemProcedure = protectedProcedure.query(
 
       const dailyProblem = await prisma.dailyProblem.findFirst({
          where: { date: today },
-         select: { problemId: true },
+         select: { baseProblemId: true },
       });
       if (!dailyProblem) {
          return false;
@@ -33,7 +33,7 @@ const hasCompletedDailyProblemProcedure = protectedProcedure.query(
       const record = await prisma.judgeRecords.findFirst({
          where: {
             userId,
-            problemId: dailyProblem.problemId,
+            problemId: dailyProblem.baseProblemId,
             result: 'success',
             type: 'judge',
          },
@@ -54,10 +54,10 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
       });
    }
 
-   const { problemId: dailyProblemId } =
+   const { baseProblemId: dailyProblemId } =
       await prisma.dailyProblem.findFirstOrThrow({
          where: { date: today },
-         select: { problemId: true },
+         select: { baseProblemId: true },
       });
    const existingCompleteRecord = await prisma.judgeRecords.findFirst({
       where: {

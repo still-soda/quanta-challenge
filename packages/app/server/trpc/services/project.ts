@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { Prisma, PrismaClient, VirtualFiles } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { TRPCError } from '@trpc/server';

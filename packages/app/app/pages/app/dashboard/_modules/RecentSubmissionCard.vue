@@ -13,8 +13,9 @@ const loading = ref(true);
 const submissionData = ref<RecentSubmissionResponse | null>(null);
 const getRecentSubmission = async () => {
    loading.value = true;
-   submissionData.value =
-      await $trpc.protected.dashboard.getRecentSubmissions.query();
+   submissionData.value = await autoRetry(() =>
+      $trpc.protected.dashboard.getRecentSubmissions.query()
+   );
    loading.value = false;
 };
 

@@ -1,6 +1,6 @@
 import z from 'zod';
 import { protectedProcedure } from '../../protected-trpc';
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { projectService } from '../../services/project';
 import { router } from '../../trpc';
 import { TRPCError } from '@trpc/server';

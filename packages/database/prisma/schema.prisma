@@ -146,6 +146,7 @@ model BaseProblems {
   CurrentProblem            Problems?                   @relation("CurrentProblem", fields: [currentPid], references: [pid], onDelete: SetNull)
   ProblemVersions           Problems[]                  @relation("ProblemVersions")
   ProblemVersionTransitions ProblemVersionTransitions[]
+  DailyProblem              DailyProblem?
 
   @@map("base_problems")
 }
@@ -178,7 +179,6 @@ model Problems {
   ProblemVersionTransitions   ProblemVersionTransitions[] @relation("FromProblemVersions")
   ProblemVersionTransitionsTo ProblemVersionTransitions[] @relation("ToProblemVersions")
   JudgeStatus                 JudgeStatus?
-  DailyProblem                DailyProblem?
 
   @@map("problems")
 }
@@ -428,12 +428,12 @@ enum ShadowFileType {
 }
 
 model DailyProblem {
-  id        Int      @id @default(autoincrement())
-  date      DateTime @unique
-  problemId Int      @unique
-  createdAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  date          DateTime @unique
+  baseProblemId Int      @unique
+  createdAt     DateTime @default(now())
 
-  problem Problems @relation(fields: [problemId], references: [pid], onDelete: Cascade)
+  baseProblem BaseProblems @relation(fields: [baseProblemId], references: [id], onDelete: Cascade)
 
   @@map("daily_problems")
 }

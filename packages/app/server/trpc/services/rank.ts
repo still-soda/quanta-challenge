@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 
 /**
  * 判断是否存在某题目的排行榜

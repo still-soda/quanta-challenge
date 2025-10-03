@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import { rankService } from '../../services/rank';

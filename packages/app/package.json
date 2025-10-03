@@ -7,6 +7,7 @@
       "dev": "nuxt dev --host",
       "generate": "nuxt generate",
       "preview": "nuxt preview",
+      "test": "vitest",
       "postinstall": "nuxt prepare",
       "prisma:migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
       "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
@@ -73,6 +74,7 @@
       "@vueuse/nuxt": "^13.6.0",
       "shiki": "^3.8.1",
       "tailwindcss": "^4.1.11",
-      "typescript": "^5.8.3"
+      "typescript": "^5.8.3",
+      "vitest": "^3.2.4"
    }
 }

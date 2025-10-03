@@ -93,9 +93,10 @@ const PopperContent = (props: {
       </thead>
       <tbody>
          <tr>
-            <td v-for="(days, month) in months" :key="idx">
+            <td v-for="(days, month) in months" :key="month">
                <div
-                  class="w-fit grid gap-[0.375rem] mr-[0.375rem] grid-flow-col"
+                  :class="{ 'mr-[0.375rem]': month !== months.length - 1 }"
+                  class="w-fit grid gap-[0.375rem] grid-flow-col"
                   :style="{ gridTemplateRows: `repeat(${rows}, 1fr)` }">
                   <Component
                      v-for="day in days"

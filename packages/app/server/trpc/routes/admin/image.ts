@@ -2,7 +2,7 @@ import z from 'zod';
 import { protectedAdminProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import { useStore } from '../../store';
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import path from 'path';
 
 const UploadImageSchema = z.object({

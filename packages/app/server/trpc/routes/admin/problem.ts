@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { protectedAdminProcedure } from '../../protected-trpc';
 import { UploadSchema } from '../../schemas/publish-schema';
 import { router } from '../../trpc';

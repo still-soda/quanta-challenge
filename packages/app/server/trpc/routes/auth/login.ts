@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import z from 'zod';
 import { publicProcedure, router } from '~~/server/trpc/trpc';
 import { generateTokens } from '~~/server/utils/jwt';
@@ -53,7 +53,9 @@ const getUserByAccessToken = protectedProcedure.query(async ({ ctx }) => {
    });
    prisma.user.update({
       where: { id: ctx.user.userId },
-      data: { lastLogin: new Date() },
+      data: {
+         lastLogin: new Date(),
+      },
    });
    return user;
 });

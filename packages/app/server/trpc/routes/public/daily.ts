@@ -1,4 +1,4 @@
-import prisma from '@challenge/database';
+import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
@@ -11,32 +11,33 @@ async function selectDailyProblem() {
    let cached = await redis.get(key);
 
    if (!cached) {
-      const unusedProblemId = (
-         await prisma.$queryRaw<{ pid: number }[]>`
-            SELECT pid FROM problems
-            WHERE pid NOT IN (SELECT "problemId" FROM daily_problems)
+      const unusedBaseProblemId = (
+         await prisma.$queryRaw<{ id: number }[]>`
+            SELECT id FROM base_problems
+            WHERE id NOT IN (SELECT "baseProblemId" FROM daily_problems)
+              AND "currentPid" IS NOT NULL
             ORDER BY RANDOM()
             LIMIT 1
          `
-      )[0]?.pid;
-      if (unusedProblemId === void 0) {
+      )[0]?.id;
+      if (unusedBaseProblemId === void 0) {
          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'No unused problem available for daily challenge',
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'No unused base problem available for daily challenge',
          });
       }
 
-      const success = await redis.setnx(key, unusedProblemId.toString());
+      const success = await redis.setnx(key, unusedBaseProblemId.toString());
       if (success) {
          await redis.expireat(key, dayjs(today).add(1, 'hour').unix());
-         cached = unusedProblemId.toString();
+         cached = unusedBaseProblemId.toString();
          await prisma.dailyProblem.create({
             data: {
                date: today,
-               problemId: unusedProblemId,
+               baseProblemId: unusedBaseProblemId,
             },
          });
-         return unusedProblemId;
+         return unusedBaseProblemId;
       }
 
       cached = await redis.get(key);
@@ -54,7 +55,7 @@ async function selectDailyProblem() {
 const getDailyProblemProcedure = publicProcedure.query(async () => {
    const today = dayjs().startOf('day').toDate();
    const problemQuery = {
-      problem: {
+      CurrentProblem: {
          select: {
             pid: true,
             title: true,
@@ -73,16 +74,21 @@ const getDailyProblemProcedure = publicProcedure.query(async () => {
    let dailyProblem = null;
    const result = await prisma.dailyProblem.findFirst({
       where: { date: today },
-      select: problemQuery,
+      select: {
+         baseProblem: {
+            select: problemQuery,
+         },
+      },
    });
    if (!result) {
-      const pid = await selectDailyProblem();
-      dailyProblem = await prisma.problems.findUniqueOrThrow({
-         where: { pid },
-         select: problemQuery['problem']['select'],
+      const id = await selectDailyProblem();
+      const temp = await prisma.baseProblems.findUniqueOrThrow({
+         where: { id },
+         select: problemQuery,
       });
+      dailyProblem = temp.CurrentProblem!;
    } else {
-      dailyProblem = result.problem;
+      dailyProblem = result.baseProblem.CurrentProblem!;
    }
 
    const { passedCount = 0, totalCount = 0 } = dailyProblem.JudgeStatus || {};
