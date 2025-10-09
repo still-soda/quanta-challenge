@@ -4,7 +4,7 @@ import { router } from '../../trpc';
 import z from 'zod';
 import pkg from 'node-sql-parser';
 const { Parser } = pkg;
-import { invalidFieldsPattern, whiteTableList } from '../../configs';
+import { contextVariables, invalidFieldsPattern } from '../../configs';
 import { TRPCError } from '@trpc/server';
 import { realNameFieldsMap, validRealNames } from '@challenge/database';
 
@@ -62,7 +62,7 @@ const requestDepDataLoaderProcedure = protectedAdminProcedure
             });
          }
 
-         const validRealNamesSet = new Set(validRealNames);
+         const validRealNamesSet = new Set<string>(validRealNames).add('__ctx');
          const invalidTables = columnListSegments
             .map(([, table]) => table)
             .filter((table) => !validRealNamesSet.has(table as any));
@@ -75,13 +75,17 @@ const requestDepDataLoaderProcedure = protectedAdminProcedure
             });
          }
 
+         const contextSet = new Set(contextVariables);
          const invalidFields = columnListSegments
-            .filter(([, t, f]) => {
-               const notExist = !(realNameFieldsMap as any)[t].has(f);
+            .filter(([, table, field]) => {
+               const notExist =
+                  table === '__ctx'
+                     ? !contextSet.has(field)
+                     : !(realNameFieldsMap as any)[table].has(field);
                const invalidPath = invalidFieldsPattern.some((pattern) =>
                   typeof pattern === 'string'
-                     ? pattern === `${t}.${f}`
-                     : pattern.test(`${t}.${f}`)
+                     ? pattern === `${table}.${field}`
+                     : pattern.test(`${table}.${field}`)
                );
                return notExist || invalidPath;
             })

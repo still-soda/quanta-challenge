@@ -511,13 +511,14 @@ enum AchievementDepDataType {
 }
 
 model AchievementDepDataLoader {
-  id                        Int                         @id @default(autoincrement())
-  name                      String
-  description               String?
-  sql                       String
-  type                      AchievementDepDataType
-  createdAt                 DateTime                    @default(now())
-  updatedAt                 DateTime                    @updatedAt
+  id          Int                    @id @default(autoincrement())
+  name        String
+  description String?
+  sql         String
+  type        AchievementDepDataType
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
   AchievementDependencyData AchievementDependencyData[]
 
   @@map("achievement_dep_data_loaders")

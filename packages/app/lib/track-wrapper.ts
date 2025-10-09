@@ -43,10 +43,9 @@ export class TrackWrapper {
          'connect',
          'connectOrCreate',
          'disconnect',
-      ])
+      ]),
+      private _observers = new Set<(paths: AffectedPath[]) => void>()
    ) {}
-
-   private _observers = new Set<(paths: AffectedPath[]) => void>();
 
    private _notify(paths: AffectedPath[] | AffectedPath) {
       const pathArray = Array.isArray(paths) ? paths : [paths];
@@ -165,7 +164,7 @@ export class TrackWrapper {
 
    private _createOperationProxy<T extends object>(obj: T, table: string): T {
       const _this = this;
-      return new Proxy(obj, {
+      const handler: ProxyHandler<T> = {
          get(target, prop, receiver) {
             const result = Reflect.get(target, prop, receiver);
             if (
@@ -182,7 +181,8 @@ export class TrackWrapper {
             }
             return result;
          },
-      });
+      };
+      return new Proxy(obj, handler);
    }
 
    wrap<T extends object>(instance: T): T {

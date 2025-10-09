@@ -1,7 +1,8 @@
 import { ValidFieldPath } from '@challenge/database';
 
-const validTables = ['users'];
+export const invalidFieldsPattern: (ValidFieldPath | RegExp)[] = [
+   /^auths.*/,
+   /^achievements.*/, // 避免触发成就相关的循环依赖
+];
 
-export const whiteTableList = [`select::(.*)::(${validTables.join('|')})`];
-
-export const invalidFieldsPattern: (ValidFieldPath | RegExp)[] = [/auths.*/];
+export const contextVariables = ['userId', 'userRole', 'isAdmin', 'userName'];

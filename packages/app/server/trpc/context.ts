@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3';
 import { ITokenPayload, verifyToken } from '../utils/jwt';
+import { AsyncLocalStorage } from 'node:async_hooks';
 
 export const createContext = async (event: H3Event) => {
    const token = getHeader(event, 'Authorization')?.replace('Bearer ', '');
@@ -17,3 +18,9 @@ export const createContext = async (event: H3Event) => {
 };
 
 export type Context = Awaited<ReturnType<typeof createContext>>;
+
+export interface IRequestContextPayload {
+   userId: string;
+}
+
+export const requestContext = new AsyncLocalStorage<IRequestContextPayload>();
