@@ -18,7 +18,7 @@ describe('AchievementObserver', () => {
    let observer: AchievementObserver;
 
    beforeEach(() => {
-      observer = new (AchievementObserver as any)();
+      observer = new AchievementObserver(() => null);
       vi.clearAllMocks();
    });
 
@@ -662,7 +662,8 @@ describe('AchievementObserver', () => {
       test('should execute achievement check and return true when condition is met', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.problemCount >= 10',
+               script:
+                  '(depData) => ({ achieved: depData.problemCount > 10, progress: depData.problemCount / 20 })',
             },
             AchievementDependencyData: [
                {
@@ -681,9 +682,9 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 15 }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 0.75 });
          expect(
             (mockPrisma as any).achievement.findUnique
          ).toHaveBeenCalledWith({
@@ -713,7 +714,8 @@ describe('AchievementObserver', () => {
       test('should execute achievement check and return false when condition is not met', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.problemCount >= 10',
+               script:
+                  '(depData) => ({ achieved: depData.problemCount >= 10, progress: depData.problemCount / 10 })',
             },
             AchievementDependencyData: [
                {
@@ -732,9 +734,9 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 5 }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(false);
+         expect(result).toStrictEqual({ achieved: false, progress: 0.5 });
       });
 
       test('should throw error when achievement validation script is not set', async () => {
@@ -747,10 +749,10 @@ describe('AchievementObserver', () => {
             mockAchievement
          );
 
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow(
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow(
             TRPCError
          );
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow(
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow(
             '成就（ID: 1）的达成检测脚本未设置'
          );
       });
@@ -759,7 +761,7 @@ describe('AchievementObserver', () => {
          const mockAchievement = {
             AchievementValidateScript: {
                script:
-                  '(depData) => depData.problemCount >= 10 && depData.isActive',
+                  '(depData) => ({ achieved: depData.problemCount >= 10 && depData.isActive, progress: depData.problemCount / 10 })',
             },
             AchievementDependencyData: [
                {
@@ -785,19 +787,20 @@ describe('AchievementObserver', () => {
             mockAchievement
          );
          mockPrisma.$queryRawUnsafe
-            .mockResolvedValueOnce([{ value: 15 }])
+            .mockResolvedValueOnce([{ value: 8 }])
             .mockResolvedValueOnce([{ value: true }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: false, progress: 0.8 });
          expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledTimes(2);
       });
 
       test('should handle BOOLEAN type data loader', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.hasCompletedTask',
+               script:
+                  '(depData) => ({ achieved: depData.hasCompletedTask, progress: depData.hasCompletedTask ? 1 : 0 })',
             },
             AchievementDependencyData: [
                {
@@ -816,15 +819,16 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: true }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 1 });
       });
 
       test('should handle TEXT type data loader', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.userName === "testUser"',
+               script:
+                  '(depData) => ({ achieved: depData.userName === "testUser", progress: depData.userName === "testUser" ? 1 : 0 })',
             },
             AchievementDependencyData: [
                {
@@ -843,15 +847,16 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 'testUser' }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 1 });
       });
 
       test('should handle empty result from data loader', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count > 0',
+               script:
+                  '(depData) => ({ achieved: depData.count > 0, progress: depData.count / 10 })',
             },
             AchievementDependencyData: [
                {
@@ -870,16 +875,18 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(false);
+         expect(result).toStrictEqual({ achieved: false, progress: 0 });
       });
 
       test('should use default values when loader returns no data', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script:
-                  '(depData) => depData.numericValue === 0 && !depData.boolValue && depData.textValue === ""',
+               script: `(depData) => {
+                     const r = depData.numericValue === 0 && !depData.boolValue && depData.textValue === "";
+                     return { achieved: r, progress: r ? 1 : 0 };
+                  }`,
             },
             AchievementDependencyData: [
                {
@@ -914,9 +921,9 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 1 });
       });
 
       test('should throw error when script execution fails', async () => {
@@ -941,10 +948,10 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
 
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow(
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow(
             TRPCError
          );
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow(
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow(
             '成就判定条件脚本执行失败'
          );
       });
@@ -952,7 +959,8 @@ describe('AchievementObserver', () => {
       test('should pass injectVars to runQuery', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.userProblemCount >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.userProblemCount >= 5, progress: depData.userProblemCount / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -969,12 +977,16 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 2 }]);
 
          const injectVars = { userId: 'user123' };
-         const result = await observer.triggerCheckAchievement('1', injectVars);
+         const result = await observer.triggerCheckAchievement(
+            1,
+            undefined,
+            injectVars
+         );
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: false, progress: 0.4 });
          expect(mockPrisma.$queryRawUnsafe).toHaveBeenCalledWith(
             expect.stringContaining("SELECT 'user123' AS userId")
          );
@@ -985,7 +997,8 @@ describe('AchievementObserver', () => {
             AchievementValidateScript: {
                script: `(depData) => {
                   const { problemCount, difficulty, isActive } = depData;
-                  return problemCount >= 10 && difficulty === 'hard' && isActive;
+                  const r = problemCount >= 10 && difficulty === 'hard' && isActive;
+                  return { achieved: r, progress: r ? 1 : (problemCount / 10) * 0.5 + (difficulty === 'hard' ? 0.3 : 0) + (isActive ? 0.2 : 0)}
                }`,
             },
             AchievementDependencyData: [
@@ -1024,15 +1037,16 @@ describe('AchievementObserver', () => {
             .mockResolvedValueOnce([{ value: 'hard' }])
             .mockResolvedValueOnce([{ value: true }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 1 });
       });
 
       test('should emit check event with achievement result', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1049,14 +1063,19 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 1 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
 
-         await observer.triggerCheckAchievement('1');
+         await observer.triggerCheckAchievement(1);
 
-         expect(checkListener).toHaveBeenCalledWith('1', true, undefined);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: false, progress: 0.2 },
+            undefined,
+            undefined
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1064,7 +1083,8 @@ describe('AchievementObserver', () => {
       test('should emit check event with injectVars', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1081,15 +1101,20 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 2 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
 
          const injectVars = { userId: 'test123' };
-         await observer.triggerCheckAchievement('1', injectVars);
+         await observer.triggerCheckAchievement(1, undefined, injectVars);
 
-         expect(checkListener).toHaveBeenCalledWith('1', true, injectVars);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: false, progress: 0.4 },
+            undefined,
+            injectVars
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1119,7 +1144,7 @@ describe('AchievementObserver', () => {
          const errorListener = vi.fn();
          observer.addListener('error', errorListener);
 
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow();
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow();
 
          expect(errorListener).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -1143,7 +1168,7 @@ describe('AchievementObserver', () => {
          const errorListener = vi.fn();
          observer.addListener('error', errorListener);
 
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow();
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow();
 
          expect(errorListener).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -1159,7 +1184,8 @@ describe('AchievementObserver', () => {
          // Test with value 0 (falsy)
          const mockAchievement1 = {
             AchievementValidateScript: {
-               script: '(depData) => depData.value',
+               script:
+                  '(depData) => ({ achieved: depData.value, progress: depData.value })',
             },
             AchievementDependencyData: [
                {
@@ -1177,8 +1203,8 @@ describe('AchievementObserver', () => {
             mockAchievement1
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ value: 0 }]);
-         let result = await observer.triggerCheckAchievement('1');
-         expect(result).toBe(false);
+         let result = await observer.triggerCheckAchievement(1);
+         expect(result).toStrictEqual({ achieved: false, progress: 0 });
 
          // Test with value 1 (truthy) using a different loader id to avoid cache
          const mockAchievement2 = {
@@ -1201,8 +1227,8 @@ describe('AchievementObserver', () => {
             mockAchievement2
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValueOnce([{ value: 1 }]);
-         result = await observer.triggerCheckAchievement('2'); // Different achievement id
-         expect(result).toBe(true);
+         result = await observer.triggerCheckAchievement(2); // Different achievement id
+         expect(result).toStrictEqual({ achieved: false, progress: 0 });
       });
 
       test('should handle undefined script return value', async () => {
@@ -1227,15 +1253,15 @@ describe('AchievementObserver', () => {
          );
          mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(false);
+         expect(result).toStrictEqual({ achieved: false, progress: 0 });
       });
 
       test('should handle achievement with no dependency data', async () => {
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => true',
+               script: '(depData) => ({ achieved: true, progress: 1 })',
             },
             AchievementDependencyData: [],
          };
@@ -1244,9 +1270,9 @@ describe('AchievementObserver', () => {
             mockAchievement
          );
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(true);
+         expect(result).toStrictEqual({ achieved: true, progress: 1 });
          expect(mockPrisma.$queryRawUnsafe).not.toHaveBeenCalled();
       });
 
@@ -1255,7 +1281,7 @@ describe('AchievementObserver', () => {
             AchievementValidateScript: {
                // Trying to access Node.js globals should fail
                script:
-                  '(depData) => { try { return typeof process !== "undefined"; } catch(e) { return false; } }',
+                  '(depData) => { try { return {achieved:typeof process !== "undefined",progress:1}; } catch(e) { return false; } }',
             },
             AchievementDependencyData: [],
          };
@@ -1264,9 +1290,9 @@ describe('AchievementObserver', () => {
             mockAchievement
          );
 
-         const result = await observer.triggerCheckAchievement('1');
+         const result = await observer.triggerCheckAchievement(1);
 
-         expect(result).toBe(false);
+         expect(result).toStrictEqual({ achieved: false, progress: 1 });
       });
 
       test('should timeout long-running scripts', async () => {
@@ -1281,7 +1307,7 @@ describe('AchievementObserver', () => {
             mockAchievement
          );
 
-         await expect(observer.triggerCheckAchievement('1')).rejects.toThrow(
+         await expect(observer.triggerCheckAchievement(1)).rejects.toThrow(
             TRPCError
          );
       });
@@ -1369,7 +1395,8 @@ describe('AchievementObserver', () => {
          // Setup achievement check mock
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1386,7 +1413,7 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 1 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
@@ -1397,7 +1424,12 @@ describe('AchievementObserver', () => {
          // Wait for microtask to complete
          await new Promise((resolve) => setTimeout(resolve, 0));
 
-         expect(checkListener).toHaveBeenCalledWith('1', true, undefined);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: false, progress: 0.2 },
+            undefined,
+            undefined
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1426,7 +1458,8 @@ describe('AchievementObserver', () => {
          // Setup achievement check mock
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.userCount >= 3',
+               script:
+                  '(depData) => ({ achieved: depData.userCount >= 5, progress: depData.userCount / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1449,12 +1482,17 @@ describe('AchievementObserver', () => {
          observer.addListener('check', checkListener);
 
          // Trigger table change (e.g., new user created)
-         await observer.manualMarkDirty('users');
+         observer.manualMarkDirty('users');
 
          // Wait for microtask to complete
          await new Promise((resolve) => setTimeout(resolve, 0));
 
-         expect(checkListener).toHaveBeenCalledWith('1', true, undefined);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: true, progress: 1 },
+            undefined,
+            undefined
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1494,7 +1532,8 @@ describe('AchievementObserver', () => {
          // Setup achievement check mocks
          const mockAchievement1 = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1510,7 +1549,8 @@ describe('AchievementObserver', () => {
 
          const mockAchievement2 = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 3',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1529,8 +1569,8 @@ describe('AchievementObserver', () => {
             .mockResolvedValueOnce(mockAchievement2);
 
          mockPrisma.$queryRawUnsafe
-            .mockResolvedValueOnce([{ value: 10 }])
-            .mockResolvedValueOnce([{ value: 10 }]);
+            .mockResolvedValueOnce([{ value: 2 }])
+            .mockResolvedValueOnce([{ value: 4 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
@@ -1542,8 +1582,18 @@ describe('AchievementObserver', () => {
          await new Promise((resolve) => setTimeout(resolve, 0));
 
          expect(checkListener).toHaveBeenCalledTimes(2);
-         expect(checkListener).toHaveBeenCalledWith('1', true, undefined);
-         expect(checkListener).toHaveBeenCalledWith('2', true, undefined);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: false, progress: 0.4 },
+            undefined,
+            undefined
+         );
+         expect(checkListener).toHaveBeenCalledWith(
+            2,
+            { achieved: false, progress: 0.8 },
+            undefined,
+            undefined
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1572,7 +1622,8 @@ describe('AchievementObserver', () => {
          // Setup achievement check mock
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({achieved: depData.count >= 5, progress: depData.count/5})',
             },
             AchievementDependencyData: [
                {
@@ -1589,7 +1640,7 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 2 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
@@ -1600,7 +1651,12 @@ describe('AchievementObserver', () => {
          // Wait for microtask to complete
          await new Promise((resolve) => setTimeout(resolve, 0));
 
-         expect(checkListener).toHaveBeenCalledWith('1', true, injectVars);
+         expect(checkListener).toHaveBeenCalledWith(
+            1,
+            { achieved: false, progress: 0.4 },
+            undefined,
+            injectVars
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1628,7 +1684,8 @@ describe('AchievementObserver', () => {
 
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({ achieved: depData.count >= 5, progress: depData.count / 5 })',
             },
             AchievementDependencyData: [
                {
@@ -1686,7 +1743,8 @@ describe('AchievementObserver', () => {
          // Setup achievement check mock
          const mockAchievement = {
             AchievementValidateScript: {
-               script: '(depData) => depData.count >= 5',
+               script:
+                  '(depData) => ({achieved: depData.count >= 5, progress: depData.count/5})',
             },
             AchievementDependencyData: [
                {
@@ -1703,7 +1761,7 @@ describe('AchievementObserver', () => {
          (mockPrisma as any).achievement.findUnique.mockResolvedValue(
             mockAchievement
          );
-         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 10 }]);
+         mockPrisma.$queryRawUnsafe.mockResolvedValue([{ value: 2 }]);
 
          const checkListener = vi.fn();
          observer.addListener('check', checkListener);
@@ -1717,7 +1775,12 @@ describe('AchievementObserver', () => {
 
          // Should only check once (batched)
          expect(checkListener).toHaveBeenCalledTimes(1);
-         expect(checkListener).toHaveBeenCalledWith('999', true, undefined);
+         expect(checkListener).toHaveBeenCalledWith(
+            999,
+            { achieved: false, progress: 0.4 },
+            undefined,
+            undefined
+         );
 
          observer.removeListener('check', checkListener);
       });
@@ -1757,7 +1820,7 @@ describe('AchievementObserver', () => {
          observer.addListener('error', errorListener);
 
          // Trigger field change
-         await observer.manualMarkDirty('problems.pid');
+         observer.manualMarkDirty('problems.pid');
 
          // Wait for microtask to complete
          await new Promise((resolve) => setTimeout(resolve, 0));

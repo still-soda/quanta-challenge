@@ -15,11 +15,11 @@ export const generateTokens = (payload: ITokenPayload) => {
 
    const refreshToken = jwt.sign(payload, refreshSecret, {
       algorithm: 'HS256',
-      expiresIn: '7d',
+      expiresIn: '7days',
    });
    const accessToken = jwt.sign(payload, accessSecret, {
       algorithm: 'HS256',
-      expiresIn: '5min',
+      expiresIn: '30mins',
    });
 
    return { accessToken, refreshToken };

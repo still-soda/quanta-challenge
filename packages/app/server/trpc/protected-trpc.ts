@@ -1,4 +1,3 @@
-import { requestContext } from './context';
 import { injectInfo } from './middlewares/inject-info';
 import { requireAuth } from './middlewares/require-auth';
 import { requireRole } from './middlewares/require-role';

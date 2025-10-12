@@ -3,7 +3,17 @@ import { ITokenPayload, verifyToken } from '../utils/jwt';
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 export const createContext = async (event: H3Event) => {
-   const token = getHeader(event, 'Authorization')?.replace('Bearer ', '');
+   const token = getCookie(event, 'quanta_access_token');
+   const csrfToken = getCookie(event, 'quanta_csrf_token');
+   const xCsrfToken = getHeader(event, 'x-csrf-token');
+   const isServer = getHeader(event, 'x-ssr') === '1';
+
+   if (!isServer) {
+      if (!csrfToken || !xCsrfToken || csrfToken !== xCsrfToken) {
+         return { event };
+      }
+   }
+
    if (!token) {
       return { event };
    }
@@ -14,6 +24,7 @@ export const createContext = async (event: H3Event) => {
    } catch (error) {
       user = null;
    }
+
    return { event, user };
 };
 

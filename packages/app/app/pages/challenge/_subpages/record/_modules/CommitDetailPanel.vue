@@ -141,13 +141,13 @@ const StatusIcon = () => {
       fill
       align="center"
       class="bg-[#1C1C1C] rounded-xl p-3">
-      <div class="w-[34rem] h-full relative overflow-auto hide-scrollbar">
+      <div class="w-[38rem] h-full relative overflow-auto hide-scrollbar">
          <StSkeleton :loading="loading || !detail">
             <template #loading>
                <CommitDetailSkeleton />
             </template>
             <StSpace
-               class="w-[34rem] min-h-full absolute top-0 left-0"
+               class="w-[38rem] min-h-full absolute top-0 left-0"
                gap="0.75rem"
                direction="vertical">
                <StSpace fill-x justify="between" align="center">

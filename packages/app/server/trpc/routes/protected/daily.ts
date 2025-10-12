@@ -3,6 +3,7 @@ import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import dayjs from 'dayjs';
 import { TRPCError } from '@trpc/server';
+import { dailyService } from '../../services/daily';
 
 function hasDailyCheckin(userId: string, date: Date) {
    return prisma.dailyCheckin.findFirst({
@@ -20,10 +21,9 @@ const hasCheckedinProcedure = protectedProcedure.query(async ({ ctx }) => {
 const hasCompletedDailyProblemProcedure = protectedProcedure.query(
    async ({ ctx }) => {
       const { userId } = ctx.user;
-      const today = dayjs().startOf('day').toDate();
 
       const dailyProblem = await prisma.dailyProblem.findFirst({
-         where: { date: today },
+         orderBy: { id: 'desc' },
          select: { baseProblemId: true },
       });
       if (!dailyProblem) {
@@ -33,7 +33,9 @@ const hasCompletedDailyProblemProcedure = protectedProcedure.query(
       const record = await prisma.judgeRecords.findFirst({
          where: {
             userId,
-            problemId: dailyProblem.baseProblemId,
+            problem: {
+               baseId: dailyProblem.baseProblemId,
+            },
             result: 'success',
             type: 'judge',
          },
@@ -56,7 +58,7 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
 
    const { baseProblemId: dailyProblemId } =
       await prisma.dailyProblem.findFirstOrThrow({
-         where: { date: today },
+         orderBy: { id: 'desc' },
          select: { baseProblemId: true },
       });
    const existingCompleteRecord = await prisma.judgeRecords.findFirst({
@@ -64,7 +66,9 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
          userId,
          result: 'success',
          type: 'judge',
-         problemId: dailyProblemId,
+         problem: {
+            baseId: dailyProblemId,
+         },
       },
    });
    if (!existingCompleteRecord) {
@@ -74,45 +78,44 @@ const dailyCheckinProcedure = protectedProcedure.mutation(async ({ ctx }) => {
       });
    }
 
-   await prisma.dailyCheckin.create({
-      data: { userId, date: today },
-   });
+   const redis = useRedis();
+   const cacheKey = `daily:continues-checkin-count:${userId}`;
+   const countCache = await redis.get(cacheKey);
+   const count = cacheKey
+      ? Number(countCache)
+      : await dailyService.countContinuesCheckin(userId);
+
+   await Promise.all([
+      redis.set(cacheKey, (count + 1).toString(), 'EX', 24 * 60 * 60),
+      prisma.dailyCheckin.create({
+         data: { userId, date: today },
+      }),
+   ]);
+
    return { success: true };
 });
 
 const continuesCheckinCountProcedure = protectedProcedure.query(
    async ({ ctx }) => {
       const { userId } = ctx.user;
-      const month = dayjs().startOf('month');
-      let count = 0;
 
-      const checkins = await prisma.dailyCheckin.findMany({
-         where: {
-            userId,
-            date: { gte: month.toDate() },
-         },
-         orderBy: { date: 'desc' },
-      });
-
-      for (let i = 0; i < checkins.length; i++) {
-         const checkinDate = dayjs(checkins[i].date);
-         if (i === 0) {
-            if (checkinDate.isSame(dayjs(), 'day')) {
-               count++;
-            } else if (checkinDate.isSame(dayjs().subtract(1, 'day'), 'day')) {
-               count++;
-            } else {
-               break;
-            }
-         } else {
-            const prevCheckinDate = dayjs(checkins[i - 1].date);
-            if (checkinDate.isSame(prevCheckinDate.subtract(1, 'day'), 'day')) {
-               count++;
-            } else {
-               break;
-            }
-         }
+      const redis = useRedis();
+      const cacheKey = `daily:continues-checkin-count:${userId}`;
+      const cachedCount = await redis.get(cacheKey);
+      if (cachedCount) {
+         return parseInt(cachedCount, 10);
       }
+
+      const count = await dailyService.countContinuesCheckin(userId);
+
+      // 缓存到 0 点
+      const tomorrow = dayjs().add(1, 'day').startOf('day');
+      await redis.set(
+         cacheKey,
+         count.toString(),
+         'EX',
+         tomorrow.diff(dayjs(), 'second')
+      );
 
       return count;
    }

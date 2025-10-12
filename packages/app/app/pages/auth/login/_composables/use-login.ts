@@ -19,7 +19,7 @@ export const useEmailLogin = () => {
 
    const handleLogin = async () => {
       if (!form.value) return;
-      const isValid = form.value.validate();
+      const isValid = form.value.validate().success;
       if (!isValid) {
          console.error('Validation failed');
          return;
@@ -31,10 +31,7 @@ export const useEmailLogin = () => {
             email: formdata.email,
             password: formdata.password,
          });
-         authStore.setTokens({
-            accessToken: result.tokens.accessToken,
-            refreshToken: result.tokens.refreshToken,
-         });
+         authStore.setCsrfToken(result.csrfToken);
          authStore.user = {
             ...result.user,
             lastLogin: new Date(result.user.lastLogin),

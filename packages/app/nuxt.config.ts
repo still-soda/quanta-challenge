@@ -5,11 +5,15 @@ export default defineNuxtConfig({
    compatibilityDate: '2025-07-15',
    devtools: { enabled: true },
 
+   experimental: {
+      asyncContext: true,
+   },
+
    css: ['~/assets/css/tailwind.css'],
    vite: {
       plugins: [tailwindcss() as any],
       ssr: {
-         noExternal: ['@prisma/client'],
+         noExternal: ['@prisma/client', 'winston'],
       },
       worker: {
          format: 'es',
@@ -35,7 +39,7 @@ export default defineNuxtConfig({
 
    security: {
       xssValidator: false,
-      rateLimiter: false
+      rateLimiter: false,
    },
 
    routeRules: {

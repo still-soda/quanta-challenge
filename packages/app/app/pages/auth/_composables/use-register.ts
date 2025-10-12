@@ -20,7 +20,7 @@ export const useRegister = () => {
    const loading = ref(false);
    const handleRegister = async () => {
       if (!form.value) return;
-      const isValid = form.value.validate();
+      const isValid = form.value.validate().success;
       if (!isValid) {
          console.error('Validation failed');
          return;
@@ -34,10 +34,7 @@ export const useRegister = () => {
             password: formdata.password,
             confirmPassword: formdata.confirmPassword,
          });
-         authStore.setTokens({
-            accessToken: result.tokens.accessToken,
-            refreshToken: result.tokens.refreshToken,
-         });
+         authStore.setCsrfToken(result.csrfToken);
          authStore.user = {
             name: result.user.name,
             id: result.user.id,

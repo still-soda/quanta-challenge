@@ -616,44 +616,44 @@ declare const getExposePage: (page: Page) => Omit<Page, 'goto'>;
  */
 type ExposePage = ReturnType<typeof getExposePage>;
 
-   /**
-    * 定义测试处理器
-    * 创建一个测试执行函数，用于运行自动化测试并评分
-    *
-    * @param handler 测试处理函数，接收页面和系统接口作为参数
-    * @returns 返回一个可执行的测试函数
-    *
-    * @example
-    * ```typescript
-    * import { defineTestHandler } from '@/lib/system';
-    *
-    * const testHandler = defineTestHandler(async ({ page, $ }) => {
-    *   // 定义检查点
-    *   $.defineCheckPoint('页面标题检查', 10, ({ score }) => {
-    *     const title = page.title();
-    *     if (title.includes('预期标题')) {
-    *       score.set(10);
-    *     }
-    *   });
-    *
-    *   // 执行页面操作
-    *   await page.click('#submit-button');
-    *   await $.expect(page.url().includes('/success'), '应该导航到成功页面');
-    * });
-    * ```
-    */
-   declear const defineTestHandler: (
-      handler: (ctx: IHandlerCtx) => Promise<void>
-   ) => (
-      page: ExposePage,
-      system: System
-   ) => Promise<{
-      /** 所有检查点的结果 */
-      results: ITestResult[];
-      /** 总得分 */
-      totalScore: number;
-      /** 最高单项得分 */
-      maxScore: number;
-      /** 整体测试状态 */
-      status: string;
-   }>;
+/**
+ * 定义测试处理器
+ * 创建一个测试执行函数，用于运行自动化测试并评分
+ *
+ * @param handler 测试处理函数，接收页面和系统接口作为参数
+ * @returns 返回一个可执行的测试函数
+ *
+ * @example
+ * ```typescript
+ * import { defineTestHandler } from '@/lib/system';
+ *
+ * const testHandler = defineTestHandler(async ({ page, $ }) => {
+ *   // 定义检查点
+ *   $.defineCheckPoint('页面标题检查', 10, ({ score }) => {
+ *     const title = page.title();
+ *     if (title.includes('预期标题')) {
+ *       score.set(10);
+ *     }
+ *   });
+ *
+ *   // 执行页面操作
+ *   await page.click('#submit-button');
+ *   await $.expect(page.url().includes('/success'), '应该导航到成功页面');
+ * });
+ * ```
+ */
+declear const defineTestHandler: (
+   handler: (ctx: IHandlerCtx) => Promise<void>
+) => (
+   page: ExposePage,
+   system: System
+) => Promise<{
+   /** 所有检查点的结果 */
+   results: ITestResult[];
+   /** 总得分 */
+   totalScore: number;
+   /** 最高单项得分 */
+   maxScore: number;
+   /** 整体测试状态 */
+   status: string;
+}>;

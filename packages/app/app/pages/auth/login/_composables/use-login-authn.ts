@@ -19,7 +19,7 @@ export const useWebAuthnLogin = () => {
    const loading = ref(false);
    const handleStartAuthenticating = async () => {
       if (!form.value) return;
-      const isValid = form.value.validate();
+      const isValid = form.value.validate().success;
       if (!isValid) {
          console.error('Validation failed');
          return;
@@ -34,11 +34,12 @@ export const useWebAuthnLogin = () => {
          const accessResponse = await clientAuthn.startAuthentication({
             optionsJSON: option,
          });
-         const tokens = await $trpc.auth.authn.verifyAuthentication.mutate({
-            accessResponse: accessResponse as any,
-            email: formdata.email,
-         });
-         authStore.setTokens(tokens);
+         const { csrfToken } =
+            await $trpc.auth.authn.verifyAuthentication.mutate({
+               accessResponse: accessResponse as any,
+               email: formdata.email,
+            });
+         authStore.setCsrfToken(csrfToken);
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
          getCallback('error').forEach((cb) => cb(error));

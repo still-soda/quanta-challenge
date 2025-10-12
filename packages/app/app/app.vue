@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import useAuthStore from './stores/auth-store';
 
-const { initTokens } = useAuthStore();
-onBeforeMount(initTokens);
+const authStore = useAuthStore();
+onMounted(() => {
+   authStore.initToken();
+});
 </script>
 
 <template>

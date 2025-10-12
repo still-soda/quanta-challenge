@@ -12,7 +12,7 @@ const emailLoginInputSchema = z.object({
 
 const emailLoginProcedure = publicProcedure
    .input(emailLoginInputSchema)
-   .query(async ({ input }) => {
+   .query(async ({ input, ctx }) => {
       const { email, password } = input;
 
       const authRecord = await prisma.auth.findFirstOrThrow({
@@ -37,7 +37,19 @@ const emailLoginProcedure = publicProcedure
          userId: user.id,
          role: user.role,
       });
-      return { user, tokens };
+      const csrfToken = crypto.randomUUID();
+
+      const opt = {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax' as any,
+      };
+
+      setCookie(ctx.event, 'quanta_access_token', tokens.accessToken, opt);
+      setCookie(ctx.event, 'quanta_refresh_token', tokens.refreshToken, opt);
+      setCookie(ctx.event, 'quanta_csrf_token', csrfToken, opt);
+
+      return { user, csrfToken };
    });
 
 const getUserByAccessToken = protectedProcedure.query(async ({ ctx }) => {
@@ -57,7 +69,8 @@ const getUserByAccessToken = protectedProcedure.query(async ({ ctx }) => {
          lastLogin: new Date(),
       },
    });
-   return user;
+
+   return { user };
 });
 
 export const loginRouter = router({

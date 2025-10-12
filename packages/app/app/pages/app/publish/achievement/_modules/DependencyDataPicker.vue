@@ -3,6 +3,7 @@ import type { ISelectOption } from '~/components/st/Select/type';
 import { Plus, Record, RobotOne } from '@icon-park/vue-next';
 import DepDataRequestDrawer from '../_drawers/DepDataRequestDrawer.vue';
 import { $Enums } from '@prisma/client';
+import type { IDataLoader } from '../_utils/dts-file-parser';
 
 const { $trpc } = useNuxtApp();
 
@@ -13,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const dependencyOptions = ref<ISelectOption[]>([]);
-const tagValueToLabel = (value: string) => {
+const depValueToLabel = (value: string) => {
    const option = dependencyOptions.value.find(
       (option) => option.value === value
    );
@@ -24,10 +25,12 @@ const handleRemoveTag = (tag: number) => {
    dependencyData.value = dependencyData.value.filter((t) => t !== tag);
 };
 
-const tagSelectOpened = ref(false);
-const fetchTagLoading = ref(false);
-const fetchTags = async (): Promise<ISelectOption[]> => {
+const depSelectOpened = ref(false);
+const fetchDepLoading = ref(false);
+const allDeps = ref<(IDataLoader & { id: number })[]>([]);
+const fetchDeps = async (): Promise<ISelectOption[]> => {
    const deps = await $trpc.admin.achievement.getAllDepDataLoaders.query();
+   allDeps.value = deps;
    return deps
       .map((dep) => ({
          label: dep.name,
@@ -41,23 +44,28 @@ const fetchTags = async (): Promise<ISelectOption[]> => {
 };
 onMounted(async () => {
    if (dependencyData.value.length > 0) {
-      dependencyOptions.value = await fetchTags();
+      dependencyOptions.value = await fetchDeps();
    }
 });
 
-watch(tagSelectOpened, async (opened) => {
+watch(depSelectOpened, async (opened) => {
    if (!opened || dependencyOptions.value.length > 0) return;
-   fetchTagLoading.value = true;
-   dependencyOptions.value = await atLeastTime(400, fetchTags());
-   fetchTagLoading.value = false;
+   fetchDepLoading.value = true;
+   dependencyOptions.value = await atLeastTime(400, fetchDeps());
+   fetchDepLoading.value = false;
+});
+
+const successListener = useEventBus('achievement-dep-data-requested-success');
+successListener.on(async () => {
+   dependencyOptions.value = await fetchDeps();
 });
 
 const depDataCreating = ref(false);
 
 const onSubmitDepDataRequest = async () => {
    depDataCreating.value = false;
-   tagSelectOpened.value = true;
-   dependencyOptions.value = await fetchTags();
+   depSelectOpened.value = true;
+   dependencyOptions.value = await fetchDeps();
 };
 
 const typeToText: Record<string, { text: string; color: string }> = {
@@ -68,6 +76,15 @@ const typeToText: Record<string, { text: string; color: string }> = {
    $Enums.AchievementDepDataType,
    { text: string; color: string }
 >;
+
+const pickedDataLoaders = defineModel<IDataLoader[]>('pickedDataLoaders', {
+   default: [],
+});
+watchEffect(() => {
+   pickedDataLoaders.value = allDeps.value.filter((dep) =>
+      dependencyData.value.includes(dep.id)
+   );
+});
 </script>
 
 <template>
@@ -77,12 +94,12 @@ const typeToText: Record<string, { text: string; color: string }> = {
       :outer-class />
    <StSelect
       v-model:value="dependencyData"
-      v-model:opened="tagSelectOpened"
+      v-model:opened="depSelectOpened"
       close-on-click-outside
       attach-to-body
       placeholder="请选择依赖数据"
       multiple
-      :loading="fetchTagLoading"
+      :loading="fetchDepLoading"
       :outer-class="props.outerClass"
       :options="dependencyOptions">
       <template #options-empty>
@@ -108,7 +125,7 @@ const typeToText: Record<string, { text: string; color: string }> = {
                v-for="tag in value"
                closable
                :key="tag"
-               :content="tagValueToLabel(tag)"
+               :content="depValueToLabel(tag)"
                color="#fa7c0e"
                @click.stop
                @close="handleRemoveTag(tag)" />

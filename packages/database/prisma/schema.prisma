@@ -33,6 +33,7 @@ model User {
   ProblemVersionTransitions ProblemVersionTransitions[]
   DailyCheckin              DailyCheckin[]
   UserAchievement           UserAchievement[]
+  Achievement               Achievement[]
 
   @@map("users")
 }
@@ -452,18 +453,31 @@ model DailyCheckin {
 
 model Achievement {
   id           Int      @id @default(autoincrement())
-  name         String
+  name         String   @unique
   description  String?
   badgeImageId String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  authorId     String?
 
+  author                    User?                       @relation(fields: [authorId], references: [id])
   badgeImage                Image                       @relation(fields: [badgeImageId], references: [id])
   UserAchievement           UserAchievement[]
   AchievementDependencyData AchievementDependencyData[]
   AchievementValidateScript AchievementValidateScript?
+  CheckinAchievement        CheckinAchievement?
 
   @@map("achievements")
+}
+
+model CheckinAchievement {
+  id            Int      @id @default(autoincrement())
+  achievementId Int      @unique
+  createdAt     DateTime @default(now())
+
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@map("checkin_achievements")
 }
 
 model AchievementDependencyDataRequestRecord {
@@ -516,6 +530,7 @@ model AchievementDepDataLoader {
   description String?
   sql         String
   type        AchievementDepDataType
+  isList      Boolean                @default(true)
   createdAt   DateTime               @default(now())
   updatedAt   DateTime               @updatedAt
 
@@ -526,6 +541,7 @@ model AchievementDepDataLoader {
 
 model UserAchievement {
   id            Int      @id @default(autoincrement())
+  progress      Float    @default(0)
   userId        String
   achievementId Int
   achievedAt    DateTime @default(now())

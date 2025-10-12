@@ -6,8 +6,10 @@ export const useAchievementPublicationForm = () => {
       name: '',
       description: '',
       imageId: '',
-      dependencyData: [] as string[],
+      dependencyData: [] as number[],
       rule: '',
+      script: '',
+      isCheckinAchievement: false,
    });
 
    const formKey = 'publishForm';
@@ -46,6 +48,13 @@ export const useAchievementPublicationForm = () => {
                return false;
             }
             return true;
+         },
+      },
+      {
+         field: 'script',
+         required: true,
+         validator(value) {
+            return value && value.length > 0;
          },
       },
    ]);

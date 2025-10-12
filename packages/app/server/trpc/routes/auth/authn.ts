@@ -106,7 +106,19 @@ const verifyAuthnRegistrationProcedure = protectedProcedure
          },
       });
 
-      return generateTokens({ userId, role: 'USER' });
+      const tokens = generateTokens({ userId, role: 'USER' });
+      const csrfToken = crypto.randomUUID();
+
+      const opt = {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax' as any,
+      };
+      setCookie(ctx.event, 'quanta_access_token', tokens.accessToken, opt);
+      setCookie(ctx.event, 'quanta_refresh_token', tokens.refreshToken, opt);
+      setCookie(ctx.event, 'quanta_csrf_token', csrfToken, opt);
+
+      return { csrfToken };
    });
 
 const AuthenticateAuthnSchema = z.object({
@@ -159,7 +171,7 @@ const VerifyAuthenticationSchema = z.object({
 
 const verifyAuthnAuthenticationProcedure = publicProcedure
    .input(VerifyAuthenticationSchema)
-   .mutation(async ({ input }) => {
+   .mutation(async ({ input, ctx }) => {
       const redis = useRedis();
       const { accessResponse, email } = input;
       const optionsJSON = await redis.get('webauthn:authenticate:' + email);
@@ -205,10 +217,22 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
          select: { id: true, role: true },
       });
 
-      return generateTokens({
+      const tokens = generateTokens({
          userId: user.id,
          role: user.role,
       });
+      const csrfToken = crypto.randomUUID();
+
+      const opt = {
+         httpOnly: true,
+         secure: process.env.NODE_ENV === 'production',
+         sameSite: 'lax' as any,
+      };
+      setCookie(ctx.event, 'quanta_access_token', tokens.accessToken, opt);
+      setCookie(ctx.event, 'quanta_refresh_token', tokens.refreshToken, opt);
+      setCookie(ctx.event, 'quanta_csrf_token', csrfToken, opt);
+
+      return { csrfToken };
    });
 
 export const authnRouter = router({

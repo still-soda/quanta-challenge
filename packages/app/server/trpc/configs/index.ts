@@ -2,7 +2,8 @@ import { ValidFieldPath } from '@challenge/database';
 
 export const invalidFieldsPattern: (ValidFieldPath | RegExp)[] = [
    /^auths.*/,
-   /^achievements.*/, // 避免触发成就相关的循环依赖
+   /^achievement.*/, // 避免触发成就相关的循环依赖
+   /^user_achievements.*/,
 ];
 
-export const contextVariables = ['userId', 'userRole', 'isAdmin', 'userName'];
+export const contextVariables = ['userId', 'continuesCheckinCount'];

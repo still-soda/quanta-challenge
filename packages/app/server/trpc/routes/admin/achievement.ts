@@ -7,6 +7,8 @@ const { Parser } = pkg;
 import { contextVariables, invalidFieldsPattern } from '../../configs';
 import { TRPCError } from '@trpc/server';
 import { realNameFieldsMap, validRealNames } from '@challenge/database';
+import { VM } from 'vm2';
+import { observer } from '../../services/achievement';
 
 const getAllDepDataLoadersProcedure = protectedAdminProcedure.query(
    async () => {
@@ -16,6 +18,7 @@ const getAllDepDataLoadersProcedure = protectedAdminProcedure.query(
             name: true,
             description: true,
             type: true,
+            isList: true,
          },
       });
 
@@ -140,7 +143,139 @@ const requestDepDataLoaderProcedure = protectedAdminProcedure
       return newLoader;
    });
 
+const CreateAchievementSchema = z.object({
+   name: z.string().min(1).max(50),
+   description: z.string().min(1).max(255),
+   imageId: z.uuid(),
+   script: z.string().min(1),
+   dependencyData: z.array(z.number()),
+   isCheckinAchievement: z.boolean(),
+});
+
+const createAchievementProcedure = protectedAdminProcedure
+   .input(CreateAchievementSchema)
+   .mutation(async ({ ctx, input }) => {
+      const image = await prisma.image.findUnique({
+         where: { id: input.imageId },
+      });
+      if (!image) {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '成就图标不存在',
+         });
+      }
+
+      const achievementWithSameName = await prisma.achievement.findFirst({
+         where: { name: input.name },
+      });
+      if (achievementWithSameName) {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '存在相同名称的成就，请更换名称',
+         });
+      }
+
+      const depDataLoaders = await prisma.achievementDepDataLoader.findMany({
+         where: { id: { in: input.dependencyData } },
+         select: { name: true, type: true },
+      });
+      if (depDataLoaders.length !== input.dependencyData.length) {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '部分成就依赖数据加载器不存在',
+         });
+      }
+
+      const { judge } = useRuntimeConfig();
+      const { code: checkScript } = await fetch(
+         `${judge.serverUrl}/code/extract`,
+         {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+               code: input.script,
+            }),
+         }
+      ).then((res) => res.json());
+      if (!checkScript || typeof checkScript !== 'string') {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Check script must export a default function',
+         });
+      }
+
+      const mockDepData = depDataLoaders.reduce((prev, curr) => {
+         prev[curr.name] =
+            curr.type === 'BOOLEAN' ? false : curr.type === 'NUMERIC' ? 0 : '';
+         return prev;
+      }, {} as Record<string, number | boolean | string>);
+      const vm = new VM({
+         allowAsync: false,
+         eval: false,
+         wasm: false,
+         timeout: 200,
+         sandbox: {
+            depData: mockDepData,
+            defineCheckFunc: (fn: Function) => fn,
+         },
+      });
+      try {
+         const scriptToRun = `${checkScript.replace(
+            'export default ',
+            'const check = '
+         )}; check(depData);`;
+         vm.run(scriptToRun);
+      } catch (err) {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+               '成就检测代码未通过测试：' +
+               (err instanceof Error ? err.message : ''),
+         });
+      }
+
+      try {
+         const result = await prisma.achievement.create({
+            data: {
+               name: input.name,
+               badgeImageId: input.imageId,
+               description: input.description,
+               authorId: ctx.user.userId,
+               AchievementValidateScript: {
+                  create: {
+                     script: input.script,
+                  },
+               },
+               AchievementDependencyData: {
+                  createMany: {
+                     data: input.dependencyData.map((id) => ({
+                        achievementDepDataLoaderId: id,
+                     })),
+                  },
+               },
+               CheckinAchievement: {
+                  create: {},
+               },
+            },
+            select: {
+               id: true,
+            },
+         });
+         // 新增成就需要重建依赖树
+         observer.rebuildDepTree();
+         return { achievementId: result.id };
+      } catch (err: any) {
+         throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '成就创建失败：' + err.message,
+         });
+      }
+   });
+
 export const achievementRouter = router({
    getAllDepDataLoaders: getAllDepDataLoadersProcedure,
    requestDepDataLoader: requestDepDataLoaderProcedure,
+   createAchievement: createAchievementProcedure,
 });

@@ -2,6 +2,7 @@ import prisma from '~~/lib/prisma';
 import { Prisma, PrismaClient, VirtualFiles } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import { TRPCError } from '@trpc/server';
+import { observer } from './achievement';
 
 type Tx = Omit<
    PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
@@ -96,6 +97,7 @@ const create = async (options: ICreateProjectOptions) => {
       });
       result.virtualFileIds = vids.map((v) => v.vid);
    };
+   observer.manualMarkDirty(['projects', 'file_systems', 'virtual_files']);
 
    if (options.tx) {
       await doTransaction(options.tx);
@@ -190,6 +192,7 @@ const fork = async (options: IForkProjectOptions) => {
       });
       result.virtualFileIds = vids.map((v) => v.vid);
    };
+   observer.manualMarkDirty(['projects', 'file_systems', 'virtual_files']);
 
    if (options.tx) {
       await doTransaction(options.tx);

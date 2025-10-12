@@ -41,11 +41,10 @@ const emailRegisterProcedure = publicProcedure
             },
          },
       });
+      const tokens = generateTokens({ userId, role: 'USER' });
+      const csrfToken = crypto.randomUUID();
       return {
-         tokens: generateTokens({
-            userId,
-            role: 'USER',
-         }),
+         csrfToken,
          user: {
             name: username,
             id: userId,

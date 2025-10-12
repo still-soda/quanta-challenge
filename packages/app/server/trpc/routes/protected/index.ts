@@ -1,4 +1,5 @@
 import { router } from '../../trpc';
+import { achievementRouter } from './achievement';
 import { dailyRouter } from './daily';
 import { dashboardRouter } from './dashboard';
 import { problemRouter } from './problem';
@@ -9,4 +10,5 @@ export const protectedRouter = router({
    rank: rankRouter,
    dashboard: dashboardRouter,
    daily: dailyRouter,
+   achievement: achievementRouter,
 });

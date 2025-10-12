@@ -44,7 +44,7 @@ const form = useTemplateRef<InstanceType<typeof StForm>>('form');
 const loading = ref(false);
 const { $trpc } = useNuxtApp();
 const handleCreate = async () => {
-   if (!form.value?.validate()) return;
+   if (!form.value?.validate().success) return;
    const createTag = async () => {
       $trpc.admin.tag.add.mutate({
          name: formdata.name,
@@ -72,7 +72,7 @@ const handleCreate = async () => {
 };
 
 const enableSubmit = computed(() => {
-   return form.value?.validate() && !loading.value;
+   return form.value?.validate().success && !loading.value;
 });
 </script>
 

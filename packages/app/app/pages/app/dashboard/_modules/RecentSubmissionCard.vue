@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Share, TableReport } from '@icon-park/vue-next';
-import MoreOptions from './MoreOptions.vue';
 import StackRank from '../_components/StackRank.vue';
 
 const { $trpc } = useNuxtApp();

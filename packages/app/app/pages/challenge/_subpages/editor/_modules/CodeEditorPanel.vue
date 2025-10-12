@@ -114,7 +114,11 @@ defineExpose({ setModel, onModelContentChange, addExtraLibs });
 </script>
 
 <template>
-   <StSpace fill direction="vertical" gap="0" class="bg-[#1F1F1F] rounded-xl">
+   <StSpace
+      fill
+      direction="vertical"
+      gap="0"
+      class="bg-[#1F1F1F] rounded-xl overflow-hidden">
       <StSpace
          fill-x
          class="p-1 rounded-t-xl bg-accent-600"
@@ -154,10 +158,6 @@ defineExpose({ setModel, onModelContentChange, addExtraLibs });
             v-show="hasEditorReady"
             :ref="containerKey"
             class="absolute top-0 left-0 size-full"></main>
-      </StSpace>
-
-      <StSpace fill-x class="px-4 py-3 rounded-b-xl bg-accent-600">
-         <div class="text-accent-300 text-xs">已保存</div>
       </StSpace>
    </StSpace>
 </template>

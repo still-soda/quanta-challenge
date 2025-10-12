@@ -26,24 +26,27 @@ const validate = () => {
       return optionsMap.has(rule.field) && formdataKeySet.has(rule.field);
    });
    let success = true;
+   let invalidField: string | null = null;
    for (const rule of rulesToValidate) {
       const options = optionsMap.get(rule.field);
       if (options) {
          const value = formdata.value[rule.field];
          if (rule.required && !value) {
             options.setStatus('error');
+            invalidField = rule.field;
             success = false;
             continue;
          }
          if (rule.validator && !rule.validator(value)) {
             options.setStatus('error');
+            invalidField = rule.field;
             success = false;
             continue;
          }
          options.setStatus('success');
       }
    }
-   return success;
+   return { success, invalidField };
 };
 
 defineExpose({

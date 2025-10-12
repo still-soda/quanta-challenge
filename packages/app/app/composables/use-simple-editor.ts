@@ -8,7 +8,8 @@ export interface IUseSimpleEditorOptions {
 }
 
 type EditorReadyCallback = (
-   editor: monaco.editor.IStandaloneCodeEditor
+   editor: monaco.editor.IStandaloneCodeEditor,
+   monaco: typeof import('monaco-editor')
 ) => void;
 
 type EditorDisposedCallback = (
@@ -42,13 +43,14 @@ const setEnvironment = () => {
 
 export const useSimpleEditor = (options: IUseSimpleEditorOptions) => {
    let editor: monaco.editor.IStandaloneCodeEditor | null = null;
+   let monacoInstance: typeof import('monaco-editor') | null = null;
    const containerKey = 'container-key';
    const container = useTemplateRef<HTMLElement>(containerKey);
 
    const editorReadyCallbacks = new Set<EditorReadyCallback>();
    const onEditorReady = (callback: EditorReadyCallback) => {
-      if (editor) {
-         callback(editor);
+      if (editor && monacoInstance) {
+         callback(editor, monacoInstance);
       }
       editorReadyCallbacks.add(callback);
    };
@@ -74,6 +76,7 @@ export const useSimpleEditor = (options: IUseSimpleEditorOptions) => {
    onMounted(async () => {
       if (!container.value) return;
       const monaco = await import('monaco-editor');
+      monacoInstance = monaco;
 
       setEnvironment();
 
@@ -120,7 +123,9 @@ export const useSimpleEditor = (options: IUseSimpleEditorOptions) => {
       };
 
       createEditor(container.value);
-      editorReadyCallbacks.forEach((callback) => callback(editor!));
+      editorReadyCallbacks.forEach((callback) =>
+         callback(editor!, monacoInstance!)
+      );
 
       editor?.onDidChangeModelContent(() => {
          const content = editor?.getValue() ?? '';

@@ -5,7 +5,7 @@ import { type IRule } from '~/components/st/Form/type';
 import { useMessage } from '~/components/st/Message/use-message';
 import type { ISelectOption } from '~/components/st/Select/type';
 
-const props = defineProps<{
+defineProps<{
    outerClass?: string;
 }>();
 
@@ -24,7 +24,7 @@ const rules = ref<IRule[]>([
       field: 'name',
       required: true,
       validator(value) {
-         return /^[A-Za-z_][A-Za-z0-9_]{0,19}$/.test(value);
+         return /^[A-Za-z_][A-Za-z0-9_]+$/.test(value);
       },
    },
    {
@@ -58,16 +58,17 @@ watch(
          enableSubmit.value = false;
          return;
       }
-      enableSubmit.value = form.value?.validate();
+      enableSubmit.value = form.value?.validate().success;
    },
    { deep: true }
 );
 
 const { $trpc } = useNuxtApp();
+const successEmitter = useEventBus('achievement-dep-data-requested-success');
 const message = useMessage();
 const loading = ref(false);
 const handleSubmit = async () => {
-   if (!form.value?.validate()) return;
+   if (!form.value?.validate().success) return;
 
    const dataToSubmit = {
       name: formdata.name,
@@ -89,6 +90,7 @@ const handleSubmit = async () => {
          $trpc.admin.achievement.requestDepDataLoader.mutate(dataToSubmit)
       );
       message.success('申请成功');
+      successEmitter.emit();
       opened.value = false;
       formdata.name = '';
       formdata.description = '';

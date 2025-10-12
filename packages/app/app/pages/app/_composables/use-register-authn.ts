@@ -1,5 +1,4 @@
 import type StForm from '~/components/st/Form/index.vue';
-import useAuthStore from '~/stores/auth-store';
 import * as clientAuthn from '@simplewebauthn/browser';
 
 export const useRegisterAuthn = () => {
@@ -11,7 +10,6 @@ export const useRegisterAuthn = () => {
    const loading = ref(false);
 
    const { $trpc } = useNuxtApp();
-   const authStore = useAuthStore();
 
    const { getCallback, on } = useStatusCallbacks<'success' | 'error'>();
    const onRegisterSuccess = (callback: Function) => on('success', callback);
@@ -19,7 +17,7 @@ export const useRegisterAuthn = () => {
 
    const handleRegister = async () => {
       if (!form.value) return;
-      const isValid = form.value.validate();
+      const isValid = form.value.validate().success;
       if (!isValid) {
          console.error('Validation failed');
          return;
@@ -33,10 +31,9 @@ export const useRegisterAuthn = () => {
          const accessResponse = await clientAuthn.startRegistration({
             optionsJSON: option,
          });
-         const tokens = await $trpc.auth.authn.verifyRegistration.mutate(
+         await $trpc.auth.authn.verifyRegistration.mutate(
             accessResponse as any
          );
-         authStore.setTokens(tokens);
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
          getCallback('error').forEach((cb) => cb());
