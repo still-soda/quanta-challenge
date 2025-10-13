@@ -14,18 +14,20 @@ const countContinuesCheckin = async (userId: string) => {
    });
 
    for (let i = 0; i < checkins.length; i++) {
-      const checkinDate = dayjs(checkins[i].date);
+      const checkinDay = dayjs(checkins[i].date);
       if (i === 0) {
-         if (checkinDate.isSame(dayjs(), 'day')) {
-            count++;
-         } else if (checkinDate.isSame(dayjs().subtract(1, 'day'), 'day')) {
+         const [today, yesterday] = [dayjs(), dayjs().subtract(1, 'day')];
+         if (
+            checkinDay.isSame(today, 'day') ||
+            checkinDay.isSame(yesterday, 'day')
+         ) {
             count++;
          } else {
             break;
          }
       } else {
-         const prevCheckinDate = dayjs(checkins[i - 1].date);
-         if (checkinDate.isSame(prevCheckinDate.subtract(1, 'day'), 'day')) {
+         const prevCheckinDay = dayjs(checkins[i - 1].date);
+         if (checkinDay.isSame(prevCheckinDay.subtract(1, 'day'), 'day')) {
             count++;
          } else {
             break;

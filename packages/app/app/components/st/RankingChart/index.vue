@@ -46,7 +46,7 @@ const xAxisLabels = computed(() => {
       labels.push(Math.round((delta / count) * i) + minScore);
    }
    const result = Array.from(new Set(labels));
-   return result.length === 1 ? result : result.slice(1);
+   return result;
 });
 </script>
 
@@ -68,7 +68,7 @@ const xAxisLabels = computed(() => {
                height="13"
                viewBox="0 0 16 13"
                fill="none"
-               class="absolute -top-6 left-1/2 -translate-x-1/2 scale-x-125">
+               class="absolute -top-5 left-1/2 -translate-x-1/2 scale-x-125">
                <path
                   d="M9.73205 12C8.96225 13.3333 7.03775 13.3333 6.26795 12L1.0718 3C0.301997 1.66667 1.26425 4.44263e-07 2.80385 5.78859e-07L13.1962 1.48738e-06C14.7358 1.62198e-06 15.698 1.66667 14.9282 3L9.73205 12Z"
                   fill="#FA7C0E" />

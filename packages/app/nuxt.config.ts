@@ -102,6 +102,12 @@ export default defineNuxtConfig({
             base: './storage/local',
          },
       },
+      experimental: {
+         tasks: true,
+      },
+      scheduledTasks: {
+         '0 0 * * *': 'db:update-rank-history',
+      },
    },
 
    build: {
@@ -111,21 +117,25 @@ export default defineNuxtConfig({
    runtimeConfig: {
       secret: {
          accessToken:
-            process.env.ACCESS_TOKEN_SECRET || 'default_access_token_secret',
+            import.meta.env.ACCESS_TOKEN_SECRET ||
+            'default_access_token_secret',
          refreshToken:
-            process.env.REFRESH_TOKEN_SECRET || 'default_refresh_token_secret',
+            import.meta.env.REFRESH_TOKEN_SECRET ||
+            'default_refresh_token_secret',
       },
       redis: {
-         host: process.env.REDIS_HOST || 'localhost',
-         port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
-         password: process.env.REDIS_PASSWORD || '',
+         host: import.meta.env.REDIS_HOST || 'localhost',
+         port: import.meta.env.REDIS_PORT
+            ? parseInt(import.meta.env.REDIS_PORT)
+            : 6379,
+         password: import.meta.env.REDIS_PASSWORD || '',
       },
       judge: {
-         serverUrl: process.env.JUDGE_SERVER || 'http://localhost:1888',
+         serverUrl: import.meta.env.JUDGE_SERVER || 'http://localhost:1888',
       },
       rank: {
-         cacheTTL: process.env.RANKING_CACHE_TTL
-            ? parseInt(process.env.RANKING_CACHE_TTL)
+         cacheTTL: import.meta.env.RANKING_CACHE_TTL
+            ? parseInt(import.meta.env.RANKING_CACHE_TTL)
             : 3600, // 默认缓存1小时
       },
    },

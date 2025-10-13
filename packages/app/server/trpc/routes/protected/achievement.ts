@@ -42,6 +42,44 @@ const getCurrentCheckinAchievementProcedure = protectedProcedure.query(
    }
 );
 
+const getAchievedAchievementsProcedure = protectedProcedure.query(
+   async ({ ctx }) => {
+      const { userId } = ctx.user;
+
+      const achievements = await prisma.userAchievement.findMany({
+         where: {
+            userId,
+            progress: 1,
+         },
+         select: {
+            achievement: {
+               select: {
+                  id: true,
+                  name: true,
+                  badgeImage: {
+                     select: {
+                        name: true,
+                     },
+                  },
+               },
+            },
+            achievedAt: true,
+         },
+         orderBy: {
+            achievedAt: 'desc',
+         },
+      });
+
+      return achievements.map((ach) => ({
+         id: ach.achievement.id,
+         name: ach.achievement.name,
+         badgeUrl: `/api/static/${ach.achievement.badgeImage.name}`,
+         achievedAt: ach.achievedAt,
+      }));
+   }
+);
+
 export const achievementRouter = router({
    getCurrentCheckinAchievement: getCurrentCheckinAchievementProcedure,
+   getAchievedAchievements: getAchievedAchievementsProcedure,
 });

@@ -3,7 +3,7 @@ import MoreOptions from './MoreOptions.vue';
 import RecentSubmissionCard from './RecentSubmissionCard.vue';
 import RecentLearningCard from './RecentLearningCard.vue';
 import SubmissionStatusCard from './SubmissionStatusCard.vue';
-import BadgesCard from './BadgesCard.vue';
+import AchievementsCard from './AchievementsCard.vue';
 import RankingCard from './RankingCard.vue';
 
 export {
@@ -12,6 +12,6 @@ export {
    RecentSubmissionCard,
    RecentLearningCard,
    SubmissionStatusCard,
-   BadgesCard,
+   AchievementsCard,
    RankingCard,
 };

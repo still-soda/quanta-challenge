@@ -1,0 +1,36 @@
+WITH
+  scores AS (
+    SELECT
+      "userId",
+      SUM(max_score) AS score
+    FROM
+      (
+        SELECT
+          "userId",
+          MAX(score) AS max_score
+        FROM
+          judge_records
+          JOIN problems ON judge_records."problemId" = problems.pid
+        WHERE
+        type = 'judge' AND
+        result = 'success'
+        GROUP BY
+          "userId",
+          "baseId"
+      ) AS per_problem_max
+    GROUP BY
+      "userId"
+  )
+INSERT INTO
+  user_statistics ("userId", score, "updatedAt", "createdAt")
+SELECT
+  "userId",
+  score,
+  NOW(),
+  NOW()
+FROM
+  scores ON CONFLICT ("userId")
+DO
+UPDATE
+SET
+  score = EXCLUDED.score;

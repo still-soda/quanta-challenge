@@ -4,7 +4,7 @@ import {
    RecentLearningCard,
    RecentSubmissionCard,
    SubmissionStatusCard,
-   BadgesCard,
+   AchievementsCard,
    RankingCard,
 } from './_modules';
 
@@ -26,7 +26,7 @@ useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
             <SubmissionStatusCard />
             <StSpace gap="1.5rem" fill>
                <RankingCard />
-               <BadgesCard />
+               <AchievementsCard />
             </StSpace>
          </StSpace>
       </StSpace>

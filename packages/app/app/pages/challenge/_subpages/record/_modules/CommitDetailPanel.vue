@@ -9,7 +9,6 @@ import { type CommitDetailType, type IRank } from '../_types/shared-types';
 import dayjs from 'dayjs';
 import { DataBlock, Divider, JudgeStatus } from '../_components/DetailItems';
 import CommitDetailSkeleton from '../_skeletons/CommitDetailSkeleton.vue';
-import RankChart from '../_components/RankChart.vue';
 
 const props = defineProps<{
    problemId: number;
@@ -77,7 +76,7 @@ const getRank = async () => {
       return;
    }
 
-   const getRank = $trpc.protected.rank.getScoreIntervals.query({
+   const getRank = $trpc.protected.rank.getProblemScoreIntervals.query({
       problemId: props.problemId,
    });
 
@@ -212,7 +211,9 @@ const StatusIcon = () => {
                         </span>
                         的提交者
                      </h2>
-                     <RankChart :rank="rank" :current-score="detail?.score" />
+                     <StRankingChart
+                        :rank="rank"
+                        :current-score="detail?.score" />
                   </StSpace>
                   <Divider v-if="showChart" />
                   <StSpace fill-x direction="vertical" gap="1rem">

@@ -34,7 +34,7 @@ const getRecentSubmissions = protectedProcedure.query(async ({ ctx }) => {
    }
 
    const [recordId, problemId] = [recentRecord.id, recentRecord.problem.pid];
-   const rank = await rankService.getSelfRank(problemId, recordId);
+   const rank = await rankService.getSelfProblemRanking(problemId, recordId);
 
    const passedCount = recentRecord.problem.JudgeStatus?.passedCount || 0;
    const totalCount = recentRecord.problem.JudgeStatus?.totalCount || 0;

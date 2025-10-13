@@ -12,6 +12,19 @@ const JudgeCompleteSchema = z.object({
       }),
 });
 
+const calculateScoreDiff = async (baseId: number, score: number) => {
+   const highestScore = await prisma.$queryRaw<{ max: number }[]>`
+      SELECT MAX(score) AS max
+      FROM "JudgeRecords" 
+      WHERE "problemBaseId" = ${baseId} 
+        AND result = 'success'
+   `;
+   if (highestScore.length === 0 || highestScore[0].max === null) {
+      return -1;
+   }
+   return highestScore[0].max - score;
+};
+
 export default defineEventHandler(async (event) => {
    const query = getQuery(event);
    const parseResult = JudgeCompleteSchema.safeParse(query);
@@ -34,13 +47,27 @@ export default defineEventHandler(async (event) => {
    }
    await redis.del(`judge_token:${recordId}`);
 
-   const { problemId, score, result } =
+   const { problem, score, result, userId } =
       await prisma.judgeRecords.findUniqueOrThrow({
          where: { id: recordId },
-         select: { problemId: true, score: true, result: true },
+         select: {
+            problem: {
+               select: {
+                  pid: true,
+                  baseId: true,
+               },
+            },
+            userId: true,
+            score: true,
+            result: true,
+         },
       });
    if (result === 'success') {
-      await rankService.pushToRankings(problemId, recordId, score);
+      await rankService.pushToProblemRankings(problem.pid, recordId, score);
+      const scoreDiff = await calculateScoreDiff(problem.baseId, score);
+      if (scoreDiff > 0) {
+         await rankService.udpateGlobalRanking(userId, scoreDiff);
+      }
    }
 
    return { message: 'ok' };

@@ -140,6 +140,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                <a
                   v-for="(problem, idx) in problems"
                   class="h-fit"
+                  target="_blank"
                   :style="{ viewTransitionName: `card-${problem.pid}` }"
                   :key="idx"
                   :href="`/challenge/editor/${problem.pid}`">
