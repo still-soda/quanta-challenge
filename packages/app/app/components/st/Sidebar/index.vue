@@ -34,7 +34,7 @@ const role = computed(() => authStore.user?.role ?? 'USER');
                </StSidebarNavigationButton>
             </StSidebarSidePopper>
             <StSidebarSidePopper content="排行榜">
-               <StSidebarNavigationButton to="#">
+               <StSidebarNavigationButton to="/app/rankings">
                   <Ranking />
                </StSidebarNavigationButton>
             </StSidebarSidePopper>

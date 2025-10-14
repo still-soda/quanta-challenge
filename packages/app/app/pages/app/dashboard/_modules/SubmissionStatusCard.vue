@@ -14,19 +14,26 @@ onMounted(() => {
 });
 
 const { $trpc } = useNuxtApp();
-const loading = ref(true);
-const submissionStatusData = ref<Record<string, number>>({});
-const getSubmissionStatusData = async () => {
-   loading.value = true;
-   submissionStatusData.value = await autoRetry(() =>
-      $trpc.protected.dashboard.getSubmissionStatus.query()
-   );
-   loading.value = false;
-};
+// const loading = ref(true);
+// const submissionStatusData = ref<Record<string, number>>({});
+// const getSubmissionStatusData = async () => {
+//    loading.value = true;
+//    submissionStatusData.value = await autoRetry(() =>
+//       $trpc.protected.dashboard.getSubmissionStatus.query()
+//    );
+//    loading.value = false;
+// };
 
-onMounted(() => {
-   getSubmissionStatusData();
-});
+// onMounted(() => {
+//    getSubmissionStatusData();
+// });
+const { data: submissionStatusData, pending: loading } = useAsyncData(
+   'submission-status-data',
+   () =>
+      $trpc.protected.dashboard.getSubmissionStatus.query().then((res) => {
+         return res;
+      })
+);
 
 const scrollContainer = useTemplateRef('scrollContainer');
 const showEndMask = ref(false);
@@ -53,7 +60,7 @@ onMounted(() => {
             :loading="loading"
             :current-year="new Date().getFullYear()"
             :rows="9"
-            :data="submissionStatusData" />
+            :data="submissionStatusData ?? {}" />
       </div>
       <div
          :class="[showEndMask ? 'opacity-100' : 'opacity-0']"

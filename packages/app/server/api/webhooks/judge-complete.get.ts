@@ -1,6 +1,9 @@
 import prisma from '~~/lib/prisma';
 import z from 'zod';
 import { rankService } from '~~/server/trpc/services/rank';
+import { observer } from '~~/server/trpc/services/achievement';
+import { ValidPath } from '~~/lib/track-wrapper';
+import { logger } from '~~/lib/logger';
 
 const JudgeCompleteSchema = z.object({
    token: z.uuid('Invalid token format'),
@@ -15,8 +18,10 @@ const JudgeCompleteSchema = z.object({
 const calculateScoreDiff = async (baseId: number, score: number) => {
    const highestScore = await prisma.$queryRaw<{ max: number }[]>`
       SELECT MAX(score) AS max
-      FROM "JudgeRecords" 
-      WHERE "problemBaseId" = ${baseId} 
+      FROM judge_records
+      JOIN problems 
+        ON judge_records."problemId" = problems.pid
+      WHERE problems."baseId" = ${baseId}
         AND result = 'success'
    `;
    if (highestScore.length === 0 || highestScore[0].max === null) {
@@ -25,10 +30,53 @@ const calculateScoreDiff = async (baseId: number, score: number) => {
    return highestScore[0].max - score;
 };
 
+const updateUserStatistic = async (
+   userId: String,
+   scoreIncreatment: number
+) => {
+   await prisma.$executeRaw`
+      WITH stats AS (
+         SELECT 
+            COUNT(DISTINCT "problemId") 
+               FILTER (WHERE result = 'success') 
+               AS pass_problems_count,
+            COUNT(*) 
+               FILTER (WHERE result = 'success') 
+               AS pass_count,
+            COUNT(*) 
+               AS total_count
+         FROM judge_records
+         WHERE type = 'judge'
+           AND "userId" = ${userId}
+      )
+      UPDATE user_statistics
+      SET 
+         "correctRate" = CASE 
+            WHEN stats.total_count = 0 THEN 0
+            ELSE ROUND((stats.pass_count::decimal / stats.total_count) * 100, 2)
+         END,
+         "passCount" = stats.pass_problems_count,
+         "updatedAt" = NOW(),
+         score = user_statistics.score + ${scoreIncreatment}
+      FROM stats
+      WHERE user_statistics."userId" = ${userId};
+   `;
+
+   const affectedFields = [
+      'user_statistics.correctRate',
+      'user_statistics.passCount',
+      scoreIncreatment > 0 ? 'user_statistics.score' : null,
+   ].filter(Boolean);
+   observer.manualMarkDirty(affectedFields as ValidPath[]);
+};
+
 export default defineEventHandler(async (event) => {
    const query = getQuery(event);
    const parseResult = JudgeCompleteSchema.safeParse(query);
    if (!parseResult.success) {
+      logger.error('Judge complete failed: ' + parseResult.error.message, {
+         query,
+      });
       throw createError({
          statusCode: 400,
          message: 'Invalid request: ' + parseResult.error.message,
@@ -40,6 +88,7 @@ export default defineEventHandler(async (event) => {
 
    const storedToken = await redis.get(`judge_token:${recordId}`);
    if (storedToken !== token) {
+      logger.error('Judge complete failed: Invalid token', { recordId, token });
       throw createError({
          statusCode: 403,
          message: 'Invalid token',
@@ -62,13 +111,24 @@ export default defineEventHandler(async (event) => {
             result: true,
          },
       });
+
+   let scoreDiff = 0;
    if (result === 'success') {
       await rankService.pushToProblemRankings(problem.pid, recordId, score);
-      const scoreDiff = await calculateScoreDiff(problem.baseId, score);
+      scoreDiff = await calculateScoreDiff(problem.baseId, score);
       if (scoreDiff > 0) {
          await rankService.udpateGlobalRanking(userId, scoreDiff);
       }
    }
+   await updateUserStatistic(userId, Math.max(scoreDiff, 0));
+
+   logger.info('Judge complete success', {
+      recordId,
+      userId,
+      problemId: problem.pid,
+      score,
+      result,
+   });
 
    return { message: 'ok' };
 });

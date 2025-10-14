@@ -11,40 +11,29 @@ export type DailyProblem = Awaited<
    ReturnType<typeof $trpc.public.daily.getProblem.query>
 >;
 
-const dailyProblem = ref<DailyProblem | null>(null);
-onMounted(async () => {
-   dailyProblem.value = await $trpc.public.daily.getProblem.query();
-});
+const { data: dailyProblem } = useAsyncData('daily-problem', () =>
+   $trpc.public.daily.getProblem.query()
+);
 
-const continueCheckinCounts = ref<string | null>(null);
-onMounted(async () => {
-   const count = await $trpc.protected.daily.continuesCheckinCount.query();
-   continueCheckinCounts.value = count.toString().padStart(2, '0');
-});
+const { data: continueCheckinCounts } = useAsyncData(
+   'continue-checkin-counts',
+   () => $trpc.protected.daily.continuesCheckinCount.query(),
+   { transform: (count) => count.toString().padStart(2, '0') }
+);
 
-const hasCheckedIn = ref<boolean | null>(null);
-onMounted(async () => {
-   hasCheckedIn.value = await $trpc.protected.daily.hasCheckedin.query();
-});
+const { data: hasCheckedIn } = useAsyncData('has-checked-in', () =>
+   $trpc.protected.daily.hasCheckedin.query()
+);
 
-const hasCompletedTodayChallenge = ref<boolean | null>(null);
-onMounted(async () => {
-   hasCompletedTodayChallenge.value =
-      await $trpc.protected.daily.hasCompletedDailyProblem.query();
-});
+const { data: hasCompletedTodayChallenge } = useAsyncData(
+   'has-completed-today-challenge',
+   () => $trpc.protected.daily.hasCompletedDailyProblem.query()
+);
 
-interface ITrackingAchievement {
-   badgeUrl: string;
-   name?: string;
-   description?: string | null;
-   progress?: number | null;
-}
-const trackingAchievement = ref<ITrackingAchievement | null>(null);
-const refreshTrackingAchievement = async () => {
-   trackingAchievement.value =
-      await $trpc.protected.achievement.getCurrentCheckinAchievement.query();
-};
-onMounted(refreshTrackingAchievement);
+const { data: trackingAchievement, refresh: refreshTrackingAchievement } =
+   useAsyncData('tracking-achievement', () =>
+      $trpc.protected.achievement.getCurrentCheckinAchievement.query()
+   );
 
 const achievementProgress = computed(() => {
    const progress = trackingAchievement.value?.progress ?? 0;
@@ -53,9 +42,9 @@ const achievementProgress = computed(() => {
 
 const isLoadingCheckinInfo = computed(() => {
    return (
-      continueCheckinCounts.value === null ||
-      hasCheckedIn.value === null ||
-      hasCompletedTodayChallenge.value === null
+      continueCheckinCounts.value === void 0 ||
+      hasCheckedIn.value === void 0 ||
+      hasCompletedTodayChallenge.value === void 0
    );
 });
 

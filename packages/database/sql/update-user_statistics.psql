@@ -20,17 +20,67 @@ WITH
       ) AS per_problem_max
     GROUP BY
       "userId"
+  ),
+  passProblemIds AS (
+    SELECT
+      "userId",
+      COUNT(DISTINCT "baseId") AS pass_count
+    FROM
+      judge_records
+      JOIN problems ON judge_records."problemId" = problems.pid
+    WHERE
+    type = 'judge' AND
+    result = 'success'
+    GROUP BY
+      "userId"
+  ),
+  passRecords AS (
+    SELECT
+      "userId",
+      COUNT(*) AS passCount
+    FROM
+      judge_records
+      JOIN problems ON judge_records."problemId" = problems.pid
+    WHERE
+    type = 'judge' AND
+    result = 'success'
+    GROUP BY
+      "userId"
+  ),
+  allRecords AS (
+    SELECT
+      "userId",
+      COUNT(*) AS totalCount
+    FROM
+      judge_records
+      JOIN problems ON judge_records."problemId" = problems.pid
+    WHERE
+    type = 'judge'
+    GROUP BY
+      "userId"
   )
 INSERT INTO
-  user_statistics ("userId", score, "updatedAt", "createdAt")
+  user_statistics ("userId", score, "correctRate", "passCount", "createdAt", "updatedAt")
 SELECT
-  "userId",
-  score,
-  NOW(),
-  NOW()
+  scores."userId",
+  scores.score,
+  CASE
+    WHEN allRecords.totalCount = 0 THEN 0
+    ELSE ROUND(passRecords.passCount::decimal / allRecords.totalCount * 100, 2)
+  END AS "correctRate",
+  passProblemIds.pass_count AS "passCount",
+  NOW() AS "createdAt",
+  NOW() AS "updatedAt"
 FROM
-  scores ON CONFLICT ("userId")
+  scores
+  JOIN passProblemIds USING ("userId")
+  JOIN passRecords USING ("userId")
+  JOIN allRecords USING ("userId") ON CONFLICT ("userId")
 DO
 UPDATE
 SET
-  score = EXCLUDED.score;
+  score = EXCLUDED.score,
+  "correctRate" = EXCLUDED."correctRate",
+  "passCount" = EXCLUDED."passCount",
+  "createdAt" = EXCLUDED."createdAt",
+  "updatedAt" = EXCLUDED."updatedAt";

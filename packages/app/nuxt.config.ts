@@ -115,6 +115,9 @@ export default defineNuxtConfig({
    },
 
    runtimeConfig: {
+      public: {
+         appBaseUrl: import.meta.env.APP_SERVER || 'http://localhost:3000',
+      },
       secret: {
          accessToken:
             import.meta.env.ACCESS_TOKEN_SECRET ||
@@ -134,9 +137,12 @@ export default defineNuxtConfig({
          serverUrl: import.meta.env.JUDGE_SERVER || 'http://localhost:1888',
       },
       rank: {
-         cacheTTL: import.meta.env.RANKING_CACHE_TTL
-            ? parseInt(import.meta.env.RANKING_CACHE_TTL)
+         problemCacheTTL: import.meta.env.PROBLEM_RANKING_CACHE_TTL
+            ? parseInt(import.meta.env.PROBLEM_RANKING_CACHE_TTL)
             : 3600, // 默认缓存1小时
+         globalCacheTTL: import.meta.env.GLOBAL_RANKING_CACHE_TTL
+            ? parseInt(import.meta.env.GLOBAL_RANKING_CACHE_TTL)
+            : 60, // 默认缓存1分钟
       },
    },
 });

@@ -2,29 +2,29 @@
 import { Ranking, TrendingDown, TrendingUp } from '@icon-park/vue-next';
 import MoreOptions from './MoreOptions.vue';
 import RankingSkeleton from '../_skeletons/RankingSkeleton.vue';
-import LineChart from '../_components/LineChart.vue';
 
 type Ranking = { from: number; to: number; count: number };
 
 const { $trpc } = useNuxtApp();
-const rankings = ref<Ranking[] | null>(null);
-const statistics = ref({ score: 0, rank: 0, beatRatio: 0 });
-onMounted(async () => {
-   const data = await $trpc.protected.rank.getMyGlobalRankStatistic.query();
 
-   statistics.value = {
-      score: data.selfRanking.score,
-      rank: data.selfRanking.rank,
-      beatRatio: data.selfRanking.aheadRate,
+const { data: globalRankData } = useAsyncData('global-rank-data', () =>
+   $trpc.protected.rank.getMyGlobalRankStatistic.query()
+);
+const statistics = computed(() => {
+   if (!globalRankData.value) {
+      return { score: 0, rank: 0, beatRatio: 0 };
+   }
+   return {
+      score: globalRankData.value.selfRanking.score,
+      rank: globalRankData.value.selfRanking.rank,
+      beatRatio: globalRankData.value.selfRanking.aheadRate,
    };
-   rankings.value = data.rankingIntervals;
 });
+const rankings = computed(() => globalRankData.value?.rankingIntervals ?? null);
 
-const trends = ref<number[] | null>(null);
-onMounted(async () => {
-   const data = await $trpc.protected.rank.getMyRankingTrends.query();
-   trends.value = data;
-});
+const { data: trends } = useAsyncData('my-ranking-trends', () =>
+   $trpc.protected.rank.getMyRankingTrends.query()
+);
 
 const loading = computed(() => !rankings.value || !trends.value);
 
@@ -115,7 +115,7 @@ const increaseRatioText = computed(() => {
                </StSpace>
             </StSpace>
             <StSpace fill-x class="flex-1" align="center">
-               <LineChart
+               <StLineChart
                   :data="trends ?? []"
                   :class="[
                      'h-16 my-6',

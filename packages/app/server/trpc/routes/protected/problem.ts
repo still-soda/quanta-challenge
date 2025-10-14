@@ -10,7 +10,7 @@ const GetOrForkProjectSchema = z.object({
    problemId: z.number('Project ID must be a number'),
 });
 
-const getOrForkProject = protectedProcedure
+const getOrForkProjectProcedure = protectedProcedure
    .input(GetOrForkProjectSchema)
    .query(async ({ ctx, input }) => {
       const { userId } = ctx.user;
@@ -66,13 +66,22 @@ const GetProblemDetailSchema = z.object({
    problemId: z.number('Problem ID must be a number'),
 });
 
-const getProblemDetail = protectedProcedure
+const getProblemDetailProcedure = protectedProcedure
    .input(GetProblemDetailSchema)
    .query(async ({ input }) => {
       const problem = await prisma.problems.findUnique({
          where: {
             pid: input.problemId,
             isDeprecated: false,
+         },
+         include: {
+            CoverImage: {
+               select: { name: true },
+            },
+            ProblemDefaultCover: {
+               select: { image: { select: { name: true } } },
+               take: 1,
+            },
          },
       });
       if (!problem) {
@@ -81,7 +90,11 @@ const getProblemDetail = protectedProcedure
             message: 'Problem not found',
          });
       }
-      return problem;
+      const imageName =
+         problem.CoverImage?.name ??
+         problem.ProblemDefaultCover?.[0]?.image.name ??
+         null;
+      return { ...problem, coverImageName: imageName };
    });
 
 // 提交答案
@@ -90,7 +103,7 @@ const CommitAnswerSchema = z.object({
    snapshot: z.record(z.string(), z.string(), 'Invalid snapshot format'),
 });
 
-const commitAnswer = protectedProcedure
+const commitAnswerProcedure = protectedProcedure
    .input(CommitAnswerSchema)
    .mutation(async ({ ctx, input }) => {
       const { userId } = ctx.user;
@@ -166,7 +179,7 @@ const GetAllCommitRecordsSchema = z.object({
    problemId: z.number('Problem ID must be a number'),
 });
 
-const getAllCommitRecords = protectedProcedure
+const getAllCommitRecordsProcedure = protectedProcedure
    .input(GetAllCommitRecordsSchema)
    .query(async ({ ctx, input }) => {
       const { userId } = ctx.user;
@@ -193,7 +206,7 @@ const GetCommitRecordDetailSchema = z.object({
    judgeRecordId: z.number('Judge Record ID must be a number'),
 });
 
-const getCommitRecordDetail = protectedProcedure
+const getCommitRecordDetailProcedure = protectedProcedure
    .input(GetCommitRecordDetailSchema)
    .query(async ({ ctx, input }) => {
       const { userId } = ctx.user;
@@ -233,10 +246,26 @@ const getCommitRecordDetail = protectedProcedure
       return record;
    });
 
+const getCommitStatisticProcedure = protectedProcedure.query(
+   async ({ ctx }) => {
+      const { userId } = ctx.user;
+
+      return await prisma.userStatistic.findUnique({
+         where: { userId },
+         select: {
+            correctRate: true,
+            passCount: true,
+            score: true,
+         },
+      });
+   }
+);
+
 export const problemRouter = router({
-   getOrForkProject: getOrForkProject,
-   getProblemDetail: getProblemDetail,
-   commitAnswer: commitAnswer,
-   getAllCommitRecords: getAllCommitRecords,
-   getCommitRecordDetail: getCommitRecordDetail,
+   getOrForkProject: getOrForkProjectProcedure,
+   getProblemDetail: getProblemDetailProcedure,
+   commitAnswer: commitAnswerProcedure,
+   getAllCommitRecords: getAllCommitRecordsProcedure,
+   getCommitRecordDetail: getCommitRecordDetailProcedure,
+   getCommitStatistic: getCommitStatisticProcedure,
 });

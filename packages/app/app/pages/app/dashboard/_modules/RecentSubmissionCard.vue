@@ -4,23 +4,10 @@ import StackRank from '../_components/StackRank.vue';
 
 const { $trpc } = useNuxtApp();
 
-type RecentSubmissionResponse = Awaited<
-   ReturnType<typeof $trpc.protected.dashboard.getRecentSubmissions.query>
->;
-
-const loading = ref(true);
-const submissionData = ref<RecentSubmissionResponse | null>(null);
-const getRecentSubmission = async () => {
-   loading.value = true;
-   submissionData.value = await autoRetry(() =>
-      $trpc.protected.dashboard.getRecentSubmissions.query()
-   );
-   loading.value = false;
-};
-
-onMounted(() => {
-   getRecentSubmission();
-});
+const { data: submissionData, pending: loading } = useAsyncData(
+   'recent-submission',
+   () => $trpc.protected.dashboard.getRecentSubmissions.query()
+);
 
 const detailPath = computed(() => {
    const { problemId, recordId } = submissionData.value || {};

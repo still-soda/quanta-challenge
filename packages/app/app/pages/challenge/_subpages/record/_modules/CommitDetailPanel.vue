@@ -5,14 +5,17 @@ import {
    DocDetail,
    LoadingFour,
 } from '@icon-park/vue-next';
-import { type CommitDetailType, type IRank } from '../_types/shared-types';
+import {
+   type CommitDetailType,
+   type CommitRecordType,
+   type IRank,
+} from '../_types/shared-types';
 import dayjs from 'dayjs';
 import { DataBlock, Divider, JudgeStatus } from '../_components/DetailItems';
 import CommitDetailSkeleton from '../_skeletons/CommitDetailSkeleton.vue';
 
 const props = defineProps<{
    problemId: number;
-   recordId: number | null;
 }>();
 
 const loading = ref(false);
@@ -21,38 +24,48 @@ const detail = ref<CommitDetailType | null>(null);
 const lastRecordId = ref<number | null>(null);
 const recordCache = new Map<number, CommitDetailType>();
 const aheadCache = new Map<number, string>();
+const recordId = ref<number | null>(null);
+
+const eventBus = useEventBus<CommitRecordType, boolean>('commit-record-select');
+eventBus.on((record, init) => {
+   recordId.value = record.id;
+   if (!init) {
+      getDetail();
+      getRank();
+   }
+});
 
 const getDetail = async () => {
-   if (props.recordId === null) {
+   if (recordId.value === null) {
       detail.value = null;
       return;
    }
-   if (props.recordId === lastRecordId.value) return;
-   lastRecordId.value = props.recordId;
+   if (recordId.value === lastRecordId.value) return;
+   lastRecordId.value = recordId.value;
 
-   if (recordCache.has(props.recordId)) {
-      detail.value = recordCache.get(props.recordId)!;
+   if (recordCache.has(recordId.value)) {
+      detail.value = recordCache.get(recordId.value)!;
       return;
    }
 
    loading.value = true;
    // @ts-ignore
    detail.value = await atLeastTime(
-      500,
+      300,
       $trpc.protected.problem.getCommitRecordDetail.query({
-         judgeRecordId: props.recordId,
+         judgeRecordId: recordId.value,
       })
    );
    loading.value = false;
 
    if (detail.value && detail.value.result !== 'pending') {
-      recordCache.set(props.recordId, detail.value);
+      recordCache.set(recordId.value, detail.value);
    } else if (detail.value?.result === 'pending') {
       // 轮询结果
       let waitTime = 1000;
       const polling = async () => {
          const data = await $trpc.protected.problem.getCommitRecordDetail.query(
-            { judgeRecordId: props.recordId! }
+            { judgeRecordId: recordId.value! }
          );
          // @ts-ignore
          detail.value = data;
@@ -60,7 +73,7 @@ const getDetail = async () => {
             waitTime *= 1.5;
             setTimeout(polling, waitTime);
          } else {
-            recordCache.set(props.recordId!, detail.value!);
+            recordCache.set(recordId.value!, detail.value!);
             getRank();
          }
       };
@@ -71,7 +84,7 @@ const getDetail = async () => {
 const rank = ref<IRank[]>([]);
 const ahead = ref('--%');
 const getRank = async () => {
-   if (props.recordId === null || detail.value?.result !== 'success') {
+   if (recordId.value === null || detail.value?.result !== 'success') {
       rank.value = [];
       return;
    }
@@ -80,13 +93,13 @@ const getRank = async () => {
       problemId: props.problemId,
    });
 
-   const getAhead = aheadCache.get(props.recordId)
-      ? Promise.resolve(aheadCache.get(props.recordId)!)
+   const getAhead = aheadCache.get(recordId.value)
+      ? Promise.resolve(aheadCache.get(recordId.value)!)
       : $trpc.protected.rank.getMyRankInProblem
-           .query({ recordId: props.recordId })
+           .query({ recordId: recordId.value })
            .then(({ aheadRate }) => {
               const res = (aheadRate * 100).toFixed(2) + '%';
-              aheadCache.set(props.recordId!, res);
+              aheadCache.set(recordId.value!, res);
               return res;
            })
            .catch(() => '--%');

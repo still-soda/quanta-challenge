@@ -149,7 +149,7 @@ model BaseProblems {
   CurrentProblem            Problems?                   @relation("CurrentProblem", fields: [currentPid], references: [pid], onDelete: SetNull)
   ProblemVersions           Problems[]                  @relation("ProblemVersions")
   ProblemVersionTransitions ProblemVersionTransitions[]
-  DailyProblem              DailyProblem?
+  DailyProblem              DailyProblem[]
 
   @@map("base_problems")
 }
@@ -433,7 +433,7 @@ enum ShadowFileType {
 model DailyProblem {
   id            Int      @id @default(autoincrement())
   date          DateTime @unique
-  baseProblemId Int      @unique
+  baseProblemId Int
   createdAt     DateTime @default(now())
 
   baseProblem BaseProblems @relation(fields: [baseProblemId], references: [id], onDelete: Cascade)
@@ -557,11 +557,13 @@ model UserAchievement {
 }
 
 model UserStatistic {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  score     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique
+  score       Int      @default(0)
+  correctRate Float    @default(0)
+  passCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -1,39 +1,22 @@
 <script setup lang="ts">
 import CommitRecordsPanel from './_modules/CommitRecordsPanel.vue';
 import CommitDetailPanel from './_modules/CommitDetailPanel.vue';
-import type { CommitRecordType } from './_types/shared-types';
-import { useQuery } from '~/composables/use-query';
 
 const props = defineProps<{ id: number }>();
 
 definePageMeta({
    layout: 'challenge-layout',
 });
-
-const initRecordId = useQuery('id', {
-   parse(value) {
-      const id = Number(value);
-      return isNaN(id) ? null : id;
-   },
-});
-
-const selectedRecordId = ref<number | null>(initRecordId.value ?? null);
-const handleSelectRecord = (record: CommitRecordType, isInit = false) => {
-   if (isInit && selectedRecordId.value !== null) return;
-   selectedRecordId.value = record.id;
-};
 </script>
 
 <template>
    <StSpace fill center class="p-4 pr-6 pt-0">
       <StSplitPanel direction="horizontal" :start-percent="25">
          <template #start>
-            <CommitRecordsPanel :id="props.id" @select="handleSelectRecord" />
+            <CommitRecordsPanel :id="props.id" />
          </template>
          <template #end>
-            <CommitDetailPanel
-               :problem-id="props.id"
-               :record-id="selectedRecordId" />
+            <CommitDetailPanel :problem-id="props.id" />
          </template>
       </StSplitPanel>
    </StSpace>

@@ -4,17 +4,21 @@ import MoreOptions from './MoreOptions.vue';
 import dayjs from 'dayjs';
 
 const { $trpc } = useNuxtApp();
-type AchievedAchievement = Awaited<
-   ReturnType<typeof $trpc.protected.achievement.getAchievedAchievements.query>
->;
 
-const achievements = ref<AchievedAchievement | null>(null);
-const loading = computed(() => !achievements.value);
-const fetchAchievements = async () => {
-   achievements.value =
-      await $trpc.protected.achievement.getAchievedAchievements.query();
-};
-onMounted(fetchAchievements);
+// type AchievedAchievement = Awaited<
+//    ReturnType<typeof $trpc.protected.achievement.getAchievedAchievements.query>
+// >;
+// const achievements = ref<AchievedAchievement | null>(null);
+// const loading = computed(() => !achievements.value);
+// const fetchAchievements = async () => {
+//    achievements.value =
+//       await $trpc.protected.achievement.getAchievedAchievements.query();
+// };
+// onMounted(fetchAchievements);
+const { data: achievements, pending: loading } = useAsyncData(
+   'achieved-achievements',
+   () => $trpc.protected.achievement.getAchievedAchievements.query()
+);
 
 const formatAchievedDate = (date: string) => {
    const dayText = dayjs(date).format('YYYY.MM.DD');

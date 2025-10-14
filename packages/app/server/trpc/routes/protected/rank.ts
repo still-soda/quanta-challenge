@@ -56,6 +56,11 @@ const getMyGlobalRankStatisticProcedure = protectedProcedure.query(
    }
 );
 
+const getMyGlobalRankProcedure = protectedProcedure.query(async ({ ctx }) => {
+   const { userId } = ctx.user;
+   return (await rankService.getSelfGlobalRanking(userId)).rank;
+});
+
 const getMyRankingTrendsProcedure = protectedProcedure.query(
    async ({ ctx }) => {
       const { userId } = ctx.user;
@@ -89,4 +94,5 @@ export const rankRouter = router({
    getProblemScoreIntervals: getProblemScoreIntervalsProcedure,
    getMyGlobalRankStatistic: getMyGlobalRankStatisticProcedure,
    getMyRankingTrends: getMyRankingTrendsProcedure,
+   getMyGlobalRank: getMyGlobalRankProcedure,
 });

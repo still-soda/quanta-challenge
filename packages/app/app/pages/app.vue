@@ -25,5 +25,6 @@ await checkUserHasLogin();
 <style>
 *::selection {
    background-color: var(--color-primary);
+   color: white !important;
 }
 </style>

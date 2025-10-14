@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { useParam } from '~/composables/use-param';
+import LazyEditor from './_subpages/editor/index.vue';
+import LazyRecord from './_subpages/record/index.vue';
 
 definePageMeta({
    layout: 'challenge-layout',
    key: 'challenge-detail',
 });
 
-const LazyEditor = defineAsyncComponent(
-   () => import('./_subpages/editor/index.vue')
-);
-const LazyRecord = defineAsyncComponent(
-   () => import('./_subpages/record/index.vue')
-);
+// const LazyEditor = defineAsyncComponent(
+//    () => import('./_subpages/editor/index.vue')
+// );
+// const LazyRecord = defineAsyncComponent(
+//    () => import('./_subpages/record/index.vue')
+// );
 
 const path = useParam<string[]>('path', {
    required: true,
@@ -57,10 +59,12 @@ useSeoMeta({
          <LazyEditor
             v-if="componentLoaded.editor"
             v-show="currentComponent === 'editor'"
+            hydrate-on-visible
             :id="id" />
          <LazyRecord
             v-if="componentLoaded.record"
             v-show="currentComponent === 'record'"
+            hydrate-on-visible
             :id="id" />
       </TransitionGroup>
    </StSpace>

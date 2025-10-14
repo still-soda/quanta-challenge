@@ -165,18 +165,32 @@ onMounted(() => {
 });
 
 // get and parse problem detail
-const problem = ref<Awaited<ReturnType<typeof getProblemDetail>>>();
 const getProblemDetail = async () => {
    if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
    }
-   const result = await $trpc.protected.problem.getProblemDetail.query({
+   return await $trpc.protected.problem.getProblemDetail.query({
       problemId: props.id,
    });
-   problem.value = result;
-   return result;
 };
-onMounted(getProblemDetail);
+const { data: problem } = await useAsyncData(
+   `problem-detail-${props.id}`,
+   getProblemDetail
+);
+
+const appBaseUrl = useRuntimeConfig().public.appBaseUrl;
+
+useSeoMeta({
+   title: `#${props.id} ${problem.value?.title} - Quanta Challenge`,
+   description: problem.value?.detail.slice(0, 100),
+   ogTitle: `#${props.id} ${problem.value?.title} - Quanta Challenge`,
+   ogDescription: problem.value?.detail.slice(0, 100),
+   ogImage: `${appBaseUrl}/api/static/${problem.value?.coverImageName}`,
+   ogUrl: `${appBaseUrl}/challenge/${props.id}`,
+   ogSiteName: 'Quanta Challenge',
+   ogType: 'website',
+   ogLocale: 'zh_CN',
+});
 </script>
 
 <template>

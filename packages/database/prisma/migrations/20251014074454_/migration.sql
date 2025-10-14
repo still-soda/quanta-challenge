@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "user_statistics" ADD COLUMN     "correctRate" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "passCount" INTEGER NOT NULL DEFAULT 0;

@@ -5,6 +5,7 @@ import useAuthStore from '~/stores/auth-store';
 import { useMessageOutsideVue } from '~/components/st/Message/use-message';
 import { TRPCError } from '@trpc/server';
 import type { H3Event } from 'h3';
+import { logger } from '~~/lib/logger';
 
 // 常量定义
 const TOKEN_KEYS = {
@@ -139,7 +140,17 @@ const showServerError = (): void => {
 /**
  * 重定向到登录页
  */
-const redirectToLogin = (): void => {
+const redirectToLogin = (isServer: boolean): void => {
+   if (isServer) {
+      const event = useRequestEvent()!;
+      event.node.res.writeHead(302, {
+         Location:
+            '/auth/login?redirect=' +
+            encodeURIComponent(event.node.req.url || '/'),
+      });
+      event.node.res.end();
+      return;
+   }
    location.replace(
       '/auth/login?redirect=' + encodeURIComponent(useRoute().fullPath)
    );
@@ -170,10 +181,8 @@ const handleUnauthorized = async (
       // 重新发起请求
       return await fetch(url, options);
    } catch (err) {
-      // 刷新失败，客户端重定向到登录页
-      if (!isServer) {
-         redirectToLogin();
-      }
+      // 重定向到登录页
+      redirectToLogin(isServer);
       throw err;
    }
 };

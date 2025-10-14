@@ -1,56 +1,7 @@
 import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
 import dayjs from 'dayjs';
-import { TRPCError } from '@trpc/server';
-
-async function selectDailyProblem() {
-   const today = dayjs().startOf('day').toDate();
-   const redis = useRedis();
-   const key = `daily_problem:${dayjs(today).format('YYYYMMDD')}`;
-
-   let cached = await redis.get(key);
-
-   if (!cached) {
-      const unusedBaseProblemId = (
-         await prisma.$queryRaw<{ id: number }[]>`
-            SELECT id FROM base_problems
-            WHERE id NOT IN (SELECT "baseProblemId" FROM daily_problems)
-              AND "currentPid" IS NOT NULL
-            ORDER BY RANDOM()
-            LIMIT 1
-         `
-      )[0]?.id;
-      if (unusedBaseProblemId === void 0) {
-         throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'No unused base problem available for daily challenge',
-         });
-      }
-
-      const success = await redis.setnx(key, unusedBaseProblemId.toString());
-      if (success) {
-         await redis.expireat(key, dayjs(today).add(1, 'hour').unix());
-         cached = unusedBaseProblemId.toString();
-         await prisma.dailyProblem.create({
-            data: {
-               date: today,
-               baseProblemId: unusedBaseProblemId,
-            },
-         });
-         return unusedBaseProblemId;
-      }
-
-      cached = await redis.get(key);
-      if (!cached) {
-         throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to retrieve daily problem',
-         });
-      }
-   }
-
-   return parseInt(cached, 10);
-}
+import { dailyService } from '../../services/daily';
 
 const getDailyProblemProcedure = publicProcedure.query(async () => {
    const today = dayjs().startOf('day').toDate();
@@ -81,7 +32,7 @@ const getDailyProblemProcedure = publicProcedure.query(async () => {
       },
    });
    if (!result) {
-      const id = await selectDailyProblem();
+      const id = await dailyService.selectDailyProblem();
       const temp = await prisma.baseProblems.findUniqueOrThrow({
          where: { id },
          select: problemQuery,

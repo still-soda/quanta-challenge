@@ -9,40 +9,28 @@ useSeoMeta({ title: '题目 - Quanta Challenge' });
 
 const { $trpc } = useNuxtApp();
 
-type TagsType = Awaited<ReturnType<typeof $trpc.public.tag.list.query>>;
-const { data: tags, status: tagsStatus } = await useAsyncData<TagsType>(
+const { data: tags, status: tagsStatus } = useAsyncData(
    'tags',
    async () => await $trpc.public.tag.list.query()
 );
 
+const { startViewTransition } = useViewTransition();
 const selectedTags = ref<number[]>([]);
 const toggleTag = (id: number) => {
    const idx = selectedTags.value.indexOf(id);
    idx === -1 ? selectedTags.value.push(id) : selectedTags.value.splice(idx, 1);
-   getPublicProblems();
+   startViewTransition(refresh);
 };
 const selectAll = () => {
    selectedTags.value = [];
-   getPublicProblems();
+   startViewTransition(refresh);
 };
 
-type ProblemType = Awaited<
-   ReturnType<typeof $trpc.public.problem.listPublicProblems.query>
->;
-const problems = ref<ProblemType>();
-const { startViewTransition } = useViewTransition();
-let requestId = 0;
-const getPublicProblems = async () => {
-   const id = ++requestId;
-   const result = await $trpc.public.problem.listPublicProblems.query({
+const { data: problems, refresh } = useAsyncData('getPublicProblems', () =>
+   $trpc.public.problem.listPublicProblems.query({
       tids: selectedTags.value,
-   });
-   if (id !== requestId) return; // 如果请求被取消，则不更新
-   startViewTransition(() => {
-      problems.value = result;
-   });
-};
-onMounted(getPublicProblems);
+   })
+);
 
 const PassRate = ({ rate }: { rate: number }) => {
    const passRate = rate.toFixed(2);

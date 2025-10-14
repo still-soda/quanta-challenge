@@ -12,6 +12,9 @@ const close = () => {
 };
 
 const { html, update } = useMarkdown();
+onMounted(() => {
+   props.markdown && update(props.markdown);
+});
 watch(
    () => props.markdown,
    (newMarkdown) => {

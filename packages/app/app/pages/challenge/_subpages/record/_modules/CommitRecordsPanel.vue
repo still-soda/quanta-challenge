@@ -9,38 +9,36 @@ const props = defineProps<{ id: number }>();
 
 const { $trpc } = useNuxtApp();
 
-const records = ref<CommitRecordType[]>([]);
-const loading = ref(false);
 const getRecords = async () => {
-   loading.value = true;
    if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
    }
-   const records = await atLeastTime(
-      500,
-      $trpc.protected.problem.getAllCommitRecords.query({
-         problemId: props.id,
-      })
-   );
-   loading.value = false;
-   return records;
+   return await $trpc.protected.problem.getAllCommitRecords.query({
+      problemId: props.id,
+   });
 };
+const {
+   data: records,
+   pending: loading,
+   refresh,
+} = await useAsyncData('commit-records', getRecords);
+
 onMounted(async () => {
-   records.value = await getRecords();
-   selectedRecord.value = records.value[0] ?? null;
-   emits('select', selectedRecord.value!, true);
+   const hasPending = computed(
+      () =>
+         !records.value ||
+         records.value.some((record) => record.result === 'pending')
+   );
 
    let waitTime = 1000;
    const polling = async () => {
-      records.value = await $trpc.protected.problem.getAllCommitRecords.query({
-         problemId: props.id,
-      });
-      if (records.value.some((record) => record.result === 'pending')) {
+      await refresh();
+      if (hasPending.value) {
          waitTime *= 1.5;
          setTimeout(polling, waitTime);
       }
    };
-   if (records.value.some((record) => record.result === 'pending')) {
+   if (hasPending.value) {
       setTimeout(polling, waitTime);
    }
 });
@@ -54,7 +52,7 @@ watch(currentComponent, async (newVal) => {
    if (opened && !loading.value) {
       records.value = await getRecords();
       selectedRecord.value = records.value[0] ?? null;
-      emits('select', selectedRecord.value!, true);
+      eventBus.emit(selectedRecord.value!, true);
    }
 });
 
@@ -114,17 +112,17 @@ const CommitRecord = ({
    );
 };
 
-const selectedRecord = ref<CommitRecordType | null>(null);
+const eventBus = useEventBus<CommitRecordType, boolean>('commit-record-select');
+
+const selectedRecord = ref<CommitRecordType | null>(records.value?.[0] ?? null);
+eventBus.emit(selectedRecord.value!, true);
 const selectRecord = (record: CommitRecordType) => {
    selectedRecord.value = record;
 };
 
-const emits = defineEmits<{
-   select: [record: CommitRecordType, isInit?: boolean];
-}>();
 watch(selectedRecord, (newRecord) => {
    if (newRecord) {
-      emits('select', newRecord);
+      eventBus.emit(newRecord);
    }
 });
 </script>
@@ -158,7 +156,7 @@ watch(selectedRecord, (newRecord) => {
                <CommitRecord
                   v-for="record in records"
                   @click="selectRecord(record)"
-                  :selected="selectedRecord === record"
+                  :selected="selectedRecord?.id === record.id"
                   :key="record.createdAt"
                   :record="record" />
             </StSkeleton>

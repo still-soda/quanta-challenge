@@ -34,7 +34,7 @@ const loadProblemRankings = async (problemId: number) => {
       pipeline.zadd(rankKey, _score, id);
    });
 
-   const ttl = useRuntimeConfig().rank.cacheTTL;
+   const ttl = useRuntimeConfig().rank.problemCacheTTL;
    pipeline.expire(rankKey, ttl ?? 3600);
    await pipeline.exec();
 };
@@ -230,7 +230,7 @@ const loadGlobalRankings = async () => {
       select: { userId: true, score: true },
    });
 
-   const ttl = useRuntimeConfig().rank.cacheTTL;
+   const ttl = useRuntimeConfig().rank.problemCacheTTL;
    const pipeline = redis.pipeline().expire(rankingKey, ttl ?? 3600);
 
    rankData.forEach(({ userId, score }) => {

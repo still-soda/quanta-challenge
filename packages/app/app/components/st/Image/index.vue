@@ -7,6 +7,7 @@ const props = defineProps<{
    object?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
    width?: string | number;
    height?: string | number;
+   lazy?: boolean;
 }>();
 
 const errorLoading = ref(false);
@@ -18,6 +19,13 @@ const style = computed(() => {
          typeof props.height === 'number' ? `${props.height}px` : props.height,
    };
 });
+
+watch(
+   () => props.src,
+   () => {
+      errorLoading.value = false;
+   }
+);
 </script>
 
 <template>
@@ -25,6 +33,7 @@ const style = computed(() => {
       v-if="!errorLoading"
       :src="src"
       :alt="alt"
+      :loading="lazy ? 'lazy' : 'eager'"
       class="h-full w-full rounded-lg"
       :class="{
          'object-cover': !object || object === 'cover',

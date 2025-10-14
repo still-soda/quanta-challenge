@@ -13,12 +13,13 @@ export const useViewTransition = (options?: IUseViewTransitionOptions) => {
 
    onMounted(() => {
       const isViewTransitionSupported =
+         import.meta.client &&
          typeof document.startViewTransition === 'function';
 
       if (isViewTransitionSupported) {
          _startViewTransition = (callback: Function) => {
             document.startViewTransition(async () => {
-               callback();
+               await callback();
                options?.delay && (await delay(options.delay));
                await nextTick();
             });
