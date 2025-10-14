@@ -3,10 +3,6 @@ import CommitRecordsPanel from './_modules/CommitRecordsPanel.vue';
 import CommitDetailPanel from './_modules/CommitDetailPanel.vue';
 
 const props = defineProps<{ id: number }>();
-
-definePageMeta({
-   layout: 'challenge-layout',
-});
 </script>
 
 <template>

@@ -13,6 +13,7 @@ import {
 import dayjs from 'dayjs';
 import { DataBlock, Divider, JudgeStatus } from '../_components/DetailItems';
 import CommitDetailSkeleton from '../_skeletons/CommitDetailSkeleton.vue';
+import { logger } from '~~/lib/logger';
 
 const props = defineProps<{
    problemId: number;

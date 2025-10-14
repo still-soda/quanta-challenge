@@ -2,18 +2,12 @@
 import { useParam } from '~/composables/use-param';
 import LazyEditor from './_subpages/editor/index.vue';
 import LazyRecord from './_subpages/record/index.vue';
+import { logger } from '~~/lib/logger';
 
 definePageMeta({
    layout: 'challenge-layout',
    key: 'challenge-detail',
 });
-
-// const LazyEditor = defineAsyncComponent(
-//    () => import('./_subpages/editor/index.vue')
-// );
-// const LazyRecord = defineAsyncComponent(
-//    () => import('./_subpages/record/index.vue')
-// );
 
 const path = useParam<string[]>('path', {
    required: true,

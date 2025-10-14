@@ -5,8 +5,8 @@ import { FingerprintThree } from '@icon-park/vue-next';
 const error = useError();
 
 const message = computed(() => {
+   return `${error.value?.message} | ${error.value?.stack}`;
    if (import.meta.dev) {
-      return error.value?.message;
    }
    if (error.value?.statusCode === 404) {
       return '页面似乎不见了……';

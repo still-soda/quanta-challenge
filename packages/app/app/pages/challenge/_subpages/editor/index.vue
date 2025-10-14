@@ -9,8 +9,6 @@ import { useWebContainer } from '../../_composables/use-web-container';
 import DetailWindow from './_components/DetailWindow.vue';
 import CommitModal from './_components/CommitModal.vue';
 
-definePageMeta({ layout: 'challenge-layout' });
-
 const props = defineProps<{ id: number }>();
 
 const { $trpc } = useNuxtApp();

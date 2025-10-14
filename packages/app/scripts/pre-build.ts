@@ -33,4 +33,20 @@ const patchPrismaClient = async () => {
    }
 };
 
+const patchNuxtIgnore = async () => {
+   const nuxtConfigPath = path.join(__dirname, '../.nuxtignore');
+   let content = await fs.readFile(nuxtConfigPath, 'utf-8');
+   const lines = content.split('\n');
+   const transformedLines = lines.map((line) => {
+      if (line.trim().startsWith('#')) {
+         return line.replace('#', '');
+      }
+      return line;
+   });
+   content = transformedLines.join('\n');
+   await fs.writeFile(nuxtConfigPath, content, 'utf-8');
+   console.log(`✅ Patched: ${nuxtConfigPath}`);
+};
+
 await patchPrismaClient();
+await patchNuxtIgnore();

@@ -198,7 +198,9 @@ export default defineNuxtPlugin(() => {
       ssrCookies = parseCookies(cookieString);
    }
 
-   const baseUrl = import.meta.server ? process.env.API_BASE_URL : '';
+   const baseUrl = import.meta.server
+      ? useRuntimeConfig().public.appBaseUrl
+      : '';
    const isServer = import.meta.server;
 
    const trpc = createTRPCClient<AppRouter>({
