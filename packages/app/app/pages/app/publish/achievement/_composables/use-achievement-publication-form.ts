@@ -7,6 +7,7 @@ export const useAchievementPublicationForm = () => {
       description: '',
       imageId: '',
       dependencyData: [] as number[],
+      preAchievements: [] as number[],
       rule: '',
       script: '',
       isCheckinAchievement: false,

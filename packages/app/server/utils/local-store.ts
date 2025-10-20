@@ -22,7 +22,7 @@ export class LocalStore implements IStore {
       const file = files.find((f) => f.startsWith(fileId));
       if (!file) return null;
       const buffer = await fs.readFile(path.join(this.storePath, file));
-      return new File([buffer], file);
+      return new File([new Uint8Array(buffer)], file);
    }
 
    async getBuffer(fileName: string): Promise<Buffer | null> {

@@ -12,7 +12,7 @@ useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
 </script>
 
 <template>
-   <StSpace direction="vertical" align="center" gap="0" fill-y>
+   <StSpace direction="vertical" align="center" gap="0">
       <StSpace gap="1.5rem" fill class="px-4 py-6 max-w-[80.68rem] shrink-0">
          <StSpace direction="vertical" align="start" gap="1.5rem" fill>
             <h1 class="st-font-hero-bold">早上好，没有气的汽水</h1>

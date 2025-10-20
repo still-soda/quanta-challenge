@@ -1,0 +1,67 @@
+<script setup lang="ts">
+import AchievementContainer from './_components/AchievementContainer.vue';
+import AchievementHeader from './_components/AchievementHeader.vue';
+import AchievementProgress from './_components/AchievementProgress.vue';
+import AchievementListSkeleton from './_skeletons/AchievementListSkeleton.vue';
+
+useSeoMeta({ title: '成就 - Quanta Challenge' });
+
+const { $trpc } = useNuxtApp();
+const { data, pending } = useAsyncData('getUserAchievementsWall', () =>
+   $trpc.protected.achievement.getUserAchievementsWall.query()
+);
+
+const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
+   achieved: '已获得',
+   inProgress: '进行中',
+   locked: '未解锁',
+};
+</script>
+
+<template>
+   <StSpace fill justify="center" class="overflow-auto">
+      <StSpace
+         direction="vertical"
+         gap="1.5rem"
+         class="w-[44rem] pb-[2rem] my-6">
+         <h1 class="st-font-hero-bold">成就</h1>
+
+         <AchievementListSkeleton v-if="pending" />
+         <StSpace
+            v-else
+            fill-x
+            direction="vertical"
+            class="p-[0.875rem]"
+            gap="0.75rem">
+            <StSpace
+               v-for="(item, name) in data"
+               :key="name"
+               fill-x
+               direction="vertical"
+               gap="0.75rem">
+               <h2 v-if="item.length" class="st-font-body-bold">
+                  {{ statusToText[name] }}
+               </h2>
+               <AchievementContainer
+                  v-for="achievement in item"
+                  :key="achievement.id"
+                  :imageUrl="achievement.badgeUrl"
+                  :locked="name === 'locked'"
+                  :grayscale="name === 'inProgress'">
+                  <AchievementHeader
+                     :title="achievement.name"
+                     :achivedAt="achievement.achievedAt" />
+                  <div class="st-font-body-normal text-accent-100">
+                     {{
+                        name === 'locked' ? '？？？' : achievement.description
+                     }}
+                  </div>
+                  <AchievementProgress
+                     v-if="name === 'inProgress'"
+                     :progress="(achievement.progress * 100).toFixed(0)" />
+               </AchievementContainer>
+            </StSpace>
+         </StSpace>
+      </StSpace>
+   </StSpace>
+</template>

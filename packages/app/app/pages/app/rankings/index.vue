@@ -62,15 +62,18 @@ const isListed = computed(() => {
 </script>
 
 <template>
-   <StSpace fill-y justify="center" gap="1.25rem" class="pt-6 relative">
+   <StSpace fill-y justify="center" gap="1.25rem" class="pt-6">
       <StSpace
          ref="rankContainer"
+         gap="0"
          fill-y
          direction="vertical"
          align="center"
-         class="hide-scrollbar pb-48 relative"
-         :class="{ 'overflow-auto': !loadingRankings }">
+         class="pb-48 relative">
          <h1 class="text-[2.5rem] font-bold text-white w-full">排行榜</h1>
+         <StSpace
+            fill-x
+            class="bg-background h-6 sticky top-[4.25rem]"></StSpace>
          <RankTable :data="rankings ?? []" :loading="loadingRankings" />
          <StSpace
             @click="handleToTop"
@@ -85,16 +88,13 @@ const isListed = computed(() => {
          </StSpace>
       </StSpace>
       <StSpace
-         class="h-[calc(100vw-5.75rem)] w-[18.875rem] relative overflow-scroll hide-scrollbar pb-32">
-         <StSpace
-            direction="vertical"
-            align="center"
-            gap="0.75rem"
-            class="top-0 left-0 absolute h-[93rem]">
-            <ProfileCard />
-            <CurrentRankCard :is-listed="isListed" />
-            <RankingTrendsCard />
-         </StSpace>
+         direction="vertical"
+         align="center"
+         gap="0.75rem"
+         class="!sticky bottom-0 w-[18.875rem] pb-4 self-end min-h-[calc(100vh-5.75rem-1.25rem)]">
+         <ProfileCard />
+         <CurrentRankCard :is-listed="isListed" />
+         <RankingTrendsCard />
       </StSpace>
    </StSpace>
 </template>

@@ -75,6 +75,7 @@ const borderedClass = computed(() => {
             'bg-success': theme === 'success',
             '!opacity-50 !cursor-wait': loading,
             '!opacity-50 !cursor-not-allowed': disabled,
+            'active:scale-95': !disabled,
          },
       ]">
       <LoadingFour v-if="props.loading" class="mr-2 animate-spin text-lg" />

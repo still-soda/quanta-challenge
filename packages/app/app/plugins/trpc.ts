@@ -132,7 +132,8 @@ const handleSSRTokenRefresh = (
 /**
  * 显示服务器错误提示
  */
-const showServerError = (): void => {
+const showServerError = (msg: string): void => {
+   logger.error('Internal server error happened:', msg);
    const message = useMessageOutsideVue();
    message.error('服务器错误，请稍后重试');
 };
@@ -218,6 +219,8 @@ export default defineNuxtPlugin(() => {
                // SSR 环境使用解析后的 cookies，客户端使用空对象
                const cookies = isServer ? ssrCookies : {};
 
+               logger.log(...pl(green.bold`Fetching TRPC URL:`, cyan`${url}`));
+
                // 构建请求 headers
                const headers: Record<string, string> = {
                   ...options?.headers,
@@ -238,11 +241,12 @@ export default defineNuxtPlugin(() => {
                   if (err instanceof TRPCError && err.code === 'UNAUTHORIZED') {
                      return { status: 401 } as Response;
                   }
+                  logger.error('Fetch error');
                   throw err;
                });
 
                // 处理 401 未授权错误 - 尝试刷新 token
-               if (res.status === 401) {
+               if (res.status === 401 || res.status === 207) {
                   res = await handleUnauthorized(
                      url as RequestInfo,
                      options,
@@ -253,7 +257,7 @@ export default defineNuxtPlugin(() => {
 
                // 客户端显示 5xx 服务器错误提示
                if (res.status >= 500 && !isServer) {
-                  showServerError();
+                  showServerError(await res.text());
                }
 
                return res;

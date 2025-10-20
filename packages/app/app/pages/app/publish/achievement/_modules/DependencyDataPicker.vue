@@ -51,7 +51,7 @@ onMounted(async () => {
 watch(depSelectOpened, async (opened) => {
    if (!opened || dependencyOptions.value.length > 0) return;
    fetchDepLoading.value = true;
-   dependencyOptions.value = await atLeastTime(400, fetchDeps());
+   dependencyOptions.value = await atLeastTime(300, fetchDeps());
    fetchDepLoading.value = false;
 });
 

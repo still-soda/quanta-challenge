@@ -35,7 +35,7 @@ const mode = computed<'problem' | 'record'>(() => {
 </script>
 
 <template>
-   <StSpace direction="vertical" fill gap="0">
+   <StSpace direction="vertical" fill gap="0" class="h-screen">
       <StHeader>
          <template #left>
             <StSpace gap="0.75rem" align="center">

@@ -48,8 +48,60 @@ observer.addListener('check', async (achId, result, userId) => {
       });
 });
 
+/**
+ * 使用 DFS 双色标法检测成就前置依赖中是否存在环
+ */
+const hasCircularDependency = async (
+   achievementId: number,
+   preAchievementIds: number[]
+) => {
+   const achievements = await prisma.achievementPreAchievement.findMany({
+      select: {
+         achievementId: true,
+         preAchievementId: true,
+      },
+   });
+   const graph: Record<number, number[]> = {};
+
+   achievements.forEach(({ achievementId, preAchievementId }) => {
+      if (!graph[achievementId]) {
+         graph[achievementId] = [];
+      }
+      graph[achievementId].push(preAchievementId);
+   });
+
+   if (!graph[achievementId]) {
+      graph[achievementId] = [];
+   }
+   graph[achievementId].push(...preAchievementIds);
+
+   const visited = new Set<number>();
+   const recStack = new Set<number>();
+
+   const dfs = (node: number): boolean => {
+      if (!visited.has(node)) {
+         visited.add(node);
+         recStack.add(node);
+
+         const neighbors = graph[node] || [];
+         for (const neighbor of neighbors) {
+            if (!visited.has(neighbor) && dfs(neighbor)) {
+               return true;
+            } else if (recStack.has(neighbor)) {
+               return true;
+            }
+         }
+      }
+      recStack.delete(node);
+      return false;
+   };
+
+   return dfs(achievementId);
+};
+
 export const achievementService = {
    get observer() {
       return observer;
    },
+   hasCircularDependency,
 };

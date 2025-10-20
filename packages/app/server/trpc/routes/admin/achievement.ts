@@ -149,6 +149,7 @@ const CreateAchievementSchema = z.object({
    imageId: z.uuid(),
    script: z.string().min(1),
    dependencyData: z.array(z.number()),
+   preAchievements: z.array(z.number()),
    isCheckinAchievement: z.boolean(),
 });
 
@@ -257,6 +258,13 @@ const createAchievementProcedure = protectedAdminProcedure
                },
                CheckinAchievement: {
                   create: {},
+               },
+               AchievementPreAchievement: {
+                  createMany: {
+                     data: input.preAchievements.map((id) => ({
+                        preAchievementId: id,
+                     })),
+                  },
                },
             },
             select: {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import defaultProfileBanner from '@/assets/images/default-profile-banner.png';
+import defaultAvatar from '@/assets/images/default-avatar.png';
 
 const { $trpc } = useNuxtApp();
 const { data: commitStatistic, pending } = useAsyncData('profile', () =>
@@ -27,7 +28,7 @@ const correctRate = computed(() => {
                class="size-[5.25rem] rounded-full z-10 border-4 border-accent-600" />
             <StImage
                v-else
-               src="/_nuxt/assets/images/default-avatar.png"
+               :src="defaultAvatar"
                class="!rounded-full z-10 border-4 border-accent-600"
                width="5.25rem"
                height="5.25rem" />
@@ -60,7 +61,7 @@ const correctRate = computed(() => {
                   </div>
                </StSpace>
                <StSpace direction="vertical" gap="0.5rem" align="center">
-                  <div class="st-font-body-normal text-accent-200">准确率</div>
+                  <div class="st-font-body-normal text-accent-200">正确率</div>
                   <div
                      class="leading-[90%] font-family-manrope font-bold text-success">
                      {{ correctRate }}

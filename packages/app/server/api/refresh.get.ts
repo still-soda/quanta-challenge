@@ -1,3 +1,5 @@
+import { logger } from '~~/lib/logger';
+
 export default defineEventHandler(async (event) => {
    const refreshToken = getCookie(event, 'quanta_refresh_token');
 
@@ -22,6 +24,7 @@ export default defineEventHandler(async (event) => {
       setResponseStatus(event, 200);
       return tokens;
    } catch (error: any) {
+      logger.error('Error renewing tokens:', error);
       setResponseStatus(event, 401);
       return { error: 'Invalid refresh token' };
    }

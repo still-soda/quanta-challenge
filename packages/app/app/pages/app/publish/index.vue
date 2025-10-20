@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { GoldMedalTwo, TableReport } from '@icon-park/vue-next';
 
+useSeoMeta({ title: '发布流程 - Quanta Challenge' });
+
 const options = [
    {
       title: '发布题目',

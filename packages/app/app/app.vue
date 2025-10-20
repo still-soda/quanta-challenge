@@ -8,8 +8,7 @@ onMounted(() => {
 </script>
 
 <template>
-   <div
-      class="w-screen h-screen bg-background text-white font-family-sans text-base overflow-hidden">
+   <div class="bg-background text-white font-family-sans text-base">
       <NuxtPage />
    </div>
 </template>
@@ -17,7 +16,7 @@ onMounted(() => {
 <style lang="css">
 .page-enter-active,
 .page-leave-active {
-   transition: all 0.2s ease-in-out;
+   transition: all 0.15s ease-in-out;
 }
 
 .page-enter-from,

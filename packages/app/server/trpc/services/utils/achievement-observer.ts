@@ -347,7 +347,7 @@ export class AchievementObserver {
                },
             },
          });
-         if (userAchievement?.progress! >= 1) {
+         if (userAchievement && userAchievement.progress >= 1) {
             // 已达成的成就不再重复检测
             return false;
          }

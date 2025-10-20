@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3';
 import { ITokenPayload, verifyToken } from '../utils/jwt';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { logger } from '~~/lib/logger';
 
 export const createContext = async (event: H3Event) => {
    const token = getCookie(event, 'quanta_access_token');

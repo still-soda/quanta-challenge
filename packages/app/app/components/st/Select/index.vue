@@ -22,6 +22,8 @@ const props = defineProps<{
    optionEmptyText?: string;
    labelClass?: any;
    closeOnClickOutside?: boolean;
+   hideDescription?: boolean;
+   hideIcon?: boolean;
 }>();
 
 const selected = defineModel<any | any[]>('value', {
@@ -192,14 +194,16 @@ const optionEmptyText = computed(() => {
                   <div class="flex gap-2 items-center w-full">
                      <Component v-if="item.icon" :is="item.icon" />
                      <img
+                        v-else-if="!props.hideIcon && item.imageUrl"
                         class="size-6 rounded-md overflow-hidden object-contain"
-                        v-else-if="item.imageUrl"
                         :src="item.imageUrl"
                         :alt="item.label" />
                      <slot name="option-label" :item="item">
                         {{ item.label }}
                      </slot>
-                     <span class="ml-auto text-accent-400">
+                     <span
+                        v-if="!props.hideDescription"
+                        class="ml-auto text-accent-400">
                         {{ item.description }}
                      </span>
                   </div>

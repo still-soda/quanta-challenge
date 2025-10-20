@@ -5,6 +5,9 @@ import DependencyDataPicker from './_modules/DependencyDataPicker.vue';
 import CheckScript from './_modules/CheckScript.vue';
 import { type IDataLoader } from './_utils/dts-file-parser';
 import { useMessage } from '~/components/st/Message/use-message';
+import PreAchievementsPicker, {
+   type IAchievement,
+} from './_modules/PreAchievementsPicker.vue';
 
 useSeoMeta({ title: '创建成就 - Quanta Challenge' });
 
@@ -13,6 +16,7 @@ const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
 const { form, formKey, formdata, rules } = useAchievementPublicationForm();
 
 const pickedDataLoader = ref<IDataLoader[]>([]);
+const pickedPreAchievements = ref<IAchievement[]>([]);
 
 const { $trpc } = useNuxtApp();
 const message = useMessage();
@@ -33,6 +37,7 @@ const handleCreate = async () => {
          description: formdata.description,
          imageId: formdata.imageId,
          dependencyData: formdata.dependencyData,
+         preAchievements: formdata.preAchievements,
          script: formdata.script,
          isCheckinAchievement: formdata.isCheckinAchievement,
       });
@@ -80,6 +85,12 @@ const handleCreate = async () => {
                   <DependencyDataPicker
                      v-model:picked-data-loaders="pickedDataLoader"
                      v-model:dependency-data="formdata.dependencyData"
+                     :outer-class />
+               </StFormItem>
+               <StFormItem name="requiredData" label="前置成就" required>
+                  <PreAchievementsPicker
+                     v-model:picked-achievements="pickedPreAchievements"
+                     v-model:pre-achievement="formdata.preAchievements"
                      :outer-class />
                </StFormItem>
                <StFormItem name="checkScript" label="成就检测脚本" required>

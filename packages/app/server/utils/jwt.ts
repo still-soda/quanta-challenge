@@ -19,7 +19,7 @@ export const generateTokens = (payload: ITokenPayload) => {
    });
    const accessToken = jwt.sign(payload, accessSecret, {
       algorithm: 'HS256',
-      expiresIn: '30mins',
+      expiresIn: '5s',
    });
 
    return { accessToken, refreshToken };

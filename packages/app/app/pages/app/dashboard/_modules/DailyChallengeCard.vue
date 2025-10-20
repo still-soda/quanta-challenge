@@ -79,7 +79,7 @@ const handleCheckin = async () => {
          <StSpace direction="vertical" gap="1rem" class="w-full h-full">
             <StDateIndicator class="w-full" />
             <div class="flex flex-1 min-h-0 overflow-hidden w-full relative">
-               <StSkeleton :loading="!dailyProblem" class="h-full">
+               <StSkeleton :loading="!dailyProblem" class="h-[21.3125rem]">
                   <template #loading>
                      <DailyChallengeSkeleton class="absolute" />
                   </template>
@@ -90,9 +90,6 @@ const handleCheckin = async () => {
                   </a>
                </StSkeleton>
             </div>
-            <div
-               v-if="!dailyProblem"
-               class="bottom-mask w-[calc(100%-2rem)] h-[4.125rem] absolute bottom-0"></div>
          </StSpace>
          <StSpace
             direction="vertical"

@@ -462,14 +462,29 @@ model Achievement {
   updatedAt    DateTime @updatedAt
   authorId     String?
 
-  author                    User?                       @relation(fields: [authorId], references: [id])
-  badgeImage                Image                       @relation(fields: [badgeImageId], references: [id])
-  UserAchievement           UserAchievement[]
-  AchievementDependencyData AchievementDependencyData[]
-  AchievementValidateScript AchievementValidateScript?
-  CheckinAchievement        CheckinAchievement?
+  author                         User?                       @relation(fields: [authorId], references: [id])
+  badgeImage                     Image                       @relation(fields: [badgeImageId], references: [id])
+  UserAchievement                UserAchievement[]
+  AchievementDependencyData      AchievementDependencyData[]
+  AchievementValidateScript      AchievementValidateScript?
+  CheckinAchievement             CheckinAchievement?
+  AchievementPreAchievement      AchievementPreAchievement[] @relation("AchievementWithPre")
+  AchievementPreAchievementAsPre AchievementPreAchievement[] @relation("AchievementAsPre")
 
   @@map("achievements")
+}
+
+model AchievementPreAchievement {
+  id               Int      @id @default(autoincrement())
+  achievementId    Int
+  preAchievementId Int
+  createdAt        DateTime @default(now())
+
+  achievement    Achievement @relation("AchievementWithPre", fields: [achievementId], references: [id], onDelete: Cascade)
+  preAchievement Achievement @relation("AchievementAsPre", fields: [preAchievementId], references: [id], onDelete: Cascade)
+
+  @@unique([achievementId, preAchievementId])
+  @@map("achievement_pre_achievements")
 }
 
 model CheckinAchievement {

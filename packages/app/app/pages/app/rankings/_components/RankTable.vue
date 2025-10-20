@@ -23,9 +23,10 @@ defineProps<{
             <col style="width: 6rem" />
          </colgroup>
 
-         <thead class="sticky top-0">
+         <thead class="sticky top-[5.75rem]">
             <tr class="text-accent-700 text-nowrap whitespace-nowrap text-left">
-               <th class="bg-secondary pl-6 pr-3 py-[0.625rem] rounded-l-lg">
+               <th
+                  class="bg-secondary pl-6 pr-3 py-[0.625rem] rounded-l-lg z-[10000]">
                   排名
                </th>
                <th class="bg-secondary pr-3 py-[0.625rem]">用户</th>

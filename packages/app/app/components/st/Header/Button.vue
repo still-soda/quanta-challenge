@@ -10,7 +10,7 @@ const props = defineProps<{
    <button
       :class="[
          'px-6 py-4 rounded-full bg-accent-600 text-white',
-         'hover:opacity-80 transition-opacity hover:cursor-pointer',
+         'hover:opacity-80 hover:cursor-pointer transition-opacity',
          props.class,
          {
             '!opacity-50 !cursor-not-allowed !text-accent-300': props.disabled,
