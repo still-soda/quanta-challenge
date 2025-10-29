@@ -351,6 +351,31 @@ export class AchievementObserver {
             // 已达成的成就不再重复检测
             return false;
          }
+
+         // 当成就未开始或进度为0时，检查前置成就是否达成
+         if (!userAchievement || userAchievement.progress === 0) {
+            const preAchievements =
+               await prisma.achievementPreAchievement.findMany({
+                  where: { achievementId },
+                  select: {
+                     preAchievement: {
+                        select: {
+                           UserAchievement: {
+                              where: { userId },
+                              select: { progress: true },
+                           },
+                        },
+                     },
+                  },
+               });
+            for (const preAch of preAchievements) {
+               const ua = preAch.preAchievement.UserAchievement[0];
+               if (!ua || ua.progress < 1) {
+                  // 前置成就未达成，跳过检测
+                  return false;
+               }
+            }
+         }
       }
 
       const achievement = await prisma.achievement.findUnique({
@@ -376,6 +401,7 @@ export class AchievementObserver {
             },
          },
       });
+
       const script = achievement?.AchievementValidateScript?.script;
       const loaders =
          achievement?.AchievementDependencyData.map(

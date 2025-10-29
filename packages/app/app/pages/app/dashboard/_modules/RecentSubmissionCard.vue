@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Share, TableReport } from '@icon-park/vue-next';
+import { Box, Share, TableReport } from '@icon-park/vue-next';
 import StackRank from '../_components/StackRank.vue';
+import LinkButton from '../_components/LinkButton.vue';
 
 const { $trpc } = useNuxtApp();
 
@@ -45,25 +46,18 @@ rule({
 <template>
    <StCard title="最近提交" class="aspect-square select-none" bordered>
       <template #header-right>
-         <a :href="detailPath" target="_blank">
-            <StPopover placement="left">
-               <template #popper="{ triggered }">
-                  <div
-                     :class="{ 'translate-x-4': !triggered }"
-                     class="bg-accent-700 text-accent-100 py-1 px-3 rounded-md transition-all duration-100">
-                     查看详情
-                  </div>
-               </template>
-               <StSpace
-                  gap="0.5rem"
-                  center
-                  class="size-8 hover:border-secondary border border-transparent hover:text-secondary transition-colors duration-100 cursor-pointer rounded-full">
-                  <Share />
-               </StSpace>
-            </StPopover>
-         </a>
+         <LinkButton
+            v-if="submissionData"
+            open-in-new-tab
+            :to="detailPath"
+            description="查看详情" />
       </template>
-      <StSpace direction="vertical" gap="1.25rem" class="mt-6 w-full h-full">
+
+      <StSpace
+         v-if="submissionData"
+         direction="vertical"
+         gap="1.25rem"
+         class="mt-6 w-full h-full">
          <StSkeleton :loading="loading">
             <template #loading>
                <StSpace gap="1rem">
@@ -155,6 +149,18 @@ rule({
                </StSpace>
             </StSpace>
          </StSkeleton>
+      </StSpace>
+
+      <StSpace
+         v-else
+         fill
+         direction="vertical"
+         gap="0.75rem"
+         align="center"
+         justify="center"
+         class="text-accent-400 pb-4">
+         <Box size="2.625rem" />
+         <div class="st-font-body-normal">暂无提交记录</div>
       </StSpace>
    </StCard>
 </template>

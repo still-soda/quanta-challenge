@@ -165,14 +165,21 @@ const getUserAchievementsWallProcedure = protectedProcedure.query(
       const achieved = achievementList
          .filter((ach) => ach.progress >= 1)
          .map(dto);
-      const inProgress = achievementList
-         .filter((ach) => ach.progress > 0 && ach.progress < 1)
-         .map(dto);
 
       const achievedIdsSet = new Set(achieved.map((ach) => ach.id));
       const locked = achievementList
          .filter((ach) =>
             ach.preAchievementIds.some((id) => !achievedIdsSet.has(id))
+         )
+         .map(dto);
+
+      const lockedIdsSet = new Set(locked.map((ach) => ach.id));
+      const inProgress = achievementList
+         .filter(
+            (ach) =>
+               ach.progress >= 0 &&
+               ach.progress < 1 &&
+               !lockedIdsSet.has(ach.id)
          )
          .map(dto);
 

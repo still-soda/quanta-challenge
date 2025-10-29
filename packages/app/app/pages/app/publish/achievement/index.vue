@@ -90,7 +90,7 @@ const handleCreate = async () => {
                <StFormItem name="requiredData" label="前置成就" required>
                   <PreAchievementsPicker
                      v-model:picked-achievements="pickedPreAchievements"
-                     v-model:pre-achievement="formdata.preAchievements"
+                     v-model:pre-achievements="formdata.preAchievements"
                      :outer-class />
                </StFormItem>
                <StFormItem name="checkScript" label="成就检测脚本" required>

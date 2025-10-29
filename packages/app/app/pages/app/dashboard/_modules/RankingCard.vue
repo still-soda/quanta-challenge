@@ -2,6 +2,7 @@
 import { Ranking, TrendingDown, TrendingUp } from '@icon-park/vue-next';
 import MoreOptions from './MoreOptions.vue';
 import RankingSkeleton from '../_skeletons/RankingSkeleton.vue';
+import LinkButton from '../_components/LinkButton.vue';
 
 type Ranking = { from: number; to: number; count: number };
 
@@ -49,7 +50,7 @@ const increaseRatioText = computed(() => {
 <template>
    <StCard :icon="Ranking" title="我的排名" class="w-full h-full">
       <template #header-right>
-         <MoreOptions />
+         <LinkButton description="查看排行榜" to="/app/rankings" />
       </template>
       <RankingSkeleton v-if="loading" />
       <StSpace v-else fill direction="vertical" gap="1.25rem" class="mt-7">

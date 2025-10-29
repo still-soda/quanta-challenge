@@ -2,7 +2,7 @@ import type StForm from '~/components/st/Form/index.vue';
 import useAuthStore from '~/stores/auth-store';
 
 export const useEmailLogin = () => {
-   const formdata = reactive({
+   const formdata = reactive<{ email: string; password: string }>({
       email: '',
       password: '',
    });
@@ -40,8 +40,7 @@ export const useEmailLogin = () => {
          };
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         getCallback('error').forEach((cb) => cb());
-      } finally {
+         getCallback('error').forEach((cb) => cb(error));
          loading.value = false;
       }
    };

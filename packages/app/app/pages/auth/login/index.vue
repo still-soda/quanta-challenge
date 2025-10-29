@@ -4,12 +4,24 @@ import type { IRule } from '~/components/st/Form/type';
 import * as clientAuthn from '@simplewebauthn/browser';
 import z from 'zod';
 import { Fingerprint, Lock, Mail } from '@icon-park/vue-next';
+import { useMessage } from '~/components/st/Message/use-message';
 
 useSeoMeta({ title: '登录 - Quanta Challenge' });
 
-const { formdata, formKey, loading, handleLogin, onLoginSuccess } =
-   useEmailLogin();
+const {
+   formdata,
+   formKey,
+   loading,
+   handleLogin,
+   onLoginSuccess,
+   onLoginError,
+} = useEmailLogin();
 const supportWebAuthn = ref(false);
+
+const message = useMessage();
+onLoginError((error: Error) => {
+   message.error(`登录失败: ${error.message}` || '登录失败，请稍后重试');
+});
 
 onBeforeMount(() => {
    supportWebAuthn.value = clientAuthn.browserSupportsWebAuthn();
@@ -56,6 +68,7 @@ const gotoWebAuthnLogin = () => {
             </p>
          </div>
          <StForm
+            v-if="formdata"
             :ref="formKey"
             @keydown.enter.prevent="handleLogin"
             v-model:model-value="formdata"

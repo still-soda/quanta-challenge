@@ -60,11 +60,6 @@ watch(selectOpened, async (opened) => {
    fetchDepLoading.value = false;
 });
 
-const successListener = useEventBus('achievement-dep-data-requested-success');
-successListener.on(async () => {
-   achievementOptions.value = await fetchAchevements();
-});
-
 const pickedAchievements = defineModel<IAchievement[]>('pickedAchievements', {
    default: [],
 });
@@ -81,8 +76,6 @@ watchEffect(() => {
       v-model:opened="selectOpened"
       close-on-click-outside
       attach-to-body
-      hide-icon
-      hide-description
       placeholder="请选择前置成就"
       multiple
       :loading="fetchDepLoading"
@@ -107,7 +100,7 @@ watchEffect(() => {
                @close="handleRemoveTag(tag)" />
          </div>
       </template>
-      <template #option-label="{ item }">
+      <template #option="{ item }">
          <StSpace align="center" gap="1rem">
             <StImage
                lazy

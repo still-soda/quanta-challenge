@@ -27,19 +27,15 @@ const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
          <h1 class="st-font-hero-bold">成就</h1>
 
          <AchievementListSkeleton v-if="pending" />
-         <StSpace
-            v-else
-            fill-x
-            direction="vertical"
-            class="p-[0.875rem]"
-            gap="0.75rem">
+         <StSpace v-else fill-x direction="vertical" class="p-[0.875rem]">
             <StSpace
                v-for="(item, name) in data"
                :key="name"
+               v-show="item.length"
                fill-x
                direction="vertical"
                gap="0.75rem">
-               <h2 v-if="item.length" class="st-font-body-bold">
+               <h2 class="st-font-body-bold">
                   {{ statusToText[name] }}
                </h2>
                <AchievementContainer

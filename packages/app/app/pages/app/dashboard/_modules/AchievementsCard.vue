@@ -1,20 +1,10 @@
 <script setup lang="ts">
 import { Box, FiveStarBadge } from '@icon-park/vue-next';
-import MoreOptions from './MoreOptions.vue';
 import dayjs from 'dayjs';
+import LinkButton from '../_components/LinkButton.vue';
 
 const { $trpc } = useNuxtApp();
 
-// type AchievedAchievement = Awaited<
-//    ReturnType<typeof $trpc.protected.achievement.getAchievedAchievements.query>
-// >;
-// const achievements = ref<AchievedAchievement | null>(null);
-// const loading = computed(() => !achievements.value);
-// const fetchAchievements = async () => {
-//    achievements.value =
-//       await $trpc.protected.achievement.getAchievedAchievements.query();
-// };
-// onMounted(fetchAchievements);
 const { data: achievements, pending: loading } = useAsyncData(
    'achieved-achievements',
    () => $trpc.protected.achievement.getAchievedAchievements.query()
@@ -47,7 +37,7 @@ onMounted(() => {
       title="徽章墙"
       class="w-full h-full !pb-0 overflow-hidden">
       <template #header-right>
-         <MoreOptions />
+         <LinkButton to="/app/achievements" description="查看成就" />
       </template>
       <div class="w-full h-5"></div>
       <div

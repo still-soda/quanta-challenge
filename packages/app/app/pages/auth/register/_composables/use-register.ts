@@ -37,6 +37,7 @@ export const useRegister = () => {
          authStore.setCsrfToken(result.csrfToken);
          authStore.user = {
             name: result.user.name,
+            displayName: result.user.displayName,
             id: result.user.id,
             email: result.user.email,
             createdAt: new Date(),
@@ -47,8 +48,7 @@ export const useRegister = () => {
          };
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         getCallback('error').forEach((cb) => cb());
-      } finally {
+         getCallback('error').forEach((cb) => cb(error));
          loading.value = false;
       }
    };

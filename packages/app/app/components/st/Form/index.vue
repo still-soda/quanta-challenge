@@ -49,8 +49,40 @@ const validate = () => {
    return { success, invalidField };
 };
 
+const validateAsync = async () => {
+   const rules = props.rules || [];
+   const formdataKeySet = new Set(Object.keys(formdata.value));
+   const rulesToValidate = rules.filter((rule) => {
+      return optionsMap.has(rule.field) && formdataKeySet.has(rule.field);
+   });
+   let success = true;
+   let invalidField: string | null = null;
+   for (const rule of rulesToValidate) {
+      const options = optionsMap.get(rule.field);
+      if (options) {
+         const value = formdata.value[rule.field];
+         if (rule.required && !value) {
+            options.setStatus('error');
+            invalidField = rule.field;
+            success = false;
+            continue;
+         }
+         // Changed line
+         if (rule.validator && !(await rule.validator(value))) {
+            options.setStatus('error');
+            invalidField = rule.field;
+            success = false;
+            continue;
+         }
+         options.setStatus('success');
+      }
+   }
+   return { success, invalidField };
+};
+
 defineExpose({
    validate,
+   validateAsync,
 });
 </script>
 

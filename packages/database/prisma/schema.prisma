@@ -9,14 +9,15 @@ datasource db {
 
 // 用户表
 model User {
-  id        String   @id @default(cuid())
-  role      UserRole @default(USER)
-  email     String?  @unique
-  name      String?
-  imageId   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLogin DateTime @default(now())
+  id          String   @id @default(cuid())
+  role        UserRole @default(USER)
+  name        String   @unique
+  email       String?  @unique
+  displayName String?
+  imageId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastLogin   DateTime @default(now())
 
   avatar                    Image?                      @relation(fields: [imageId], references: [id])
   auths                     Auth[]
@@ -36,6 +37,7 @@ model User {
   Achievement               Achievement[]
   UserStatistic             UserStatistic?
   RankingHistory            RankingHistory[]
+  UserSettings              UserSetting?
 
   @@map("users")
 }
@@ -596,4 +598,18 @@ model RankingHistory {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("ranking_histories")
+}
+
+model UserSetting {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@map("user_settings")
 }

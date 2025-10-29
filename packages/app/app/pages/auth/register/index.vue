@@ -3,21 +3,57 @@ import { Lock, Mail, User } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegister } from './_composables/use-register';
+import { useMessage } from '~/components/st/Message/use-message';
 
 useSeoMeta({ title: '注册 - Quanta Challenge' });
 
-const { formdata, formKey, loading, handleRegister } = useRegister();
+const {
+   formdata,
+   formKey,
+   loading,
+   handleRegister,
+   onRegisterSuccess,
+   onRegisterError,
+} = useRegister();
 
-const rules: IRule[] = [
+onRegisterSuccess(() => {
+   navigateTo('/app/dashboard', { replace: true });
+});
+
+const message = useMessage();
+onRegisterError((error: Error) => {
+   message.error(`注册失败: ${error.message}` || '注册失败，请稍后重试');
+});
+
+const { $trpc } = useNuxtApp();
+const checkIfExistingUsername = useDebounceFn(async (username: string) => {
+   const { exists } = await $trpc.auth.register.existingUser.query({
+      username,
+   });
+   return exists;
+}, 500);
+
+const checkIfExistingEmail = useDebounceFn(async (email: string) => {
+   const { exists } = await $trpc.auth.register.existingEmail.query({
+      email,
+   });
+   return exists;
+}, 500);
+
+const rules = [
    {
       field: 'username',
       required: true,
-      validator: (value: string) => value.length >= 3,
+      validator: async (value: string) =>
+         /^[a-zA-Z0-9_]{3,20}$/.test(value) &&
+         !(await checkIfExistingUsername(value)),
    },
    {
       field: 'email',
       required: true,
-      validator: (value: string) => z.email().safeParse(value).success,
+      validator: async (value: string) =>
+         z.email().safeParse(value).success &&
+         !(await checkIfExistingEmail(value)),
    },
    {
       field: 'password',
@@ -29,15 +65,9 @@ const rules: IRule[] = [
       required: true,
       validator: (value: string) => value === formdata.password,
    },
-];
+] as const satisfies IRule[];
 
-const getStatus = (
-   prop: keyof typeof formdata,
-   idx: number
-): 'success' | 'error' | 'default' => {
-   if (!formdata[prop] || !rules[idx]?.validator) return 'default';
-   return rules[idx].validator(formdata[prop]) ? 'success' : 'error';
-};
+const status = useAsyncStatus(rules, formdata);
 </script>
 
 <template>
@@ -58,9 +88,11 @@ const getStatus = (
             @keydown.enter.prevent="handleRegister"
             v-model:model-value="formdata"
             class="flex flex-col gap-4 w-full">
-            <StFormItem name="username" error-message="用户名至少需要3个字符">
+            <StFormItem
+               name="username"
+               error-message="用户名必须由英文、数字和下划线组成, 且长度在3到20个字符之间">
                <StInput
-                  :status="getStatus('username', 0)"
+                  :status="status['username']"
                   v-model:value="formdata.username"
                   outer-class="bg-accent-700"
                   placeholder="请输入用户名">
@@ -71,7 +103,7 @@ const getStatus = (
             </StFormItem>
             <StFormItem name="email" error-message="请输入有效的邮箱地址">
                <StInput
-                  :status="getStatus('email', 1)"
+                  :status="status['email']"
                   v-model:value="formdata.email"
                   outer-class="bg-accent-700"
                   placeholder="请输入邮箱">
@@ -82,7 +114,7 @@ const getStatus = (
             </StFormItem>
             <StFormItem name="password" error-message="密码至少需要6个字符">
                <StInput
-                  :status="getStatus('password', 2)"
+                  :status="status['password']"
                   v-model:value="formdata.password"
                   outer-class="bg-accent-700"
                   placeholder="请输入密码"
@@ -98,7 +130,7 @@ const getStatus = (
                name="confirmPassword"
                error-message="两次输入的密码不一致">
                <StInput
-                  :status="getStatus('confirmPassword', 3)"
+                  :status="status['confirmPassword']"
                   v-model:value="formdata.confirmPassword"
                   outer-class="bg-accent-700"
                   placeholder="请确认密码"
