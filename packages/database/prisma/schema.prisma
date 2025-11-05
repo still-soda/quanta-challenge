@@ -38,6 +38,7 @@ model User {
   UserStatistic             UserStatistic?
   RankingHistory            RankingHistory[]
   UserSettings              UserSetting?
+  UserInfo                  UserInfo?
 
   @@map("users")
 }
@@ -46,6 +47,25 @@ enum UserRole {
   SUPER_ADMIN
   ADMIN
   USER
+}
+
+// 用户信息表
+model UserInfo {
+  id            Int       @id @default(autoincrement())
+  userId        String    @unique
+  bio           String?
+  email         String?
+  major         String?
+  identifier    String?
+  birthday      DateTime?
+  bannerImageId String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user        User   @relation(fields: [userId], references: [id])
+  bannerImage Image? @relation(fields: [bannerImageId], references: [id])
+
+  @@map("user_infos")
 }
 
 // 角色变更记录表
@@ -121,6 +141,7 @@ model Image {
   UserImage           UserImage[]
   Problem             Problems[]
   Achievement         Achievement[]
+  UserInfo            UserInfo[]
 
   @@map("images")
 }

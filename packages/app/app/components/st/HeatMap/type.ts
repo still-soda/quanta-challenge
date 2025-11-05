@@ -3,6 +3,7 @@ export interface IHeatMapProps {
    data: Record<string, number>;
    rows?: number;
    loading?: boolean;
+   scrollIntoView?: boolean;
 }
 
 export const monthText = [

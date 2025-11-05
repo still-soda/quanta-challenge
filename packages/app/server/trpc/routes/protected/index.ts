@@ -4,6 +4,7 @@ import { dailyRouter } from './daily';
 import { dashboardRouter } from './dashboard';
 import { problemRouter } from './problem';
 import { rankRouter } from './rank';
+import { userRouter } from './user';
 
 export const protectedRouter = router({
    problem: problemRouter,
@@ -11,4 +12,5 @@ export const protectedRouter = router({
    dashboard: dashboardRouter,
    daily: dailyRouter,
    achievement: achievementRouter,
+   user: userRouter,
 });

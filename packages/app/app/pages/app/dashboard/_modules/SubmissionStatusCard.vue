@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Fire } from '@icon-park/vue-next';
 
-defineProps<{
+const props = defineProps<{
    status?: 'dashboard' | 'personal-space';
 }>();
 
@@ -46,9 +46,14 @@ onMounted(() => {
       <div
          ref="scrollContainer"
          class="mt-4 overflow-x-auto flex shrink-0 w-0 hide-scrollbar relative"
-         :class="[status === 'personal-space' ? '' : 'min-w-[36.625rem]']"
+         :class="[
+            status === 'personal-space'
+               ? 'min-h-[14.625rem]'
+               : 'min-w-[36.625rem]',
+         ]"
          :style="{ width: `${width - 34}px` }">
          <StHeatMap
+            :scroll-into-view="status !== 'personal-space'"
             :loading="loading"
             :current-year="new Date().getFullYear()"
             :rows="9"

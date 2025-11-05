@@ -43,7 +43,8 @@ const getCountByDate = (month: number, day: number) => {
 onMounted(() => {
    const currentId = dayjs(new Date()).format('YYYY-MM-DD');
    const el = document.getElementById(currentId);
-   el &&
+   props.scrollIntoView &&
+      el &&
       el.scrollIntoView({
          behavior: 'smooth',
          block: 'center',

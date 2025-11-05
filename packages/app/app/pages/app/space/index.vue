@@ -9,15 +9,73 @@ import {
 } from '@icon-park/vue-next';
 import SubmissionStatusCard from '../dashboard/_modules/SubmissionStatusCard.vue';
 import AchievementsCard from '../dashboard/_modules/AchievementsCard.vue';
+import UserInfoEditDrawer from './_drawers/UserInfoEditDrawer.vue';
+import dayjs from 'dayjs';
 
 useSeoMeta({ title: '个人空间 - Quanta Challenge' });
 
-const userInfo = [
-   { label: '生日', value: '2000-01-01', icon: BirthdayCake },
-   { label: '邮箱', value: 'example@example.com', icon: Mail },
-   { label: '身份', value: '前端工程师', icon: PeopleBottomCard },
-   { label: '学院', value: '计算机科学与技术学院', icon: School },
-];
+const { $trpc } = useNuxtApp();
+
+const editDrawerOpened = ref(false);
+
+const openEditDrawer = () => {
+   editDrawerOpened.value = true;
+};
+
+const infoLabelMapping = {
+   birthday: '生日',
+   email: '邮箱',
+   identifier: '身份',
+   major: '学院',
+};
+
+const iconMapping = {
+   birthday: BirthdayCake,
+   email: Mail,
+   identifier: PeopleBottomCard,
+   major: School,
+} as const;
+
+type IconKey = keyof typeof iconMapping;
+
+const { data: userInfo, refresh: refreshUserInfo } = await useAsyncData(
+   'get-user-info',
+   () => $trpc.protected.user.getUserInfo.query(),
+   {
+      transform: (data) => [
+         {
+            label: infoLabelMapping.birthday,
+            value: data.birthday
+               ? dayjs(data.birthday).format('YYYY-MM-DD')
+               : '--',
+            iconKey: 'birthday' as IconKey,
+         },
+         {
+            label: infoLabelMapping.email,
+            value: data.email || '--',
+            iconKey: 'email' as IconKey,
+         },
+         {
+            label: infoLabelMapping.identifier,
+            value: data.identifier || '--',
+            iconKey: 'identifier' as IconKey,
+         },
+         {
+            label: infoLabelMapping.major,
+            value: data.major || '--',
+            iconKey: 'major' as IconKey,
+         },
+      ],
+   }
+);
+
+const { data: rawUserInfo } = await useAsyncData('get-raw-user-info', () =>
+   $trpc.protected.user.getUserInfo.query()
+);
+
+const handleUserInfoUpdated = async () => {
+   await refreshUserInfo();
+};
 </script>
 
 <template>
@@ -62,6 +120,7 @@ const userInfo = [
                   </StSpace>
                   <StButton
                      bordered
+                     @click="openEditDrawer"
                      class="!bg-transparent !border-secondary !text-secondary !font-normal !py-2">
                      编辑个人资料
                   </StButton>
@@ -70,7 +129,9 @@ const userInfo = [
          </StSpace>
 
          <StSpace class="p-4">
-            <div class="st-font-body-normal">这个人没有任何个性签名。</div>
+            <div class="st-font-body-normal">
+               {{ rawUserInfo?.bio || '这个人没有任何个性签名。' }}
+            </div>
          </StSpace>
 
          <div class="h-[1px] w-full bg-accent-500" />
@@ -83,7 +144,7 @@ const userInfo = [
                gap="6px"
                class="st-font-body-normal">
                <component
-                  :is="item.icon"
+                  :is="iconMapping[item.iconKey]"
                   class="text-accent-200"
                   :strokeWidth="3"
                   :size="20" />
@@ -94,11 +155,18 @@ const userInfo = [
 
          <div class="h-[1px] w-full bg-accent-500" />
 
-         <SubmissionStatusCard status="personal-space" class="!mt-0" />
+         <SubmissionStatusCard
+            status="personal-space"
+            class="!mt-0 min-h-[18.625rem]" />
 
          <div class="h-[1px] w-full bg-accent-500" />
 
          <AchievementsCard status="personal-space" class="!min-h-[16rem]" />
       </StSpace>
+
+      <!-- 编辑用户信息 Drawer -->
+      <UserInfoEditDrawer
+         v-model:opened="editDrawerOpened"
+         @updated="handleUserInfoUpdated" />
    </StSpace>
 </template>
