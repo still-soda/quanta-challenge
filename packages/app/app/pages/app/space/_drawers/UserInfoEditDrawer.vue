@@ -2,6 +2,7 @@
 import type { IRule } from '~/components/st/Form/type';
 import type { StForm } from '#components';
 import { SaveOne } from '@icon-park/vue-next';
+import { useMessage } from '~/components/st/Message/use-message';
 
 const opened = defineModel<boolean>('opened', { default: false });
 
@@ -64,6 +65,8 @@ watch(opened, async (isOpened) => {
 
 const loading = ref(false);
 
+const message = useMessage();
+
 const handleUpdate = async () => {
    if (!form.value?.validate().success) return;
 
@@ -83,9 +86,11 @@ const handleUpdate = async () => {
       .then(() => {
          opened.value = false;
          emits('updated');
+         message.success('用户信息更新成功');
       })
       .catch((e) => {
          console.error('更新用户信息失败:', e);
+         message.error('更新用户信息失败');
       })
       .finally(() => {
          loading.value = false;

@@ -11,6 +11,7 @@ import SubmissionStatusCard from '../dashboard/_modules/SubmissionStatusCard.vue
 import AchievementsCard from '../dashboard/_modules/AchievementsCard.vue';
 import UserInfoEditDrawer from './_drawers/UserInfoEditDrawer.vue';
 import dayjs from 'dayjs';
+import useAuthStore from '~/stores/auth-store';
 
 useSeoMeta({ title: '个人空间 - Quanta Challenge' });
 
@@ -76,6 +77,8 @@ const { data: rawUserInfo } = await useAsyncData('get-raw-user-info', () =>
 const handleUserInfoUpdated = async () => {
    await refreshUserInfo();
 };
+
+const authStore = useAuthStore();
 </script>
 
 <template>
@@ -112,7 +115,9 @@ const handleUserInfoUpdated = async () => {
                   align="center">
                   <StSpace direction="vertical" gap="0.5rem">
                      <div class="st-font-third-bold text-shadow-sm">
-                        没有气的汽水
+                        {{
+                           authStore.user?.displayName ?? authStore.user?.name
+                        }}
                      </div>
                      <div class="st-font-body-normal text-accent-200">
                         20th 前端工程师

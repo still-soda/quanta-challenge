@@ -230,7 +230,7 @@ const isSelected = (dateStr: string) => {
                transition: 'margin 0.1s ease-in-out, opacity 0.1s ease-in-out',
             }"
             :class="[
-               'p-4 rounded-lg bg-background border border-accent-300 hover:cursor-auto z-[10001]',
+               'absolute p-4 rounded-lg bg-background border border-accent-300 hover:cursor-auto z-[10001]',
                { 'opacity-0 pointer-events-none': !opened },
                !opened && {
                   '!-mb-4': upside,

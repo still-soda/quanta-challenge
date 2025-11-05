@@ -16,6 +16,29 @@ const description = computed(() => {
 const handleMyPublish = () => {
    navigateTo('/app/publish/problem/mine');
 };
+
+// 搜索功能
+const { openSearch } = useSearch();
+
+const handleSearchClick = () => {
+   openSearch();
+};
+
+// 全局快捷键 Cmd/Ctrl + K
+const handleKeydown = (e: KeyboardEvent) => {
+   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      openSearch();
+   }
+};
+
+onMounted(() => {
+   window.addEventListener('keydown', handleKeydown);
+});
+
+onUnmounted(() => {
+   window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <template>
@@ -28,7 +51,7 @@ const handleMyPublish = () => {
             class="fixed top-0 !w-[calc(100vw-9.3125rem)] !min-w-[calc(1440px-9.3125rem)]">
             <template #left>
                <StSpace gap="0.75rem" align="center">
-                  <StHeaderButton text="搜索">
+                  <StHeaderButton text="搜索" @click="handleSearchClick">
                      <Search class="text-[1.25rem]" />
                   </StHeaderButton>
                   <StHeaderButton text="通知">
@@ -50,6 +73,9 @@ const handleMyPublish = () => {
          <div class="h-[5.75rem]"></div>
          <slot></slot>
       </main>
+
+      <!-- 搜索覆盖层 -->
+      <StSearchOverlay />
    </div>
 </template>
 
