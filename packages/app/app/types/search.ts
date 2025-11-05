@@ -5,12 +5,17 @@
 /**
  * 搜索结果类型
  */
-export type SearchResultType = 'problem' | 'user' | 'tag' | 'announcement';
+export type SearchResultType =
+   | 'problem'
+   | 'user'
+   | 'tag'
+   | 'page-section'
+   | 'daily-problem';
 
 /**
  * 题目难度
  */
-export type ProblemDifficulty = 'easy' | 'medium' | 'hard';
+export type ProblemDifficulty = 'easy' | 'medium' | 'hard' | 'very_hard';
 
 /**
  * 搜索结果基础接口
@@ -60,13 +65,27 @@ export interface TagSearchResult extends SearchResultBase {
 }
 
 /**
- * 公告搜索结果
+ * 页面板块搜索结果
  */
-export interface AnnouncementSearchResult extends SearchResultBase {
-   type: 'announcement';
+export interface PageSectionSearchResult extends SearchResultBase {
+   type: 'page-section';
    metadata: {
-      publishDate: string;
-      author?: string;
+      pageName: string; // 页面名称，如 "首页"
+      sectionName: string; // 板块名称，如 "最近提交"
+      icon?: string; // 图标名称
+   };
+}
+
+/**
+ * 每日一题搜索结果
+ */
+export interface DailyProblemSearchResult extends SearchResultBase {
+   type: 'daily-problem';
+   metadata: {
+      date: string; // 日期
+      difficulty: ProblemDifficulty;
+      tags: string[];
+      isToday: boolean; // 是否是今日题目
    };
 }
 
@@ -77,7 +96,8 @@ export type SearchResult =
    | ProblemSearchResult
    | UserSearchResult
    | TagSearchResult
-   | AnnouncementSearchResult;
+   | PageSectionSearchResult
+   | DailyProblemSearchResult;
 
 /**
  * 搜索 API 请求参数

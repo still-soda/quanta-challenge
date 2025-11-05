@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { ListTwo, User, Tag, Message } from '@icon-park/vue-next';
+import {
+   ListTwo,
+   User,
+   Tag,
+   Calendar,
+   ApplicationMenu,
+   Check,
+   ChartProportion,
+   Time,
+   Fire,
+} from '@icon-park/vue-next';
 import type { SearchResult } from '~/types/search';
 
 const props = defineProps<{
    result: SearchResult;
+   isSelected?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,8 +29,10 @@ const icon = computed(() => {
          return User;
       case 'tag':
          return Tag;
-      case 'announcement':
-         return Message;
+      case 'daily-problem':
+         return Calendar;
+      case 'page-section':
+         return ApplicationMenu;
    }
 });
 
@@ -31,8 +44,74 @@ const typeText = computed(() => {
          return '用户';
       case 'tag':
          return '标签';
-      case 'announcement':
-         return '公告';
+      case 'daily-problem':
+         return '每日一题';
+      case 'page-section':
+         return '页面';
+   }
+});
+
+const difficultyText = (difficulty: string) => {
+   switch (difficulty) {
+      case 'easy':
+         return '简单';
+      case 'medium':
+         return '中等';
+      case 'hard':
+         return '困难';
+      case 'very_hard':
+         return '极难';
+      default:
+         return difficulty;
+   }
+};
+
+const difficultyColor = (difficulty: string) => {
+   switch (difficulty) {
+      case 'easy':
+         return 'bg-success/20 text-success';
+      case 'medium':
+         return 'bg-warning/20 text-warning';
+      case 'hard':
+         return 'bg-error/20 text-error';
+      case 'very_hard':
+         return 'bg-purple-500/20 text-purple-400';
+      default:
+         return 'bg-accent-600 text-accent-300';
+   }
+};
+
+const typeColor = computed(() => {
+   switch (props.result.type) {
+      case 'problem':
+         return 'text-primary';
+      case 'user':
+         return 'text-secondary';
+      case 'tag':
+         return 'text-success';
+      case 'daily-problem':
+         return 'text-warning';
+      case 'page-section':
+         return 'text-accent-300';
+      default:
+         return 'text-accent-300';
+   }
+});
+
+const typeBgColor = computed(() => {
+   switch (props.result.type) {
+      case 'problem':
+         return 'bg-primary/20 text-primary';
+      case 'user':
+         return 'bg-secondary/20 text-secondary';
+      case 'tag':
+         return 'bg-success/20 text-success';
+      case 'daily-problem':
+         return 'bg-warning/20 text-warning';
+      case 'page-section':
+         return 'bg-accent-500 text-accent-200';
+      default:
+         return 'bg-accent-500 text-accent-300';
    }
 });
 
@@ -43,119 +122,145 @@ const handleClick = () => {
 
 <template>
    <div
-      class="px-6 py-4 hover:bg-accent-600 transition-colors cursor-pointer"
+      class="group px-4 py-2.5 hover:bg-accent-500 transition-colors cursor-pointer"
+      :class="{ 'bg-accent-500': isSelected }"
       @click="handleClick">
-      <div class="flex items-start gap-3">
+      <StSpace gap="0.75rem" align="center" fill-x>
          <!-- 图标 -->
-         <div class="shrink-0 mt-1">
-            <component
-               :is="icon"
-               class="text-xl"
-               :class="{
-                  'text-primary': result.type === 'problem',
-                  'text-secondary': result.type === 'user',
-                  'text-success': result.type === 'tag',
-                  'text-warning': result.type === 'announcement',
-               }" />
-         </div>
+         <component :is="icon" class="text-lg shrink-0" :class="typeColor" />
 
-         <!-- 内容 -->
-         <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
+         <!-- 内容区域 -->
+         <StSpace direction="vertical" gap="0.25rem" fill-x class="min-w-0">
+            <!-- 标题行 -->
+            <StSpace gap="0.5rem" align="center" fill-x no-wrap>
                <!-- 标题 -->
-               <h3 class="text-white st-font-body-bold truncate">
+               <h3 class="text-white text-sm font-medium truncate flex-1">
                   {{ result.title }}
                </h3>
 
-               <!-- 类型标签 -->
-               <span
-                  class="text-xs px-2 py-0.5 rounded"
-                  :class="{
-                     'bg-primary/20 text-primary': result.type === 'problem',
-                     'bg-secondary/20 text-secondary': result.type === 'user',
-                     'bg-success/20 text-success': result.type === 'tag',
-                     'bg-warning/20 text-warning':
-                        result.type === 'announcement',
-                  }">
-                  {{ typeText }}
-               </span>
-
-               <!-- 题目难度标签 -->
-               <span
-                  v-if="result.type === 'problem'"
-                  class="text-xs px-2 py-0.5 rounded"
-                  :class="{
-                     'bg-success/20 text-success':
-                        result.metadata.difficulty === 'easy',
-                     'bg-warning/20 text-warning':
-                        result.metadata.difficulty === 'medium',
-                     'bg-error/20 text-error':
-                        result.metadata.difficulty === 'hard',
-                  }">
-                  {{
-                     result.metadata.difficulty === 'easy'
-                        ? '简单'
-                        : result.metadata.difficulty === 'medium'
-                        ? '中等'
-                        : '困难'
-                  }}
-               </span>
-            </div>
-
-            <!-- 描述 -->
-            <p
-               v-if="result.description"
-               class="text-accent-300 text-sm mt-1 line-clamp-2">
-               {{ result.description }}
-            </p>
-
-            <!-- 元数据 -->
-            <div
-               v-if="result.type === 'problem'"
-               class="flex items-center gap-3 mt-2 text-xs text-accent-300">
-               <span v-if="result.metadata.solvedCount">
-                  已解决: {{ result.metadata.solvedCount }}
-               </span>
-               <span v-if="result.metadata.acceptRate">
-                  通过率: {{ (result.metadata.acceptRate * 100).toFixed(1) }}%
-               </span>
-               <div v-if="result.metadata.tags.length > 0" class="flex gap-1">
+               <!-- 标签组 -->
+               <StSpace gap="0.25rem" align="center" no-wrap class="shrink-0">
+                  <!-- 类型标签 -->
                   <span
-                     v-for="tag in result.metadata.tags.slice(0, 3)"
-                     :key="tag"
-                     class="px-1.5 py-0.5 bg-accent-700 rounded">
-                     {{ tag }}
+                     class="text-[0.625rem] px-1.5 py-0.5 rounded bg-accent-600 text-accent-200 leading-none whitespace-nowrap">
+                     {{ typeText }}
                   </span>
-               </div>
-            </div>
 
-            <div
-               v-else-if="result.type === 'user'"
-               class="flex items-center gap-3 mt-2 text-xs text-accent-300">
-               <span>{{ result.metadata.role }}</span>
-               <span v-if="result.metadata.solvedProblems">
-                  已解决: {{ result.metadata.solvedProblems }} 题
-               </span>
-            </div>
+                  <!-- 难度标签 -->
+                  <span
+                     v-if="
+                        result.type === 'problem' ||
+                        result.type === 'daily-problem'
+                     "
+                     class="text-[0.625rem] px-1.5 py-0.5 rounded leading-none whitespace-nowrap"
+                     :class="difficultyColor(result.metadata.difficulty)">
+                     {{ difficultyText(result.metadata.difficulty) }}
+                  </span>
 
-            <div
-               v-else-if="result.type === 'tag'"
-               class="mt-2 text-xs text-accent-300">
-               <span>{{ result.metadata.problemCount }} 道题目</span>
-            </div>
+                  <!-- 今日标记 -->
+                  <StSpace
+                     v-if="
+                        result.type === 'daily-problem' &&
+                        result.metadata.isToday
+                     "
+                     gap="0.25rem"
+                     align="center"
+                     class="text-[0.625rem] px-1.5 py-0.5 rounded bg-primary/20 text-primary leading-none whitespace-nowrap">
+                     <Fire theme="filled" size="10" />
+                     <span>今日</span>
+                  </StSpace>
+               </StSpace>
+            </StSpace>
 
-            <div
-               v-else-if="result.type === 'announcement'"
-               class="mt-2 text-xs text-accent-300">
-               <span>{{
-                  new Date(result.metadata.publishDate).toLocaleDateString()
-               }}</span>
-               <span v-if="result.metadata.author" class="ml-2">
-                  作者: {{ result.metadata.author }}
-               </span>
-            </div>
-         </div>
-      </div>
+            <!-- 元数据行 -->
+            <StSpace
+               gap="0.75rem"
+               align="center"
+               class="text-xs text-accent-300">
+               <!-- 题目元数据 -->
+               <template v-if="result.type === 'problem'">
+                  <StSpace
+                     v-if="result.metadata.solvedCount"
+                     gap="0.25rem"
+                     align="center"
+                     no-wrap>
+                     <Check size="12" class="text-success" />
+                     <span>{{ result.metadata.solvedCount }}</span>
+                  </StSpace>
+                  <StSpace
+                     v-if="result.metadata.acceptRate"
+                     gap="0.25rem"
+                     align="center"
+                     no-wrap>
+                     <ChartProportion size="12" />
+                     <span
+                        >{{
+                           (result.metadata.acceptRate * 100).toFixed(0)
+                        }}%</span
+                     >
+                  </StSpace>
+                  <StSpace
+                     v-if="result.metadata.tags.length > 0"
+                     gap="0.25rem"
+                     no-wrap>
+                     <span
+                        v-for="tag in result.metadata.tags.slice(0, 2)"
+                        :key="tag"
+                        class="text-accent-400 whitespace-nowrap">
+                        #{{ tag }}
+                     </span>
+                  </StSpace>
+               </template>
+
+               <!-- 用户元数据 -->
+               <template v-else-if="result.type === 'user'">
+                  <span>{{ result.metadata.role }}</span>
+                  <StSpace
+                     v-if="result.metadata.solvedProblems"
+                     gap="0.25rem"
+                     align="center"
+                     no-wrap>
+                     <Check size="12" class="text-success" />
+                     <span>{{ result.metadata.solvedProblems }} 题</span>
+                  </StSpace>
+               </template>
+
+               <!-- 标签元数据 -->
+               <template v-else-if="result.type === 'tag'">
+                  <span>{{ result.metadata.problemCount }} 道题目</span>
+               </template>
+
+               <!-- 页面板块元数据 -->
+               <template v-else-if="result.type === 'page-section'">
+                  <span>{{ result.metadata.pageName }}</span>
+               </template>
+
+               <!-- 每日一题元数据 -->
+               <template v-else-if="result.type === 'daily-problem'">
+                  <StSpace gap="0.25rem" align="center" no-wrap>
+                     <Time size="12" />
+                     <span>{{
+                        new Date(result.metadata.date).toLocaleDateString(
+                           'zh-CN',
+                           { month: 'long', day: 'numeric' }
+                        )
+                     }}</span>
+                  </StSpace>
+                  <StSpace
+                     v-if="result.metadata.tags.length > 0"
+                     gap="0.25rem"
+                     no-wrap>
+                     <span
+                        v-for="tag in result.metadata.tags.slice(0, 2)"
+                        :key="tag"
+                        class="text-accent-400 whitespace-nowrap">
+                        #{{ tag }}
+                     </span>
+                  </StSpace>
+               </template>
+            </StSpace>
+         </StSpace>
+      </StSpace>
    </div>
 </template>
 

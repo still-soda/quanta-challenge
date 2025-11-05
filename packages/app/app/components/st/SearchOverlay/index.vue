@@ -13,6 +13,8 @@ const {
 
 const inputRef = ref<HTMLInputElement>();
 const localQuery = ref('');
+const selectedIndex = ref(-1); // 当前选中的结果索引
+const resultsContainerRef = ref<HTMLElement>(); // 结果列表容器
 
 // 监听输入变化执行搜索
 const debouncedSearch = useDebounceFn((query: string) => {
@@ -21,6 +23,42 @@ const debouncedSearch = useDebounceFn((query: string) => {
 
 watch(localQuery, (newQuery) => {
    debouncedSearch(newQuery);
+   // 输入变化时重置选中索引
+   selectedIndex.value = -1;
+});
+
+// 监听搜索结果变化，重置选中索引
+watch(searchResults, () => {
+   selectedIndex.value = -1;
+});
+
+// 监听选中索引变化，滚动到可见区域
+watch(selectedIndex, (newIndex) => {
+   if (newIndex >= 0 && resultsContainerRef.value) {
+      nextTick(() => {
+         const container = resultsContainerRef.value;
+         const items = container?.querySelectorAll('[data-result-item]');
+         const selectedItem = items?.[newIndex] as HTMLElement;
+
+         if (selectedItem && container) {
+            const containerRect = container.getBoundingClientRect();
+            const itemRect = selectedItem.getBoundingClientRect();
+
+            // 如果元素不在可见区域，滚动到该元素
+            if (itemRect.top < containerRect.top) {
+               selectedItem.scrollIntoView({
+                  block: 'nearest',
+                  behavior: 'smooth',
+               });
+            } else if (itemRect.bottom > containerRect.bottom) {
+               selectedItem.scrollIntoView({
+                  block: 'nearest',
+                  behavior: 'smooth',
+               });
+            }
+         }
+      });
+   }
 });
 
 // 当覆盖层打开时，聚焦输入框
@@ -33,13 +71,40 @@ watch(isSearchOpen, (opened) => {
       // 关闭时清空搜索
       localQuery.value = '';
       searchQuery.value = '';
+      selectedIndex.value = -1;
    }
 });
 
-// ESC 键关闭
+// 键盘导航处理
 const handleKeydown = (e: KeyboardEvent) => {
    if (e.key === 'Escape') {
       closeSearch();
+      return;
+   }
+
+   // 只在有搜索结果时处理上下键和回车键
+   if (searchResults.value.length === 0) return;
+
+   if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex.value = Math.min(
+         selectedIndex.value + 1,
+         searchResults.value.length - 1
+      );
+   } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex.value = Math.max(selectedIndex.value - 1, 0);
+   } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (
+         selectedIndex.value >= 0 &&
+         selectedIndex.value < searchResults.value.length
+      ) {
+         const result = searchResults.value[selectedIndex.value];
+         if (result) {
+            handleResultClick(result);
+         }
+      }
    }
 };
 
@@ -73,34 +138,36 @@ const handleResultClick = (result: SearchResult) => {
             <div class="w-full max-w-[42rem] mx-4" @click="handleContentClick">
                <!-- 搜索框 -->
                <div
-                  class="bg-accent-700 rounded-xl shadow-2xl overflow-hidden border border-accent-500">
-                  <div
-                     class="flex items-center gap-3 px-6 py-4 border-b border-accent-500">
-                     <Search class="text-2xl text-accent-300 shrink-0" />
+                  class="bg-accent-600 rounded-xl shadow-2xl overflow-hidden border border-accent-500">
+                  <!-- 搜索输入区 -->
+                  <div class="flex items-center gap-3 px-5 py-3 bg-accent-700">
+                     <Search class="text-xl text-accent-300 shrink-0" />
                      <input
                         ref="inputRef"
                         v-model="localQuery"
                         type="text"
-                        placeholder="搜索题目、标签、用户..."
-                        class="flex-1 bg-transparent border-none outline-none text-white text-lg placeholder:text-accent-300"
+                        placeholder="搜索题目、标签、用户、页面..."
+                        class="flex-1 bg-transparent border-none outline-none text-white text-sm placeholder:text-accent-300"
                         @keydown.esc="closeSearch" />
                      <button
                         v-if="localQuery"
-                        class="text-accent-300 hover:text-white transition-colors"
+                        class="text-accent-300 hover:text-white transition-colors p-1"
                         @click="localQuery = ''">
-                        <Close class="text-xl cursor-pointer" />
+                        <Close class="text-base cursor-pointer" />
                      </button>
                   </div>
 
                   <!-- 搜索结果区域 -->
-                  <div class="max-h-[60vh] overflow-y-auto">
+                  <div
+                     ref="resultsContainerRef"
+                     class="max-h-[60vh] overflow-y-auto">
                      <!-- 加载中 -->
                      <div
                         v-if="isSearching"
                         class="px-6 py-12 text-center text-accent-300">
                         <div
-                           class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-accent-300 border-t-transparent"></div>
-                        <p class="mt-4">搜索中...</p>
+                           class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-3"></div>
+                        <p class="text-sm">搜索中...</p>
                      </div>
 
                      <!-- 无搜索内容 -->
@@ -109,63 +176,81 @@ const handleResultClick = (result: SearchResult) => {
                         direction="vertical"
                         align="center"
                         gap="0.5rem"
-                        class="px-6 py-12 text-center text-accent-300">
-                        <Search class="text-5xl mx-auto mb-4 opacity-50" />
-                        <p class="st-font-body-bold">输入关键词开始搜索</p>
-                        <p class="text-sm mt-2 opacity-70">
-                           支持搜索题目、标签、用户等
+                        class="px-6 py-12 text-center">
+                        <Search
+                           class="text-5xl text-accent-400 opacity-40 mb-2" />
+                        <p class="st-font-body-bold text-white text-sm">
+                           输入关键词开始搜索
+                        </p>
+                        <p class="text-xs text-accent-400">
+                           支持搜索题目、用户、标签、页面板块等
                         </p>
                      </StSpace>
 
                      <!-- 无结果 -->
-                     <div
+                     <StSpace
                         v-else-if="!isSearching && searchResults.length === 0"
-                        class="px-6 py-12 text-center text-accent-300">
-                        <p class="st-font-body-bold">未找到相关结果</p>
-                        <p class="text-sm mt-2 opacity-70">
-                           尝试使用其他关键词搜索
+                        direction="vertical"
+                        align="center"
+                        gap="0.5rem"
+                        class="px-6 py-12 text-center">
+                        <div class="text-4xl text-accent-400 opacity-40 mb-2">
+                           ∅
+                        </div>
+                        <p class="st-font-body-bold text-white text-sm">
+                           未找到相关结果
                         </p>
-                     </div>
+                        <p class="text-xs text-accent-400">
+                           尝试使用其他关键词或简化搜索条件
+                        </p>
+                     </StSpace>
 
                      <!-- 搜索结果列表 -->
                      <div v-else class="divide-y divide-accent-500">
                         <StSearchOverlaySearchResultItem
-                           v-for="result in searchResults"
+                           v-for="(result, index) in searchResults"
                            :key="result.id"
                            :result="result"
+                           :is-selected="index === selectedIndex"
+                           data-result-item
                            @click="handleResultClick" />
                      </div>
                   </div>
 
                   <!-- 底部提示 -->
                   <div
-                     class="px-6 py-3 bg-accent-800 border-t border-accent-500 flex items-center justify-between text-xs text-accent-300">
-                     <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-1">
+                     class="px-5 py-2.5 bg-accent-700 border-t border-accent-500 flex items-center justify-between text-xs text-accent-300">
+                     <StSpace gap="1rem" align="center">
+                        <StSpace gap="0.25rem" align="center">
                            <kbd
-                              class="px-2 py-1 bg-accent-700 rounded border border-accent-500">
+                              class="px-1.5 py-0.5 bg-accent-600 rounded border border-accent-500 text-[0.625rem]">
                               ↑
                            </kbd>
                            <kbd
-                              class="px-2 py-1 bg-accent-700 rounded border border-accent-500">
+                              class="px-1.5 py-0.5 bg-accent-600 rounded border border-accent-500 text-[0.625rem]">
                               ↓
                            </kbd>
-                           <span class="ml-1">选择</span>
-                        </div>
-                        <div class="flex items-center gap-1">
+                           <span>导航</span>
+                        </StSpace>
+                        <StSpace gap="0.25rem" align="center">
                            <kbd
-                              class="px-2 py-1 bg-accent-700 rounded border border-accent-500">
+                              class="px-1.5 py-0.5 bg-accent-600 rounded border border-accent-500 text-[0.625rem]">
                               Enter
                            </kbd>
-                           <span class="ml-1">打开</span>
-                        </div>
-                     </div>
-                     <div class="flex items-center gap-1">
-                        <kbd
-                           class="px-2 py-1 bg-accent-700 rounded border border-accent-500">
-                           Esc
-                        </kbd>
-                        <span class="ml-1">关闭</span>
+                           <span>选择</span>
+                        </StSpace>
+                        <StSpace gap="0.25rem" align="center">
+                           <kbd
+                              class="px-1.5 py-0.5 bg-accent-600 rounded border border-accent-500 text-[0.625rem]">
+                              Esc
+                           </kbd>
+                           <span>关闭</span>
+                        </StSpace>
+                     </StSpace>
+                     <div
+                        v-if="searchResults.length > 0"
+                        class="text-accent-400">
+                        共 {{ searchResults.length }} 条
                      </div>
                   </div>
                </div>

@@ -41,13 +41,14 @@ export const useSearch = () => {
       searchQuery.value = query;
 
       try {
-         // TODO: 实现实际的搜索逻辑
-         // const results = await $fetch('/api/search', { query: { q: query } });
-         // searchResults.value = results;
+         const { $trpc } = useNuxtApp();
+         const response = await $trpc.protected.search.search.query({
+            q: query,
+            type: 'all',
+            limit: 20,
+         });
 
-         // 临时模拟数据
-         await new Promise((resolve) => setTimeout(resolve, 300));
-         searchResults.value = [];
+         searchResults.value = response.results;
       } catch (error) {
          console.error('搜索失败:', error);
          searchResults.value = [];
