@@ -14,7 +14,7 @@ await new Promise<void>((resolve) => {
 ws.onmessage = async (event) => {
    const jrtp = new JRTP();
    const message = jrtp.unpack(event.data);
-   console.log('Received message:', message);
+   console.log('[INFO] Received message:', message);
 
    // const buffer: Buffer =
    //    message.results[0].cacheFiles['button-click-increment.png'];

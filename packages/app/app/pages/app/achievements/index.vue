@@ -11,6 +11,13 @@ const { data, pending } = useAsyncData('getUserAchievementsWall', () =>
    $trpc.protected.achievement.getUserAchievementsWall.query()
 );
 
+const isEmpty = computed(() => {
+   const achievedCount = data.value?.achieved.length ?? 0;
+   const inProgressCount = data.value?.inProgress.length ?? 0;
+   const lockedCount = data.value?.locked.length ?? 0;
+   return achievedCount + inProgressCount + lockedCount === 0;
+});
+
 const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
    achieved: '已获得',
    inProgress: '进行中',
@@ -27,6 +34,10 @@ const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
          <h1 class="st-font-hero-bold">成就</h1>
 
          <AchievementListSkeleton v-if="pending" />
+         <StEmptyStatus
+            v-else-if="isEmpty"
+            content="暂无成就"
+            class="!w-[44rem] mt-[10rem]" />
          <StSpace v-else fill-x direction="vertical" class="p-[0.875rem]">
             <StSpace
                v-for="(item, name) in data"

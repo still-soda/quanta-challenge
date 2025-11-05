@@ -13,7 +13,7 @@ const server = serve(
       hostname: '0.0.0.0',
    },
    (info) => {
-      console.log(`Server is running on http://localhost:${info.port}`);
+      console.log(`[INFO] Server is running on http://localhost:${info.port}`);
    }
 );
 injectWebSocket(server);

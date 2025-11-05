@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { StSpace } from '#components';
 import dayjs from 'dayjs';
 
 defineProps<{

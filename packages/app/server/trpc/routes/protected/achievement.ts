@@ -33,12 +33,14 @@ const getCurrentCheckinAchievementProcedure = protectedProcedure.query(
          },
       });
 
-      return {
-         badgeUrl: `/api/static/${achievement?.badgeImage.name}`,
-         name: achievement?.name,
-         description: achievement?.description,
-         progress: achievement?.UserAchievement[0]?.progress || 0,
-      };
+      return achievement
+         ? {
+              badgeUrl: `/api/static/${achievement.badgeImage.name}`,
+              name: achievement.name,
+              description: achievement.description,
+              progress: achievement.UserAchievement[0]?.progress || 0,
+           }
+         : null;
    }
 );
 

@@ -10,6 +10,7 @@ const { $trpc } = useNuxtApp();
 const { data: myRank, pending: loadingMyRank } = useAsyncData('ranking', () =>
    $trpc.protected.rank.getMyGlobalRank.query()
 );
+const diplayedRank = computed(() => (myRank.value === -1 ? '0' : myRank.value));
 </script>
 
 <template>
@@ -47,7 +48,7 @@ const { data: myRank, pending: loadingMyRank } = useAsyncData('ranking', () =>
          fill-x
          center
          class="h-[5.5rem] text-[4rem] text-primary font-family-manrope font-bold leading-[90%]">
-         {{ myRank }}
+         {{ diplayedRank }}
       </StSpace>
 
       <StSkeletonItem

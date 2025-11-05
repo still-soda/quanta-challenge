@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NuxtLink } from '#components';
 import { Share } from '@icon-park/vue-next';
 import type { DefineComponent } from 'vue';
 

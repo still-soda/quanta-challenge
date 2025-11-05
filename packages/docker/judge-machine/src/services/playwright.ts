@@ -118,10 +118,10 @@ export class PlaywrightService extends Singleton {
          this.browsers[browserIndex] = await chromium.launch({
             headless: true,
          });
-         console.log('Playwright browser restarted successfully.');
+         console.log('[INFO] Playwright browser restarted successfully.');
          return true;
       } catch (error) {
-         console.error('Failed to restart Playwright browser:', error);
+         console.error('[ERROR] Failed to restart Playwright browser:', error);
          return false;
       }
    }

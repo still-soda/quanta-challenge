@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Box, Share, TableReport } from '@icon-park/vue-next';
+import { TableReport, TerminationFile } from '@icon-park/vue-next';
 import StackRank from '../_components/StackRank.vue';
 import LinkButton from '../_components/LinkButton.vue';
 
@@ -158,9 +158,16 @@ rule({
          gap="0.75rem"
          align="center"
          justify="center"
-         class="text-accent-400 pb-4">
-         <Box size="2.625rem" />
-         <div class="st-font-body-normal">暂无提交记录</div>
+         class="text-accent-400">
+         <TerminationFile size="2.625rem" />
+         <div class="st-font-body-normal">
+            暂无提交记录
+            <!-- <NuxtLink
+               to="app/problems"
+               class="text-primary cursor-pointer hover:opacity-75 transition-all">
+               去做题
+            </NuxtLink> -->
+         </div>
       </StSpace>
    </StCard>
 </template>

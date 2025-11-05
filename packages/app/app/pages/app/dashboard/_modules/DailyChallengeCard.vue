@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { Calendar, CheckOne, FireTwo, Round } from '@icon-park/vue-next';
+import {
+   Calendar,
+   CalendarThree,
+   CheckOne,
+   FireTwo,
+   Round,
+} from '@icon-park/vue-next';
 import DailyChallengeSkeleton from '../_skeletons/DailyChallengeSkeleton.vue';
 import ProblemCard from '../_components/ProblemCard.vue';
 import CheckinInfoSkeleton from '../_skeletons/CheckinInfoSkeleton.vue';
@@ -11,8 +17,9 @@ export type DailyProblem = Awaited<
    ReturnType<typeof $trpc.public.daily.getProblem.query>
 >;
 
-const { data: dailyProblem } = useAsyncData('daily-problem', () =>
-   $trpc.public.daily.getProblem.query()
+const { data: dailyProblem, error: dailyProblemError } = useAsyncData(
+   'daily-problem',
+   () => $trpc.public.daily.getProblem.query()
 );
 
 const { data: continueCheckinCounts } = useAsyncData(
@@ -75,7 +82,7 @@ const handleCheckin = async () => {
 
 <template>
    <StCard :icon="Calendar" class="h-full" title="每日一题">
-      <StSpace class="w-full h-full mt-5">
+      <StSpace v-if="!dailyProblemError" class="w-full h-full mt-5">
          <StSpace direction="vertical" gap="1rem" class="w-full h-full">
             <StDateIndicator class="w-full" />
             <div class="flex flex-1 min-h-0 overflow-hidden w-full relative">
@@ -84,6 +91,7 @@ const handleCheckin = async () => {
                      <DailyChallengeSkeleton class="absolute" />
                   </template>
                   <a
+                     class="w-full"
                      :href="`/challenge/editor/${dailyProblem!.pid}`"
                      target="_blank">
                      <ProblemCard :problem="dailyProblem!" />
@@ -114,43 +122,64 @@ const handleCheckin = async () => {
                   </span>
                   天
                </StSpace>
+
                <StSpace
                   fill-x
                   direction="vertical"
                   gap="0.75rem"
                   class="p-3 bg-accent-500 rounded-lg">
-                  <StSpace fill-x gap="0.625rem" align="center">
-                     <StImage
-                        width="4rem"
-                        height="4rem"
-                        class="shrink-0 grayscale-100"
-                        :src="trackingAchievement?.badgeUrl ?? ''"
-                        alt="徽章" />
-                     <StSpace direction="vertical" class="flex-1" gap="0.25rem">
-                        <span class="st-font-body-bold text-white">
-                           {{ trackingAchievement?.name ?? '无签到成就' }}
-                        </span>
-                        <span class="st-font-caption text-white line-clamp-2">
-                           {{ trackingAchievement?.description ?? '暂无描述' }}
+                  <template v-if="trackingAchievement">
+                     <StSpace fill-x gap="0.625rem" align="center">
+                        <StImage
+                           width="4rem"
+                           height="4rem"
+                           class="shrink-0 grayscale-100"
+                           :src="trackingAchievement?.badgeUrl ?? ''"
+                           alt="徽章" />
+                        <StSpace
+                           direction="vertical"
+                           class="flex-1"
+                           gap="0.25rem">
+                           <span class="st-font-body-bold text-white">
+                              {{ trackingAchievement?.name ?? '无签到成就' }}
+                           </span>
+                           <span
+                              class="st-font-caption text-white line-clamp-2">
+                              {{
+                                 trackingAchievement?.description ?? '暂无描述'
+                              }}
+                           </span>
+                        </StSpace>
+                     </StSpace>
+                     <StSpace fill-x gap="0.5rem" align="center">
+                        <StSpace
+                           fill-x
+                           class="h-2 bg-accent-400 rounded-full overflow-hidden">
+                           <div
+                              class="h-full bg-primary transition-all duration-300"
+                              :style="{
+                                 width: achievementProgress,
+                              }" />
+                        </StSpace>
+                        <span
+                           class="text-[0.625rem] font-family-manrope text-white">
+                           {{ achievementProgress }}
                         </span>
                      </StSpace>
-                  </StSpace>
-                  <StSpace fill-x gap="0.5rem" align="center">
+                  </template>
+                  <template v-else>
                      <StSpace
+                        align="center"
                         fill-x
-                        class="h-2 bg-accent-400 rounded-full overflow-hidden">
-                        <div
-                           class="h-full bg-primary transition-all duration-300"
-                           :style="{
-                              width: achievementProgress,
-                           }" />
+                        justify="center"
+                        gap="0.5rem">
+                        <div class="st-font-body-normal text-accent-300">
+                           暂无签到成就
+                        </div>
                      </StSpace>
-                     <span
-                        class="text-[0.625rem] font-family-manrope text-white">
-                        {{ achievementProgress }}
-                     </span>
-                  </StSpace>
+                  </template>
                </StSpace>
+
                <StSpace direction="vertical" gap="1rem" class="w-full h-full">
                   <StSpace
                      direction="vertical"
@@ -186,6 +215,18 @@ const handleCheckin = async () => {
                </StSpace>
             </StSkeleton>
          </StSpace>
+      </StSpace>
+
+      <StSpace
+         v-else
+         fill
+         direction="vertical"
+         gap="0.75rem"
+         align="center"
+         justify="center"
+         class="text-accent-400 min-h-[20rem]">
+         <CalendarThree size="2.625rem" />
+         <div class="st-font-body-normal">每日一题未解锁</div>
       </StSpace>
    </StCard>
 </template>

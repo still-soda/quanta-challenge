@@ -17,7 +17,7 @@ const {
 } = useRegister();
 
 onRegisterSuccess(() => {
-   navigateTo('/app/dashboard', { replace: true });
+   window.location.href = '/app/dashboard';
 });
 
 const message = useMessage();

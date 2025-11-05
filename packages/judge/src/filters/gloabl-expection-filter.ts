@@ -2,7 +2,7 @@ import type { ErrorHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
 export const globalExpectionFilter: ErrorHandler = (err) => {
-   console.log(err.cause, err.message);
+   console.log('[ERROR]', err.cause, err.message);
    if (err instanceof HTTPException) {
       return err.getResponse();
    }

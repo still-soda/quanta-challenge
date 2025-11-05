@@ -7,6 +7,7 @@
       "dev": "nuxt dev --host",
       "generate": "nuxt generate",
       "preview": "nuxt preview",
+      "prod": "node .output/server/index.mjs",
       "test": "vitest",
       "postinstall": "nuxt prepare",
       "prisma:migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",

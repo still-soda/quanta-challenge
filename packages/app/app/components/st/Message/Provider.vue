@@ -43,12 +43,24 @@ const addMessage = (options: AddMessageOptions): MessageOperation => {
 provide(ADD_MESSAGE_KEY, addMessage);
 
 onMounted(() => {
-   Object.defineProperty(globalThis, ADD_MESSAGE_OUTSIDE_VUE_KEY, {
-      value: addMessage,
-      writable: false,
-      configurable: false,
-      enumerable: false,
-   });
+   if (!Object.hasOwn(globalThis, ADD_MESSAGE_OUTSIDE_VUE_KEY)) {
+      Object.defineProperty(globalThis, ADD_MESSAGE_OUTSIDE_VUE_KEY, {
+         value: addMessage,
+         writable: false,
+         configurable: false,
+         enumerable: false,
+      });
+   }
+});
+
+onUnmounted(() => {
+   const globalThis = window as any;
+   if (
+      Object.hasOwn(globalThis, ADD_MESSAGE_OUTSIDE_VUE_KEY) &&
+      globalThis[ADD_MESSAGE_OUTSIDE_VUE_KEY] === addMessage
+   ) {
+      delete globalThis[ADD_MESSAGE_OUTSIDE_VUE_KEY];
+   }
 });
 </script>
 

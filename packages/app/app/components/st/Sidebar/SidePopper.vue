@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-   <StPopover placement="right">
+   <StPopover placement="right" :z-index="10000">
       <template #popper="{ triggered }">
          <div
             class="px-3 py-2 rounded-lg bg-accent-600 text-white transition-all text-nowrap"

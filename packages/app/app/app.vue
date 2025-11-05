@@ -8,7 +8,8 @@ onMounted(() => {
 </script>
 
 <template>
-   <div class="bg-background text-white font-family-sans text-base">
+   <div
+      class="bg-background text-white font-family-sans text-base min-w-[1440px]">
       <NuxtPage />
    </div>
 </template>

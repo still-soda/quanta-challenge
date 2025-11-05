@@ -123,7 +123,7 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
             <StEmptyStatus
                v-if="!problems?.length"
                content="暂无题目"
-               class="!w-[61.75rem] pb-32" />
+               class="!w-[61.75rem] pb-32 mt-[5rem]" />
             <StGrid v-else fill :cols="4" gap="1.25rem">
                <a
                   v-for="(problem, idx) in problems"

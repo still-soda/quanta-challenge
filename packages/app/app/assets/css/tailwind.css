@@ -28,6 +28,7 @@
    --font-family-serif: 'Microsoft YaHei', serif;
    --font-family-mono: 'Microsoft YaHei', monospace;
    --font-family-manrope: 'Manrope', sans-serif;
+   --font-family-name: 'Microsoft YaHei', 'Manrope', sans-serif;
    --font-family-fira-code: 'FiraCode Nerd Font Mono', 'Microsoft YaHei',
       monospace;
    --font-size-base: 16px;

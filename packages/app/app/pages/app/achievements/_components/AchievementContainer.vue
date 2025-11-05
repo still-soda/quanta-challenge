@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { StImage, StSpace } from '#components';
 import { Lock } from '@icon-park/vue-next';
 
 defineProps<{

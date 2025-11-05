@@ -29,7 +29,8 @@ onBeforeMount(() => {
 
 const redirect = useQuery<string>('redirect');
 onLoginSuccess(() => {
-   navigateTo(redirect.value ?? '/app/dashboard', { replace: true });
+   // navigateTo(redirect.value ?? '/app/dashboard', { replace: true });
+   window.location.href = redirect.value ?? '/app/dashboard';
 });
 
 const rules: IRule[] = [

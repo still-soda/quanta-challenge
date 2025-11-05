@@ -45,7 +45,7 @@ export const initTaskResultHandlers = () => {
    EventEmitterService.instance.on<ITaskCompletedPayload>(
       EventType.TASK_COMPLETED,
       async ({ job, result }) => {
-         console.log(`Task completed for job ${job.id}:`, result);
+         console.log(`[INFO] Task completed for job ${job.id}:`, result);
          const status =
             result.type === 'error'
                ? 'invalid'

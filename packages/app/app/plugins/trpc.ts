@@ -114,13 +114,14 @@ const updateTokensInCookies = (
  * 处理 token 刷新后的 SSR 逻辑
  */
 const handleSSRTokenRefresh = (
+   event: H3Event,
    cookies: Record<string, string>,
    accessToken: string,
    refreshToken: string,
    options: any
 ): void => {
    // 设置 Set-Cookie headers 传递给客户端
-   setSSRCookies(useRequestEvent()!, accessToken, refreshToken);
+   setSSRCookies(event, accessToken, refreshToken);
 
    // 更新 cookies 对象（cookies 和 ssrCookies 是同一个引用）
    updateTokensInCookies(cookies, accessToken, refreshToken);
@@ -141,9 +142,12 @@ const showServerError = (msg: string): void => {
 /**
  * 重定向到登录页
  */
-const redirectToLogin = (isServer: boolean): void => {
-   if (isServer) {
-      const event = useRequestEvent()!;
+const redirectToLogin = (
+   isServer: boolean,
+   event?: H3Event,
+   currentPath?: string
+): void => {
+   if (isServer && event) {
       event.node.res.writeHead(302, {
          Location:
             '/auth/login?redirect=' +
@@ -152,9 +156,11 @@ const redirectToLogin = (isServer: boolean): void => {
       event.node.res.end();
       return;
    }
-   location.replace(
-      '/auth/login?redirect=' + encodeURIComponent(useRoute().fullPath)
-   );
+   if (!isServer) {
+      location.replace(
+         '/auth/login?redirect=' + encodeURIComponent(currentPath || '/')
+      );
+   }
 };
 
 /**
@@ -164,7 +170,9 @@ const handleUnauthorized = async (
    url: RequestInfo | URL,
    options: any,
    isServer: boolean,
-   cookies: Record<string, string>
+   cookies: Record<string, string>,
+   event?: H3Event,
+   currentPath?: string
 ): Promise<Response> => {
    try {
       // 刷新 token
@@ -174,8 +182,14 @@ const handleUnauthorized = async (
       );
 
       // SSR 环境需要手动更新 cookies 和 headers
-      if (isServer) {
-         handleSSRTokenRefresh(cookies, accessToken, refreshToken, options);
+      if (isServer && event) {
+         handleSSRTokenRefresh(
+            event,
+            cookies,
+            accessToken,
+            refreshToken,
+            options
+         );
       }
       // 客户端环境：cookie 已通过服务端 setCookie 自动设置到浏览器
 
@@ -183,13 +197,17 @@ const handleUnauthorized = async (
       return await fetch(url, options);
    } catch (err) {
       // 重定向到登录页
-      redirectToLogin(isServer);
+      redirectToLogin(isServer, event, currentPath);
       throw err;
    }
 };
 
 export default defineNuxtPlugin(() => {
    const authStore = useAuthStore();
+
+   // 在插件顶层获取 Nuxt composables
+   const event = import.meta.server ? useRequestEvent() : undefined;
+   const route = import.meta.client ? useRoute() : undefined;
 
    // SSR 阶段提前读取 Cookie 并解析
    let ssrCookies: Record<string, string> = {};
@@ -251,7 +269,9 @@ export default defineNuxtPlugin(() => {
                      url as RequestInfo,
                      options,
                      isServer,
-                     cookies
+                     cookies,
+                     event,
+                     route?.fullPath
                   );
                }
 

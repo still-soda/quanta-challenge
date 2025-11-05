@@ -6,16 +6,16 @@ import { destroyServices, initServices } from './services/index.js';
 await initMq();
 await initServices();
 
-const server = serve(
-   {
-      fetch: app.fetch,
-      port: Number(process.env.PORT ?? 3000),
-   },
-   (info) => {
-      console.log(`Server is running on http://localhost:${info.port}`);
-   }
-);
+const port = Number(process.env.PORT ?? 3000);
 
-server.on('close', async () => {
-   await destroyServices();
-});
+try {
+   serve({ fetch: app.fetch, port })
+      .once('close', destroyServices)
+      .once('listening', () => {
+         console.log(`[INFO] Server is running on http://localhost:${port}`);
+      });
+} catch (error) {
+   console.error(
+      `服务器启动失败，请检查 [:${port}] 端口是否被占用\n[ERROR] ${error}`
+   );
+}

@@ -57,7 +57,7 @@ const correctRate = computed(() => {
                <StSpace direction="vertical" gap="0.5rem" align="center">
                   <div class="st-font-body-normal text-accent-200">得分</div>
                   <div class="leading-[90%] font-family-manrope font-bold">
-                     {{ commitStatistic?.score }}
+                     {{ commitStatistic?.score ?? '--' }}
                   </div>
                </StSpace>
                <StSpace direction="vertical" gap="0.5rem" align="center">
@@ -70,7 +70,7 @@ const correctRate = computed(() => {
                <StSpace direction="vertical" gap="0.5rem" align="center">
                   <div class="st-font-body-normal text-accent-200">作答数</div>
                   <div class="leading-[90%] font-family-manrope font-bold">
-                     {{ commitStatistic?.passCount }}
+                     {{ commitStatistic?.passCount ?? '--' }}
                   </div>
                </StSpace>
             </template>

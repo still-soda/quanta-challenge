@@ -3,6 +3,10 @@ import { Box, FiveStarBadge } from '@icon-park/vue-next';
 import dayjs from 'dayjs';
 import LinkButton from '../_components/LinkButton.vue';
 
+defineProps<{
+   status?: 'dashboard' | 'personal-space';
+}>();
+
 const { $trpc } = useNuxtApp();
 
 const { data: achievements, pending: loading } = useAsyncData(
@@ -34,10 +38,13 @@ onMounted(() => {
 <template>
    <StCard
       :icon="FiveStarBadge"
-      title="徽章墙"
+      :title="status === 'personal-space' ? '我的成就' : '徽章墙'"
       class="w-full h-full !pb-0 overflow-hidden">
       <template #header-right>
-         <LinkButton to="/app/achievements" description="查看成就" />
+         <LinkButton
+            v-if="status !== 'personal-space'"
+            to="/app/achievements"
+            description="查看成就" />
       </template>
       <div class="w-full h-5"></div>
       <div

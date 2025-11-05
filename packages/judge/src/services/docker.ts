@@ -36,13 +36,13 @@ export class DockerService extends Singleton {
                CheckDuplicate: true,
                Driver: 'bridge',
             });
-            console.log('Created network:', network.id);
+            console.log('[INFO] Created network:', network.id);
             return;
          }
 
-         console.log(`Network ${this.networkName} already exists`);
+         console.log(`[INFO] Network ${this.networkName} already exists`);
       } catch (error) {
-         console.error('Error creating network:', error);
+         console.error('[ERROR] Error creating network:', error);
       }
 
       try {
@@ -50,10 +50,13 @@ export class DockerService extends Singleton {
          this.judgeMachineWs = result.ws;
          this.judgeMachineContainer = result.container;
 
-         console.log('Judge machine container started:', result.containerId);
+         console.log(
+            '[INFO] Judge machine container started:',
+            result.containerId
+         );
       } catch (error: any) {
          throw new Error(
-            `Failed to start Playwright container: ${error.message}`
+            `[ERROR] Failed to start Playwright container: ${error.message}`
          );
       }
    }
@@ -149,7 +152,7 @@ export class DockerService extends Singleton {
       })();
 
       if (existContainer) {
-         console.log(`Using existing container with image ${imageName}`);
+         console.log(`[INFO] Using existing container with image ${imageName}`);
          container = this.docker.getContainer(
             containerList.find((c) => c.Image === imageName)!.Id
          );

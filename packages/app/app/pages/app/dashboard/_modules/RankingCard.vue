@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { Ranking, TrendingDown, TrendingUp } from '@icon-park/vue-next';
-import MoreOptions from './MoreOptions.vue';
+import { Lock, Ranking, TrendingDown, TrendingUp } from '@icon-park/vue-next';
 import RankingSkeleton from '../_skeletons/RankingSkeleton.vue';
 import LinkButton from '../_components/LinkButton.vue';
 
@@ -8,9 +7,11 @@ type Ranking = { from: number; to: number; count: number };
 
 const { $trpc } = useNuxtApp();
 
-const { data: globalRankData } = useAsyncData('global-rank-data', () =>
-   $trpc.protected.rank.getMyGlobalRankStatistic.query()
+const { data: globalRankData, error } = await useAsyncData(
+   'global-rank-data',
+   () => $trpc.protected.rank.getMyGlobalRankStatistic.query()
 );
+
 const statistics = computed(() => {
    if (!globalRankData.value) {
       return { score: 0, rank: 0, beatRatio: 0 };
@@ -27,7 +28,9 @@ const { data: trends } = useAsyncData('my-ranking-trends', () =>
    $trpc.protected.rank.getMyRankingTrends.query()
 );
 
-const loading = computed(() => !rankings.value || !trends.value);
+const loading = computed(
+   () => !error.value && (!rankings.value || !trends.value)
+);
 
 const beatRadio = computed(() => {
    if (!statistics.value) return '--';
@@ -53,6 +56,19 @@ const increaseRatioText = computed(() => {
          <LinkButton description="查看排行榜" to="/app/rankings" />
       </template>
       <RankingSkeleton v-if="loading" />
+
+      <StSpace
+         v-else-if="globalRankData?.selfRanking.rank === -1"
+         fill
+         direction="vertical"
+         gap="0.75rem"
+         align="center"
+         justify="center"
+         class="text-accent-400">
+         <Lock size="2.625rem" />
+         <div class="st-font-body-normal">排名未解锁</div>
+      </StSpace>
+
       <StSpace v-else fill direction="vertical" gap="1.25rem" class="mt-7">
          <StSpace fill-x direction="vertical" gap="1rem">
             <StSpace gap="0.25rem">

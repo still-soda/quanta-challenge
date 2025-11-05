@@ -2,6 +2,9 @@
    "name": "quanta-challenge",
    "module": "index.ts",
    "type": "module",
+   "scripts": {
+      "migrate": "sh ./scripts/migrate.sh"
+   },
    "devDependencies": {
       "@types/bun": "latest"
    },

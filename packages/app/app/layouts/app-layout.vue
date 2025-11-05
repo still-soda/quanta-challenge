@@ -19,13 +19,13 @@ const handleMyPublish = () => {
 </script>
 
 <template>
-   <div class="w-full flex min-w-[1280px]">
+   <div class="w-full flex min-w-[1440px]">
       <StSidebar class="w-[9.3125rem] !fixed left-0 top-0 h-screen" />
       <div class="w-[9.3125rem]"></div>
       <main class="flex flex-col flex-1">
          <StHeader
             mode="gradient"
-            class="fixed top-0 !w-[calc(100vw-9.3125rem)]">
+            class="fixed top-0 !w-[calc(100vw-9.3125rem)] !min-w-[calc(1440px-9.3125rem)]">
             <template #left>
                <StSpace gap="0.75rem" align="center">
                   <StHeaderButton text="搜索">

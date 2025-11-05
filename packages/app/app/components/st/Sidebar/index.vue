@@ -16,7 +16,8 @@ const role = computed(() => authStore.user?.role ?? 'USER');
 </script>
 
 <template>
-   <aside class="relative px-8 py-12 flex justify-center w-fit">
+   <aside
+      class="relative px-8 py-12 flex justify-center w-fit bg-background z-[9999]">
       <Logo class="absolute top-8" />
       <StSpace
          direction="vertical"

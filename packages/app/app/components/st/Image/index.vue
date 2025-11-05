@@ -10,7 +10,7 @@ const props = defineProps<{
    lazy?: boolean;
 }>();
 
-const errorLoading = ref(false);
+const errorLoading = ref(props.src === '' ? true : false);
 
 const style = computed(() => {
    return {
@@ -43,13 +43,15 @@ watch(
          'object-scale-down': object === 'scale-down',
       }"
       :style="style"
-      @error="errorLoading = true" />
-   <slot v-else name="fallback">
+      @error="errorLoading = true"
+      v-bind="$attrs" />
+   <slot v-else name="fallback" :style>
       <StSpace
          fill
          center
          class="rounded-lg bg-accent-500 text-accent-400"
-         :style="style">
+         :style="style"
+         v-bind="$attrs">
          <ErrorPicture size="2rem" />
       </StSpace>
    </slot>

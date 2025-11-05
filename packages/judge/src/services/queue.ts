@@ -35,7 +35,7 @@ export class QueueService extends Singleton {
          const worker = new Worker(name, processor, { connection: this.redis });
 
          worker.on('completed', (job, result) => {
-            console.log(`Job ${job.id} completed successfully.`);
+            console.log(`[INFO] Job ${job.id} completed successfully.`);
             EventEmitterService.instance.emit(EventType.TASK_COMPLETED, {
                job,
                result,
