@@ -53,8 +53,8 @@ export class AchievementObserver {
       private _dirtyQueries = new Set<string>(),
       private _queryCache = new LRUMap<string, any>(this._maxCacheSize),
       private _parser = new Parser(),
-      // field path -> loader id -> achievement id
-      private _depTree = new Map<string, Map<number, number>>(),
+      // field path -> loader id -> achievement ids
+      private _depTree = new Map<string, Map<number, Set<number>>>(),
       private _emitter = new EventEmitter<AchivementObserverEvent>(),
       private _injectors = new Set<AchievementVarsInjector>()
    ) {
@@ -131,8 +131,10 @@ export class AchievementObserver {
 
             const loaderMap = this._depTree.get(pathToCheck);
             if (loaderMap) {
-               loaderMap.forEach((achId) => {
-                  this._checkAchievement(achId);
+               loaderMap.forEach((achIds) => {
+                  achIds.forEach((achId) => {
+                     this._checkAchievement(achId);
+                  });
                });
             }
 
@@ -151,8 +153,10 @@ export class AchievementObserver {
 
          const loaderMap = this._depTree.get(path);
          if (loaderMap) {
-            loaderMap.forEach((achId) => {
-               this._checkAchievement(achId, injectVars);
+            loaderMap.forEach((achIds) => {
+               achIds.forEach((achId) => {
+                  this._checkAchievement(achId, injectVars);
+               });
             });
          }
       });
@@ -317,18 +321,28 @@ export class AchievementObserver {
             columnListSegments.forEach(([, table, field]) => {
                const path = `${table}.${field}`;
 
+               // Add to full path (table.field)
                const loaderMapFullPath =
                   this._depTree.get(path) ??
                   this._depTree.set(path, new Map()).get(path)!;
-               loaderMapFullPath.set(loader.id, ach.id);
+               const achIdsFullPath =
+                  loaderMapFullPath.get(loader.id) ??
+                  loaderMapFullPath.set(loader.id, new Set()).get(loader.id)!;
+               achIdsFullPath.add(ach.id);
 
+               // Add to table only
                const loaderMapTable =
                   this._depTree.get(table) ??
                   this._depTree.set(table, new Map()).get(table)!;
-               loaderMapTable.set(loader.id, ach.id);
+               const achIdsTable =
+                  loaderMapTable.get(loader.id) ??
+                  loaderMapTable.set(loader.id, new Set()).get(loader.id)!;
+               achIdsTable.add(ach.id);
             });
          });
       });
+
+      console.log('[INFO] rebuild dep tree', this._depTree);
 
       this._emitter.emit('rebuild');
    }
@@ -368,6 +382,7 @@ export class AchievementObserver {
                      },
                   },
                });
+
             for (const preAch of preAchievements) {
                const ua = preAch.preAchievement.UserAchievement[0];
                if (!ua || ua.progress < 1) {
@@ -481,6 +496,14 @@ export class AchievementObserver {
                  achieved: false,
                  progress: 0,
               };
+
+         console.log(
+            '[INFO] achievement update',
+            achievementId,
+            result,
+            userId,
+            injectVars
+         );
          this._emitter.emit('check', achievementId, result, userId, injectVars);
          return result;
       } catch (error) {

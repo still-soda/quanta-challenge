@@ -226,7 +226,7 @@ const loadGlobalRankings = async () => {
    const redis = useRedis();
    const rankingKey = `global:rankings`;
    const rankData = await prisma.userStatistic.findMany({
-      where: { score: { gt: 0 } },
+      where: { score: { gte: 0 } },
       select: { userId: true, score: true },
    });
 

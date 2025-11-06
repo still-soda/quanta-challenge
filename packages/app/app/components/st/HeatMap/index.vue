@@ -64,7 +64,9 @@ const PopperContent = (props: {
       <div
          class={[
             'bg-accent-700 p-2 text-white rounded-md transition-all',
-            triggered ? 'translate-0 scale-100' : 'translate-y-2 scale-90',
+            triggered
+               ? 'translate-0 scale-100 opacity-100'
+               : 'translate-y-2 scale-90 opacity-0',
          ]}>
          <div class='st-font-body-normal mb-1 flex items-center gap-1 text-white/60'>
             <Calendar />

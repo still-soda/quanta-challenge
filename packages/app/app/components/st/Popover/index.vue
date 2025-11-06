@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { VNode } from 'vue';
 import { usePopper, type IUsePopperOptions } from '~/composables/use-popper';
 
 const props = defineProps<{

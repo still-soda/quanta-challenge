@@ -72,12 +72,12 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
 
 <template>
    <StSpace
-      fill-y
+      fill
       direction="vertical"
       align="center"
       gap="0"
-      class="overflow-scroll hide-scrollbar">
-      <StSpace fill-y direction="vertical" class="mt-6">
+      class="hide-scrollbar overflow-auto">
+      <StSpace fill-y direction="vertical" class="mt-6 w-[65rem]">
          <h1 class="text-[2.5rem] font-bold text-white">题目</h1>
          <StSkeleton :loading="tagsStatus === 'pending'" class="mt-4">
             <template #loading>

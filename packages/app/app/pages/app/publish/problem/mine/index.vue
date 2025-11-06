@@ -99,7 +99,7 @@ const showEmptyStatus = computed(() => {
          <Divider />
          <StEmptyStatus content="暂无发布内容" class="pb-32 mt-24" />
       </StSpace>
-      <StSpace v-else fill-y direction="vertical" class="mt-6">
+      <StSpace v-else fill-y direction="vertical" class="mt-6 w-[65rem]">
          <h1 class="text-[2.5rem] font-bold text-white">我的发布</h1>
          <StSkeleton :loading="!tags" class="mt-4">
             <template #loading>

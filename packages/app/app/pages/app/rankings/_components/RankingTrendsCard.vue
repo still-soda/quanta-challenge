@@ -9,7 +9,7 @@ const { data: trends, pending } = useAsyncData<number[]>(
 );
 
 const increaseRatio = computed(() => {
-   if (!trends.value) return 0;
+   if (!trends.value || trends.value.length < 2) return 0;
    const [lastRank, currRank] = trends.value.slice(-2) as [number, number];
    const delta = lastRank - currRank;
    const ratio = (delta / lastRank) * 100;

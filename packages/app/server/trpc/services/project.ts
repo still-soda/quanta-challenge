@@ -132,13 +132,16 @@ const fork = async (options: IForkProjectOptions) => {
    const doTransaction = async (tx: Tx) => {
       // 创建新项目，返回项目ID
       const newProjectResult = await tx.$queryRaw<{ pid: string }[]>`
-         INSERT INTO "Project" (isTemplate, name, ownerId, problemId)
+         INSERT INTO projects (pid, "isTemplate", name, "ownerId", "problemId", "createdAt", "updatedAt")
          SELECT 
-            COALESCE(${options.isTemplate}, isTemplate), 
+            gen_random_uuid(),
+            COALESCE(${options.isTemplate}, "isTemplate"), 
             COALESCE(${options.projectName}, 'Project-' || EXTRACT(EPOCH FROM NOW())), 
             ${options.userId}, 
-            COALESCE(${options.problemId}, problemId)
-         FROM "Project"
+            COALESCE(${options.problemId}, "problemId"),
+            NOW(),
+            NOW()
+         FROM projects
          WHERE pid = ${options.projectId}
          RETURNING pid
       `;
@@ -169,17 +172,20 @@ const fork = async (options: IForkProjectOptions) => {
 
       // 克隆虚拟文件到新文件系统
       await tx.$executeRaw`
-         INSERT INTO "VirtualFile" (path, content, ownerId, fileSystemFsid)
+         INSERT INTO "virtual_files" (vid, path, content, "ownerId", "fileSystemFsid", "createdAt", "updatedAt")
          SELECT 
+            gen_random_uuid() AS vid,
             path, 
             content, 
             ${options.userId}, 
-            ${newFileSystemId}
-         FROM "VirtualFile"
-         WHERE fileSystemFsid = (
+            ${newFileSystemId},
+            NOW(),
+            NOW()
+         FROM "virtual_files"
+         WHERE "fileSystemFsid" = (
             SELECT fsid
-            FROM "FileSystem"
-            WHERE projectId = ${options.projectId}
+            FROM "file_systems"
+            WHERE "projectId" = ${options.projectId}
          )
       `;
       const vids = await tx.virtualFiles.findMany({

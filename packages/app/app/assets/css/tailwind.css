@@ -54,6 +54,12 @@
    }
 }
 
+html {
+   width: 100vw;
+   height: 100vh;
+   overflow-x: hidden;
+}
+
 body {
    @apply bg-background font-family-sans;
 }

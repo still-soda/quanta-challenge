@@ -86,12 +86,12 @@ const authStore = useAuthStore();
       <StSpace
          direction="vertical"
          gap="0.75rem"
-         class="w-[42.625rem] p-[0.875rem] mt-[2rem] bg-accent-600 rounded-[1rem] relative">
+         class="w-[38.625rem] p-[0.875rem] mt-[2rem] bg-accent-600 rounded-[1rem] relative">
          <StSpace fill-x direction="vertical">
             <StImage
                :src="DEFAULT_SPACE_URL"
                height="13rem"
-               width="40.875rem"
+               width="36.875rem"
                class="rounded-[0.5rem] object-top absolute"
                object="cover" />
             <StSpace

@@ -41,7 +41,8 @@ const increaseRatio = computed(() => {
    if (!trends.value) return 0;
    const [lastRank, currRank] = trends.value.slice(-2) as [number, number];
    const delta = lastRank - currRank;
-   return (delta / lastRank) * 100;
+   const ratio = (delta / lastRank) * 100;
+   return isNaN(ratio) ? 0 : ratio;
 });
 
 const increaseRatioText = computed(() => {

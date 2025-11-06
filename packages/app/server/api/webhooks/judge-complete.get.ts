@@ -49,17 +49,42 @@ const updateUserStatistic = async (
          WHERE type = 'judge'
            AND "userId" = ${userId}
       )
-      UPDATE user_statistics
-      SET 
-         "correctRate" = CASE 
+      INSERT INTO user_statistics ("userId", "correctRate", "passCount", score, "createdAt", "updatedAt")
+      SELECT 
+         ${userId},
+         CASE 
             WHEN stats.total_count = 0 THEN 0
             ELSE ROUND((stats.pass_count::decimal / stats.total_count) * 100, 2)
          END,
-         "passCount" = stats.pass_problems_count,
-         "updatedAt" = NOW(),
-         score = user_statistics.score + ${scoreIncreatment}
+         stats.pass_problems_count,
+         ${scoreIncreatment},
+         NOW(),
+         NOW()
       FROM stats
-      WHERE user_statistics."userId" = ${userId};
+      ON CONFLICT ("userId") 
+      DO UPDATE SET 
+         "correctRate" = CASE 
+            WHEN (SELECT COUNT(*) FROM judge_records WHERE type = 'judge' AND "userId" = ${userId}) = 0 THEN 0
+            ELSE ROUND(
+               (SELECT COUNT(*) FILTER (WHERE result = 'success')::decimal 
+                FROM judge_records 
+                WHERE type = 'judge' AND "userId" = ${userId}) 
+               / 
+               (SELECT COUNT(*)::decimal 
+                FROM judge_records 
+                WHERE type = 'judge' AND "userId" = ${userId}) 
+               * 100, 2
+            )
+         END,
+         "passCount" = (
+            SELECT COUNT(DISTINCT "problemId") 
+            FROM judge_records 
+            WHERE type = 'judge' 
+              AND "userId" = ${userId} 
+              AND result = 'success'
+         ),
+         "updatedAt" = NOW(),
+         score = user_statistics.score + ${scoreIncreatment};
    `;
 
    const affectedFields = [
