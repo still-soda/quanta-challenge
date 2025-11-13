@@ -18,13 +18,31 @@ const onFileOrFolderClick = ({ path }: { path: string }) => {
    selectedPath.value = path;
 };
 
-defineEmits(['addFile', 'addFolder']);
+const emits = defineEmits(['addFile', 'addFolder', 'moveItem']);
+
 const Operation: Component = (_, { slots }) => {
    return (
       <div class='cursor-pointer hover:bg-accent-500/50 transition-colors p-1 rounded-sm'>
          {slots.default?.()}
       </div>
    );
+};
+
+// 处理拖拽移动
+const handleDrop = (
+   targetFolder: IFileSystemItem,
+   draggedItem: IFileSystemItem
+) => {
+   if (!targetFolder || !draggedItem) return;
+
+   // 构建新路径
+   const targetPath = targetFolder.path.endsWith('/')
+      ? targetFolder.path.slice(0, -1)
+      : targetFolder.path;
+   const newPath = `${targetPath}/${draggedItem.name}`;
+
+   // 触发移动事件
+   emits('moveItem', draggedItem.path, newPath);
 };
 </script>
 
@@ -63,6 +81,7 @@ const Operation: Component = (_, { slots }) => {
                   class="absolute top-0 left-0"
                   @contextmenu.prevent
                   @file-or-folder-click="onFileOrFolderClick"
+                  @drop="handleDrop"
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
                   :current-file-path="selectedPath"

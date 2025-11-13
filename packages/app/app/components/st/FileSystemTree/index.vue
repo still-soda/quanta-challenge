@@ -20,7 +20,13 @@ const sortedDirectory = computed(() => {
    });
 });
 
-const emits = defineEmits(['file-or-folder-click']);
+const emits = defineEmits<{
+   'file-or-folder-click': [item: IFileSystemItem];
+   'drag-start': [item: IFileSystemItem];
+   'drag-end': [];
+   drop: [targetFolder: IFileSystemItem, draggedItem: IFileSystemItem];
+}>();
+
 const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
    if (fileOrFolder.suspense) {
       if (fileOrFolder.type === 'folder' && props.dirLoader) {
@@ -42,6 +48,33 @@ const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
    }
    emits('file-or-folder-click', fileOrFolder);
 };
+
+// 拖拽状态管理
+const draggedItem = ref<IFileSystemItem | null>(null);
+
+const handleDragStart = (item: IFileSystemItem) => {
+   draggedItem.value = item;
+   emits('drag-start', item);
+};
+
+const handleDragEnd = () => {
+   draggedItem.value = null;
+   emits('drag-end');
+};
+
+const handleDrop = (
+   targetFolder: IFileSystemItem,
+   _draggedItem: IFileSystemItem | null
+) => {
+   if (!draggedItem.value) return;
+
+   // 防止将文件夹拖到自己或自己的子文件夹中
+   if (draggedItem.value.path === targetFolder.path) return;
+   if (targetFolder.path.startsWith(draggedItem.value.path + '/')) return;
+
+   emits('drop', targetFolder, draggedItem.value);
+   draggedItem.value = null;
+};
 </script>
 
 <template>
@@ -50,6 +83,8 @@ const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
          <StFileSystemTreeFileItem
             v-if="item.type === 'file'"
             @click="handleFileOrFolderClick(item)"
+            @drag-start="handleDragStart"
+            @drag-end="handleDragEnd"
             :file="item"
             :selected="props.currentFilePath === item.path"
             :deep="deep ?? 0" />
@@ -59,7 +94,10 @@ const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
             :folder="item"
             :current-file-path="props.currentFilePath"
             :deep="deep ?? 0"
-            @file-or-folder-click="handleFileOrFolderClick" />
+            @file-or-folder-click="handleFileOrFolderClick"
+            @drag-start="handleDragStart"
+            @drag-end="handleDragEnd"
+            @drop="handleDrop" />
       </div>
    </div>
 </template>

@@ -180,11 +180,20 @@ const { data: problem } = await useAsyncData(
 const appBaseUrl = useRuntimeConfig().public.appBaseUrl;
 
 // command for right-click menu
-useCommands({
+const { operator } = useCommands({
    runCommand,
    getWebContainerInstance: getInstance,
    fsTree,
 });
+
+// 处理拖拽移动
+const handleMoveItem = async (oldPath: string, newPath: string) => {
+   try {
+      await operator.moveItem(oldPath, newPath);
+   } catch (error) {
+      console.error('Failed to move item:', error);
+   }
+};
 
 // seo enhancement
 useSeoMeta({
@@ -217,7 +226,8 @@ useSeoMeta({
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
                   :fs-tree="fsTree"
-                  v-model:selected-path="selectedPath" />
+                  v-model:selected-path="selectedPath"
+                  @move-item="handleMoveItem" />
             </template>
             <template #end>
                <StSplitPanel

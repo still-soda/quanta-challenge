@@ -9,6 +9,11 @@ const props = defineProps<{
    selected?: boolean;
 }>();
 
+const emits = defineEmits<{
+   dragStart: [item: IFileSystemItem];
+   dragEnd: [];
+}>();
+
 const FileIcon = () => {
    const name = props.file.name;
    const segments = name.split('.');
@@ -22,15 +27,28 @@ const FileIcon = () => {
    }
    return <FileCode theme='filled' size='1rem' />;
 };
+
+const handleDragStart = (e: DragEvent) => {
+   e.dataTransfer!.effectAllowed = 'move';
+   e.dataTransfer!.setData('text/plain', props.file.path);
+   emits('dragStart', props.file);
+};
+
+const handleDragEnd = () => {
+   emits('dragEnd');
+};
 </script>
 
 <template>
    <div
+      draggable="true"
       data-type="file"
       :data-path="props.file.path"
       :style="{ paddingLeft: `${props.deep * 1 + 0.5}rem` }"
-      class="flex items-center gap-1 font-family-fira-code min-w-fit w-full py-1 px-2 hover:cursor-pointer hover:bg-accent-600"
-      :class="{ 'bg-accent-600': props.selected }">
+      class="flex items-center gap-1 font-family-fira-code min-w-fit w-full py-1 px-2 hover:cursor-pointer hover:bg-accent-600 transition-colors"
+      :class="{ 'bg-accent-600': props.selected }"
+      @dragstart="handleDragStart"
+      @dragend="handleDragEnd">
       <FileIcon class="pointer-events-none" />
       <div class="pointer-events-none text-sm text-nowrap whitespace-nowrap">
          {{ file.name }}
