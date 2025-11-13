@@ -15,7 +15,7 @@ const props = defineProps<{
          gap="1.5rem"
          align="center"
          class="text-accent-300">
-         <component :is="icon ?? Box" size="4rem" />
+         <component :is="icon ?? Box" size="4rem" stroke-width="2px" />
          <div class="text-center text-muted">{{ props.content }}</div>
       </StSpace>
    </StSpace>

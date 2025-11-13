@@ -8,6 +8,7 @@ import PreviewPanel from './_modules/PreviewPanel.vue';
 import { useWebContainer } from '../../_composables/use-web-container';
 import DetailWindow from './_components/DetailWindow.vue';
 import CommitModal from './_components/CommitModal.vue';
+import { useCommands } from '../../_composables/use-commands';
 
 const props = defineProps<{ id: number }>();
 
@@ -178,6 +179,14 @@ const { data: problem } = await useAsyncData(
 
 const appBaseUrl = useRuntimeConfig().public.appBaseUrl;
 
+// command for right-click menu
+useCommands({
+   runCommand,
+   getWebContainerInstance: getInstance,
+   fsTree,
+});
+
+// seo enhancement
 useSeoMeta({
    title: `#${props.id} ${problem.value?.title} - Quanta Challenge`,
    description: problem.value?.detail.slice(0, 100),
@@ -207,7 +216,7 @@ useSeoMeta({
                <FileManagerPanel
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
-                  :fsTree="fsTree"
+                  :fs-tree="fsTree"
                   v-model:selected-path="selectedPath" />
             </template>
             <template #end>

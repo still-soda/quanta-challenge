@@ -4,12 +4,19 @@ import { ref, type DefineComponent } from 'vue';
 import { arrayBufferToBase64 } from '~/components/st/DropUploader/walk-file-list';
 import type { FormItemStatus } from '~/components/st/Form/type';
 
-const props = defineProps<{
-   placeholder?: string;
-   imageMaxHeight?: string;
-   icon?: DefineComponent;
-   status?: FormItemStatus;
-}>();
+const props = withDefaults(
+   defineProps<{
+      placeholder?: string;
+      imageMaxHeight?: string;
+      icon?: DefineComponent;
+      status?: FormItemStatus;
+      /** 上传权限级别，默认为 ADMIN */
+      uploadLevel?: 'USER' | 'ADMIN';
+   }>(),
+   {
+      uploadLevel: 'ADMIN',
+   }
+);
 
 const imageUrl = defineModel<string>('imageUrl', { default: '' });
 const imageId = defineModel<string>('imageId', { default: '' });
@@ -26,18 +33,27 @@ const { $trpc } = useNuxtApp();
 const uploadImage = async () => {
    if (!(imageFile.value instanceof File)) return;
    const fileBase64 = arrayBufferToBase64(await imageFile.value.arrayBuffer());
-   await $trpc.admin.image.upload
-      .mutate({
-         fileBase64: fileBase64,
-         fileName: imageFile.value.name,
-      })
-      .then((res) => {
-         imageUrl.value = '/api/static/' + res.name;
-         imageId.value = res.id;
-      })
-      .catch((error) => {
-         console.error('Image upload failed:', error);
-      });
+
+   const uploadData = {
+      fileBase64: fileBase64,
+      fileName: imageFile.value.name,
+   };
+
+   try {
+      let res;
+      if (props.uploadLevel === 'USER') {
+         // 使用普通用户接口
+         res = await $trpc.protected.user.uploadImage.mutate(uploadData);
+      } else {
+         // 使用管理员接口（默认）
+         res = await $trpc.admin.image.upload.mutate(uploadData);
+      }
+      imageUrl.value = '/api/static/' + res.name;
+      imageId.value = res.id;
+   } catch (error) {
+      console.error('Image upload failed:', error);
+      throw error;
+   }
 };
 
 const uploading = ref(false);

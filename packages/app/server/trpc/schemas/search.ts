@@ -1,15 +1,44 @@
 import { z } from 'zod';
+import {
+   type SearchType,
+   validateSearchTypes,
+   SEARCH_LIMITS,
+} from '@challenge/shared/config';
+
+// 导出 SearchType 供其他模块使用
+export type { SearchType };
+
+// 构造逗号分隔的搜索类型组合,确保每个部分都是有效的 SearchType
+type SearchTypeString =
+   | SearchType
+   | `${SearchType},${SearchType}`
+   | `${SearchType},${SearchType},${SearchType}`
+   | `${SearchType},${SearchType},${SearchType},${SearchType}`
+   | `${SearchType},${SearchType},${SearchType},${SearchType},${SearchType}`
+   | `${SearchType},${SearchType},${SearchType},${SearchType},${SearchType},${SearchType}`;
 
 /**
  * 搜索请求 Schema
  */
 export const searchQuerySchema = z.object({
-   q: z.string().min(1, '搜索关键词不能为空').max(100, '搜索关键词过长'),
+   q: z
+      .string()
+      .min(SEARCH_LIMITS.MIN_QUERY_LENGTH, '搜索关键词不能为空')
+      .max(SEARCH_LIMITS.MAX_QUERY_LENGTH, '搜索关键词过长'),
    type: z
-      .enum(['all', 'problem', 'user', 'tag', 'page-section', 'daily-problem'])
+      .custom<SearchTypeString>()
       .optional()
-      .default('all'),
-   limit: z.number().int().min(1).max(50).optional().default(20),
+      .default('all')
+      .refine((val) => {
+         return validateSearchTypes((val as string).split(','));
+      }, '搜索类型无效'),
+   limit: z
+      .number()
+      .int()
+      .min(SEARCH_LIMITS.MIN_LIMIT)
+      .max(SEARCH_LIMITS.MAX_LIMIT)
+      .optional()
+      .default(SEARCH_LIMITS.DEFAULT_LIMIT),
 });
 
 export type SearchQueryInput = z.infer<typeof searchQuerySchema>;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import defaultProfileBanner from '@/assets/images/default-profile-banner.png';
-import defaultAvatar from '@/assets/images/default-avatar.png';
+import DEFAULT_PROFILE_BANNER from '@/assets/images/default-profile-banner.png';
+import useAuthStore from '~/stores/auth-store';
 
 const { $trpc } = useNuxtApp();
 const { data: commitStatistic, pending } = useAsyncData('profile', () =>
@@ -11,6 +11,21 @@ const correctRate = computed(() => {
    if (!commitStatistic.value) return '--%';
    return commitStatistic.value.correctRate.toFixed(2) + '%';
 });
+
+const authStore = useAuthStore();
+const isAdmin = computed(() => authStore.user?.role !== 'USER');
+
+const username = computed(
+   () => authStore.user?.displayName || authStore.user?.name || '用户'
+);
+
+const avatarUrl = computed(() =>
+   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
+);
+
+const description = computed(() => {
+   return isAdmin.value ? '管理员' : '普通用户';
+});
 </script>
 
 <template>
@@ -19,7 +34,7 @@ const correctRate = computed(() => {
          <StSpace
             class="w-[17.875rem] h-32 rounded-lg bg-accent-500 absolute top-2 left-2 overflow-hidden">
             <StSkeletonItem v-if="pending" class="size-full rounded-md" />
-            <StImage v-else :src="defaultProfileBanner" class="size-full" />
+            <StImage v-else :src="DEFAULT_PROFILE_BANNER" class="size-full" />
          </StSpace>
 
          <StSpace direction="vertical" align="center" gap="0.75rem">
@@ -28,13 +43,13 @@ const correctRate = computed(() => {
                class="size-[5.25rem] rounded-full z-10 border-4 border-accent-600" />
             <StImage
                v-else
-               :src="defaultAvatar"
+               :src="avatarUrl"
                class="!rounded-full z-10 border-4 border-accent-600"
                width="5.25rem"
                height="5.25rem" />
             <StSpace direction="vertical" align="center" gap="0.375rem">
-               <div class="st-font-body-bold">没有气的汽水</div>
-               <div class="st-font-caption">20th前端经理</div>
+               <div class="st-font-body-bold">{{ username }}</div>
+               <div class="st-font-caption">{{ description }}</div>
             </StSpace>
          </StSpace>
 

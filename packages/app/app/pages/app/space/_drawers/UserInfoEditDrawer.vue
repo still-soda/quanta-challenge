@@ -19,6 +19,7 @@ const formdata = reactive({
    identifier: '',
    birthday: '',
    bannerImageId: '',
+   avatarImageId: '',
 });
 
 const rules: IRule[] = [
@@ -50,6 +51,7 @@ const loadUserInfo = async () => {
             formdata.birthday = '';
          }
          formdata.bannerImageId = data.bannerImageId || '';
+         formdata.avatarImageId = data.avatarImageId || '';
       }
    } catch (e) {
       console.error('加载用户信息失败:', e);
@@ -78,6 +80,7 @@ const handleUpdate = async () => {
          identifier: formdata.identifier || undefined,
          birthday: formdata.birthday || undefined,
          bannerImageId: formdata.bannerImageId || undefined,
+         avatarImageId: formdata.avatarImageId || undefined,
       });
    };
 
@@ -115,6 +118,15 @@ const enableSubmit = computed(() => {
                   :rules="rules"
                   class="w-full absolute top-0 left-0">
                   <StSpace direction="vertical" gap="1.5rem" fill-x>
+                     <StFormItem name="avatarImageId" label="头像">
+                        <StUploadImage
+                           v-model:image-id="formdata.avatarImageId"
+                           class="bg-black !max-h-[12rem]"
+                           image-max-height="8rem"
+                           placeholder="请选择头像"
+                           aspect-ratio="1/1"
+                           upload-level="USER" />
+                     </StFormItem>
                      <StFormItem name="bio" label="个性签名">
                         <StTextarea
                            v-model:value="formdata.bio"
@@ -150,7 +162,8 @@ const enableSubmit = computed(() => {
                            v-model:image-id="formdata.bannerImageId"
                            class="bg-black !max-h-[12rem]"
                            image-max-height="8rem"
-                           placeholder="请选择背景图" />
+                           placeholder="请选择背景图"
+                           upload-level="USER" />
                      </StFormItem>
                   </StSpace>
                </StForm>

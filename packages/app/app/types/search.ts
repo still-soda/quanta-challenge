@@ -3,6 +3,17 @@
  */
 
 /**
+ * 搜索类型（包含 'all'）
+ */
+export type SearchType =
+   | 'all'
+   | 'problem'
+   | 'user'
+   | 'tag'
+   | 'page-section'
+   | 'daily-problem';
+
+/**
  * 搜索结果类型
  */
 export type SearchResultType =

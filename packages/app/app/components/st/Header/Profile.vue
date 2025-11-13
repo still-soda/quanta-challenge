@@ -23,13 +23,15 @@ const menuItems: MenuItem[] = [
 </script>
 
 <template>
-   <StSpace gap="0.625rem" align="center">
+   <StSpace gap="0.875rem" align="center">
       <StSpace direction="vertical" align="end" justify="center" gap="0.25rem">
          <div class="font-bold">{{ name }}</div>
          <div class="font-light text-sm">{{ desc }}</div>
       </StSpace>
       <NuxtLink to="/app/space">
-         <StAvatar :url="url" class="w-10 h-10 cursor-pointer" />
+         <StAvatar
+            :url="url"
+            class="w-10 h-10 cursor-pointer hover:ring-2 ring-secondary transition-all" />
       </NuxtLink>
    </StSpace>
 </template>

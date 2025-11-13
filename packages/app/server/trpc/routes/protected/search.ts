@@ -1,6 +1,6 @@
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
-import { searchQuerySchema } from '../../schemas/search';
+import { searchQuerySchema, SearchType } from '../../schemas/search';
 import prisma from '~~/lib/prisma';
 import type {
    SearchResult,
@@ -21,14 +21,31 @@ const PAGE_SECTIONS = [
       pageName: '仪表盘',
       sectionName: '最近提交',
       url: '/app/dashboard',
-      keywords: ['首页', '仪表盘', 'dashboard', '最近', '提交', 'submission'],
+      keywords: [
+         '首页',
+         '仪表盘',
+         'dashboard',
+         '最近',
+         '提交',
+         'submission',
+         'zuijingtijiao',
+      ],
    },
    {
       id: 'dashboard-recent-learning',
       pageName: '仪表盘',
       sectionName: '最近学习',
       url: '/app/dashboard',
-      keywords: ['首页', '仪表盘', 'dashboard', '最近', '学习', 'learning'],
+      keywords: [
+         '首页',
+         '仪表盘',
+         'dashboard',
+         '最近',
+         '学习',
+         'learning',
+         'yibiaopan',
+         'shouye',
+      ],
    },
    {
       id: 'dashboard-daily-challenge',
@@ -43,6 +60,9 @@ const PAGE_SECTIONS = [
          '一题',
          'daily',
          'challenge',
+         'meiriyiti',
+         'timu',
+         'shouye',
       ],
    },
    {
@@ -58,6 +78,8 @@ const PAGE_SECTIONS = [
          '排名',
          'ranking',
          'leaderboard',
+         'paihangbang',
+         'shouye',
       ],
    },
    {
@@ -65,14 +87,57 @@ const PAGE_SECTIONS = [
       pageName: '题库',
       sectionName: '题目列表',
       url: '/app/problems',
-      keywords: ['题库', '题目', 'problems', '列表', 'list'],
+      keywords: ['题库', '题目', 'problems', '列表', 'list', 'timu', 'tiku'],
    },
    {
       id: 'space',
       pageName: '个人空间',
       sectionName: '个人信息',
       url: '/app/space',
-      keywords: ['个人', '中心', '信息', 'profile', 'user'],
+      keywords: [
+         '个人',
+         '中心',
+         '信息',
+         'profile',
+         'user',
+         'gerenkongjian',
+         'space',
+      ],
+   },
+   {
+      id: 'rankings',
+      pageName: '排行榜',
+      sectionName: '全部排行',
+      url: '/app/rankings',
+      keywords: [
+         '排行',
+         '排名',
+         '排行榜',
+         'ranking',
+         'leaderboard',
+         'paihangbang',
+      ],
+   },
+   {
+      id: 'settings-common',
+      pageName: '设置',
+      sectionName: '常规设置',
+      url: '/app/settings',
+      keywords: ['设置', '常规', 'settings', 'common', 'shezhi', 'changgui'],
+   },
+   {
+      id: 'settings-security',
+      pageName: '设置',
+      sectionName: '安全设置',
+      url: '/app/settings/security',
+      keywords: ['设置', '安全', 'settings', 'security', 'shezhi', 'anquan'],
+   },
+   {
+      id: 'settings-advanced',
+      pageName: '设置',
+      sectionName: '高级设置',
+      url: '/app/settings/advanced',
+      keywords: ['设置', '高级', 'settings', 'advanced', 'shezhi', 'gaoji'],
    },
 ];
 
@@ -81,14 +146,16 @@ const PAGE_SECTIONS = [
  */
 const searchProcedure = protectedProcedure
    .input(searchQuerySchema)
-   .query(async ({ input, ctx }) => {
+   .query(async ({ input }) => {
       const { q, type, limit } = input;
       const searchQuery = q.trim().toLowerCase();
       const results: SearchResult[] = [];
 
+      const types: Set<SearchType> = new Set(type.split(',') as SearchType[]);
+
       try {
          // 1. 搜索题目
-         if (type === 'all' || type === 'problem') {
+         if (types.has('all') || types.has('problem')) {
             const problems = await prisma.baseProblems.findMany({
                where: {
                   CurrentProblem: {
@@ -139,7 +206,7 @@ const searchProcedure = protectedProcedure
          }
 
          // 2. 按标签搜索题目
-         if (type === 'all' || type === 'tag') {
+         if (types.has('all') || types.has('tag')) {
             const tags = await prisma.tags.findMany({
                where: {
                   name: {
@@ -198,7 +265,7 @@ const searchProcedure = protectedProcedure
          }
 
          // 3. 搜索用户
-         if (type === 'all' || type === 'user') {
+         if (types.has('all') || types.has('user')) {
             const users = await prisma.user.findMany({
                where: {
                   OR: [
@@ -246,7 +313,7 @@ const searchProcedure = protectedProcedure
          }
 
          // 4. 搜索页面板块
-         if (type === 'all' || type === 'page-section') {
+         if (types.has('all') || types.has('page-section')) {
             const matchingSections = PAGE_SECTIONS.filter((section) =>
                section.keywords.some((keyword) =>
                   keyword.toLowerCase().includes(searchQuery)
@@ -270,21 +337,50 @@ const searchProcedure = protectedProcedure
          }
 
          // 5. 搜索每日一题
-         if (
-            type === 'all' ||
-            type === 'daily-problem' ||
-            searchQuery.includes('每日') ||
-            searchQuery.includes('daily')
-         ) {
+         if (types.has('all') || types.has('daily-problem')) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            const dailyProblems = await prisma.dailyProblem.findMany({
-               where: {
-                  date: {
-                     gte: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000), // 最近7天
+            // 构建搜索条件
+            const dailyProblemWhere: any = {
+               date: {
+                  gte: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000), // 最近30天
+               },
+               baseProblem: {
+                  CurrentProblem: {
+                     OR: [
+                        // 按题目标题搜索
+                        {
+                           title: {
+                              contains: searchQuery,
+                              mode: 'insensitive',
+                           },
+                        },
+                        // 按题目详情搜索
+                        {
+                           detail: {
+                              contains: searchQuery,
+                              mode: 'insensitive',
+                           },
+                        },
+                        // 按标签搜索
+                        {
+                           tags: {
+                              some: {
+                                 name: {
+                                    contains: searchQuery,
+                                    mode: 'insensitive',
+                                 },
+                              },
+                           },
+                        },
+                     ],
                   },
                },
+            };
+
+            const dailyProblems = await prisma.dailyProblem.findMany({
+               where: dailyProblemWhere,
                include: {
                   baseProblem: {
                      include: {
@@ -299,7 +395,7 @@ const searchProcedure = protectedProcedure
                orderBy: {
                   date: 'desc',
                },
-               take: 5,
+               take: 10,
             });
 
             const dailyResults: DailyProblemSearchResult[] = dailyProblems
@@ -310,7 +406,7 @@ const searchProcedure = protectedProcedure
                   return {
                      id: `daily-${dp.id}`,
                      type: 'daily-problem' as const,
-                     title: `${isToday ? '今日题目' : '每日一题'}: ${
+                     title: `${isToday ? '今日题目' : '每日一题'}：${
                         dp.baseProblem.CurrentProblem!.title
                      }`,
                      description: `${dp.date.toLocaleDateString(

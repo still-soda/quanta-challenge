@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import {
-   ListTwo,
    User,
    Tag,
-   Calendar,
-   ApplicationMenu,
    Check,
    ChartProportion,
    Time,
    Fire,
+   ListView,
+   CalendarThirtyTwo,
+   WebPage,
 } from '@icon-park/vue-next';
 import type { SearchResult } from '~/types/search';
 
@@ -24,15 +24,15 @@ const emit = defineEmits<{
 const icon = computed(() => {
    switch (props.result.type) {
       case 'problem':
-         return ListTwo;
+         return ListView;
       case 'user':
          return User;
       case 'tag':
          return Tag;
       case 'daily-problem':
-         return Calendar;
+         return CalendarThirtyTwo;
       case 'page-section':
-         return ApplicationMenu;
+         return WebPage;
    }
 });
 
@@ -92,7 +92,7 @@ const typeColor = computed(() => {
       case 'daily-problem':
          return 'text-warning';
       case 'page-section':
-         return 'text-accent-300';
+         return 'text-accent-100';
       default:
          return 'text-accent-300';
    }
@@ -122,12 +122,16 @@ const handleClick = () => {
 
 <template>
    <div
-      class="group px-4 py-2.5 hover:bg-accent-500 transition-colors cursor-pointer"
+      class="group px-4 py-2.5 hover:bg-accent-600 transition-colors cursor-pointer rounded-lg border-transparent"
       :class="{ 'bg-accent-500': isSelected }"
       @click="handleClick">
       <StSpace gap="0.75rem" align="center" fill-x>
          <!-- 图标 -->
-         <component :is="icon" class="text-lg shrink-0" :class="typeColor" />
+         <div
+            :class="typeBgColor"
+            class="size-[2.5rem] flex items-center justify-center rounded-full shrink-0">
+            <component :is="icon" class="text-md shrink-0" :class="typeColor" />
+         </div>
 
          <!-- 内容区域 -->
          <StSpace direction="vertical" gap="0.25rem" fill-x class="min-w-0">
@@ -142,7 +146,7 @@ const handleClick = () => {
                <StSpace gap="0.25rem" align="center" no-wrap class="shrink-0">
                   <!-- 类型标签 -->
                   <span
-                     class="text-[0.625rem] px-1.5 py-0.5 rounded bg-accent-600 text-accent-200 leading-none whitespace-nowrap">
+                     class="text-[0.625rem] px-2 py-1 rounded bg-accent-500 text-accent-200 leading-none whitespace-nowrap">
                      {{ typeText }}
                   </span>
 
@@ -152,7 +156,7 @@ const handleClick = () => {
                         result.type === 'problem' ||
                         result.type === 'daily-problem'
                      "
-                     class="text-[0.625rem] px-1.5 py-0.5 rounded leading-none whitespace-nowrap"
+                     class="text-[0.625rem] px-1.5 py-1 rounded leading-none whitespace-nowrap"
                      :class="difficultyColor(result.metadata.difficulty)">
                      {{ difficultyText(result.metadata.difficulty) }}
                   </span>
@@ -165,7 +169,7 @@ const handleClick = () => {
                      "
                      gap="0.25rem"
                      align="center"
-                     class="text-[0.625rem] px-1.5 py-0.5 rounded bg-primary/20 text-primary leading-none whitespace-nowrap">
+                     class="text-[0.625rem] px-1.5 py-1 rounded bg-primary/20 text-primary leading-none whitespace-nowrap">
                      <Fire theme="filled" size="10" />
                      <span>今日</span>
                   </StSpace>
@@ -193,11 +197,9 @@ const handleClick = () => {
                      align="center"
                      no-wrap>
                      <ChartProportion size="12" />
-                     <span
-                        >{{
-                           (result.metadata.acceptRate * 100).toFixed(0)
-                        }}%</span
-                     >
+                     <span>
+                        {{ (result.metadata.acceptRate * 100).toFixed(0) }}%
+                     </span>
                   </StSpace>
                   <StSpace
                      v-if="result.metadata.tags.length > 0"

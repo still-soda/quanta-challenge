@@ -223,7 +223,7 @@ const isSelected = (dateStr: string) => {
          <Calendar :size="20" :strokeWidth="3" />
       </div>
 
-      <Component :is="Teleport" to="body" class="absolute z-50">
+      <Teleport to="body" class="absolute z-50">
          <div
             :ref="popperKey"
             :style="{
@@ -309,6 +309,6 @@ const isSelected = (dateStr: string) => {
                </button>
             </div>
          </div>
-      </Component>
+      </Teleport>
    </div>
 </template>

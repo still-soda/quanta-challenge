@@ -2,7 +2,8 @@
 import type { Component } from 'vue';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FsTreeSkeleton from '../_skeletons/FsTreeSkeleton.vue';
-import { FileAdditionOne, FolderFailedOne } from '@icon-park/vue-next';
+import { FileAdditionOne, FolderPlus } from '@icon-park/vue-next';
+import RightClickMenuProvider from '../_components/RightClickMenuProvider.vue';
 
 defineProps<{
    fsTree?: IFileSystemItem[];
@@ -47,7 +48,7 @@ const Operation: Component = (_, { slots }) => {
                <FileAdditionOne />
             </Operation>
             <Operation @click="$emit('addFolder')">
-               <FolderFailedOne />
+               <FolderPlus />
             </Operation>
          </StSpace>
       </StSpace>
@@ -56,17 +57,7 @@ const Operation: Component = (_, { slots }) => {
             <template #loading>
                <FsTreeSkeleton />
             </template>
-            <StContextMenuProvider>
-               <template #menu>
-                  <StContextMenuRoot v-slot="{ target }">
-                     <StContextMenuList class="!text-white">
-                        <StContextMenuItem>
-                           {{ target?.getAttribute('data-path') }}
-                        </StContextMenuItem>
-                        <StContextMenuItem>新建文件</StContextMenuItem>
-                     </StContextMenuList>
-                  </StContextMenuRoot>
-               </template>
+            <RightClickMenuProvider>
                <StFileSystemTree
                   v-if="fsTree"
                   class="absolute top-0 left-0"
@@ -77,7 +68,7 @@ const Operation: Component = (_, { slots }) => {
                   :current-file-path="selectedPath"
                   :default-opened="true"
                   :directory="fsTree" />
-            </StContextMenuProvider>
+            </RightClickMenuProvider>
          </StSkeleton>
       </StSpace>
    </StSpace>

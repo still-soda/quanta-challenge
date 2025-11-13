@@ -15,6 +15,9 @@
       },
       "./utils": {
          "import": "./utils/url.ts"
+      },
+      "./config": {
+         "import": "./configs/search-config.ts"
       }
    },
    "main": "index.js",

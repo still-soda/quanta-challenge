@@ -3,6 +3,7 @@ import {
    type ModifierArguments,
    type Options,
 } from '@popperjs/core';
+import { logger } from '~~/lib/logger';
 
 type Modifier = Options['modifiers'][number];
 
@@ -62,6 +63,10 @@ export const usePopper = (options?: IUsePopperOptions) => {
    // 挂载创建 Popper 实例
    onMounted(() => {
       if (!container.value || !popper.value) {
+         logger.info({
+            container: container.value,
+            popper: popper.value,
+         });
          throw new Error('Container or Popper element is not defined');
       }
 

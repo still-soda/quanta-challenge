@@ -1,4 +1,5 @@
-import type { SearchResult } from '~/types/search';
+import type { SearchResult, SearchType } from '~/types/search';
+import { SEARCH_CONSTANTS, SEARCH_LIMITS } from '@challenge/shared/config';
 
 /**
  * 全局搜索状态管理
@@ -21,6 +22,9 @@ export const useSearch = () => {
    // 搜索关键词
    const searchQuery = useState('search-query', () => '');
 
+   // 搜索类型过滤
+   const searchTypes = useState<SearchType[]>('search-types', () => []);
+
    // 搜索结果（预留接口）
    const searchResults = useState<SearchResult[]>('search-results', () => []);
 
@@ -42,11 +46,20 @@ export const useSearch = () => {
 
       try {
          const { $trpc } = useNuxtApp();
-         const response = await $trpc.protected.search.search.query({
-            q: query,
-            type: 'all',
-            limit: 20,
-         });
+         // 构造搜索类型参数
+         const typeParam =
+            searchTypes.value.length === 0
+               ? 'all'
+               : searchTypes.value.join(',');
+
+         const response = await atLeastTime(
+            SEARCH_CONSTANTS.DEBOUNCE_DELAY,
+            $trpc.protected.search.search.query({
+               q: query,
+               type: typeParam as any,
+               limit: SEARCH_LIMITS.DEFAULT_LIMIT,
+            })
+         );
 
          searchResults.value = response.results;
       } catch (error) {
@@ -63,6 +76,7 @@ export const useSearch = () => {
       closeSearch,
       toggleSearch,
       searchQuery,
+      searchTypes,
       searchResults,
       isSearching,
       performSearch,

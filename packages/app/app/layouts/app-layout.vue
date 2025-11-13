@@ -9,6 +9,10 @@ const username = computed(
    () => authStore.user?.displayName || authStore.user?.name || '用户'
 );
 
+const avatarUrl = computed(() =>
+   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
+);
+
 const description = computed(() => {
    return isAdmin.value ? '管理员' : '普通用户';
 });
@@ -66,7 +70,10 @@ onUnmounted(() => {
                </StSpace>
             </template>
             <template #right>
-               <StHeaderProfile :name="username" :desc="description" />
+               <StHeaderProfile
+                  :name="username"
+                  :desc="description"
+                  :url="avatarUrl" />
             </template>
          </StHeader>
 

@@ -11,6 +11,7 @@ import {
 import { useEventEmitter } from '~/composables/use-event-emitter';
 import { useParam } from '~/composables/use-param';
 import { usePreventLeave } from '~/composables/use-prevent-leave';
+import useAuthStore from '~/stores/auth-store';
 
 const store = useEditorStore();
 const toggleDetailWindow = () => {
@@ -32,18 +33,23 @@ const mode = computed<'problem' | 'record'>(() => {
    if (route.path.startsWith('/challenge/record')) return 'record';
    return 'problem';
 });
+
+const authStore = useAuthStore();
+const avatarUrl = computed(() =>
+   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
+);
 </script>
 
 <template>
    <StSpace direction="vertical" fill gap="0" class="h-screen">
-      <StHeader>
+      <StHeader mode="gradient">
          <template #left>
             <StSpace gap="0.75rem" align="center">
                <IconLogo class="mx-4" />
 
                <template v-if="mode === 'record'">
                   <NuxtLink :to="`/challenge/editor/${id}`">
-                     <StHeaderButton class="!px-4" text="返回题目">
+                     <StHeaderButton class="!pl-5 !pr-6" text="返回题目">
                         <Return class="text-[1.25rem]" />
                      </StHeaderButton>
                   </NuxtLink>
@@ -91,7 +97,7 @@ const mode = computed<'problem' | 'record'>(() => {
                <StHeaderButton class="!px-4">
                   <SettingOne class="text-[1.25rem]" />
                </StHeaderButton>
-               <StAvatar class="w-10 h-10" />
+               <StAvatar class="w-10 h-10" :url="avatarUrl" />
             </StSpace>
          </template>
       </StHeader>

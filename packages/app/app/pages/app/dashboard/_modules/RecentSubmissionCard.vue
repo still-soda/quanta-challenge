@@ -74,8 +74,15 @@ rule({
                   </span>
                </StSpace>
                <StSpace
-                  class="py-1 px-2 rounded-md bg-secondary st-font-tooltip text-accent-700 whitespace-nowrap text-nowrap">
-                  已通过
+                  :class="
+                     submissionData?.result === 'failed'
+                        ? 'bg-primary text-white'
+                        : 'bg-secondary'
+                  "
+                  class="py-1 px-2 rounded-md st-font-tooltip text-accent-700 whitespace-nowrap text-nowrap">
+                  {{
+                     submissionData?.result === 'failed' ? '未通过' : '已通过'
+                  }}
                </StSpace>
             </StSpace>
          </StSkeleton>

@@ -70,15 +70,19 @@ const { data: userInfo, refresh: refreshUserInfo } = await useAsyncData(
    }
 );
 
-const { data: rawUserInfo } = await useAsyncData('get-raw-user-info', () =>
-   $trpc.protected.user.getUserInfo.query()
+const { data: rawUserInfo, refresh: refreshRawUserInfo } = await useAsyncData(
+   'get-raw-user-info',
+   () => $trpc.protected.user.getUserInfo.query()
 );
 
 const handleUserInfoUpdated = async () => {
    await refreshUserInfo();
+   await refreshRawUserInfo();
 };
 
 const authStore = useAuthStore();
+
+const width = ref(38.625);
 </script>
 
 <template>
@@ -86,13 +90,14 @@ const authStore = useAuthStore();
       <StSpace
          direction="vertical"
          gap="0.75rem"
-         class="w-[38.625rem] p-[0.875rem] mt-[2rem] bg-accent-600 rounded-[1rem] relative">
+         :style="{ width: `${width}rem` }"
+         class="p-[0.5rem] mt-[2rem] bg-accent-600 rounded-[1rem] relative border border-secondary/50">
          <StSpace fill-x direction="vertical">
             <StImage
                :src="DEFAULT_SPACE_URL"
                height="13rem"
-               width="36.875rem"
-               class="rounded-[0.5rem] object-top absolute"
+               :width="`${width - 1.1}rem`"
+               class="rounded-[0.875rem] object-top absolute"
                object="cover" />
             <StSpace
                class="px-[1.5rem] pr-[1rem] mt-[10rem] z-5 relative"
@@ -103,10 +108,11 @@ const authStore = useAuthStore();
                   <div
                      class="size-[9.5rem] rounded-full bg-[#434343] opacity-60 backdrop-blur-xs absolute -left-2 -top-2"></div>
                   <StImage
-                     :src="DEFAULT_AVATAR_URL"
+                     :src="rawUserInfo?.avatarUrl || DEFAULT_AVATAR_URL"
                      width="8.5rem"
                      height="8.5rem"
-                     class="!rounded-full z-50" />
+                     class="!rounded-full z-50"
+                     object="cover" />
                </StSpace>
                <StSpace
                   class="px-3 py-2 pr-0"
@@ -126,7 +132,7 @@ const authStore = useAuthStore();
                   <StButton
                      bordered
                      @click="openEditDrawer"
-                     class="!bg-transparent !border-secondary !text-secondary !font-normal !py-2">
+                     class="!bg-transparent !border-primary !text-primary !font-normal !py-2">
                      编辑个人资料
                   </StButton>
                </StSpace>
