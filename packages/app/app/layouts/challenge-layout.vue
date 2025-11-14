@@ -5,7 +5,6 @@ import {
    LayoutFour,
    Return,
    SettingOne,
-   Timer,
    UploadWeb,
 } from '@icon-park/vue-next';
 import { useEventEmitter } from '~/composables/use-event-emitter';
@@ -41,71 +40,69 @@ const avatarUrl = computed(() =>
 </script>
 
 <template>
-   <StSpace direction="vertical" fill gap="0" class="h-screen">
-      <StHeader mode="gradient">
-         <template #left>
-            <StSpace gap="0.75rem" align="center">
-               <IconLogo class="mx-4" />
+   <StMessageProvider>
+      <StSpace direction="vertical" fill gap="0" class="h-screen">
+         <StHeader mode="gradient">
+            <template #left>
+               <StSpace gap="0.75rem" align="center">
+                  <IconLogo class="mx-4" />
 
-               <template v-if="mode === 'record'">
-                  <NuxtLink :to="`/challenge/editor/${id}`">
-                     <StHeaderButton class="!pl-5 !pr-6" text="返回题目">
-                        <Return class="text-[1.25rem]" />
-                     </StHeaderButton>
-                  </NuxtLink>
-               </template>
+                  <template v-if="mode === 'record'">
+                     <NuxtLink :to="`/challenge/editor/${id}`">
+                        <StHeaderButton class="!pl-5 !pr-6" text="返回题目">
+                           <Return class="text-[1.25rem]" />
+                        </StHeaderButton>
+                     </NuxtLink>
+                  </template>
 
-               <template v-if="mode === 'problem'">
-                  <a href="/app/problems">
-                     <StHeaderButton class="!px-4">
-                        <Return class="text-[1.25rem]" />
-                     </StHeaderButton>
-                  </a>
-                  <NuxtLink :to="`/challenge/record/${id}`">
+                  <template v-if="mode === 'problem'">
+                     <a href="/app/problems">
+                        <StHeaderButton class="!px-4">
+                           <Return class="text-[1.25rem]" />
+                        </StHeaderButton>
+                     </a>
+                     <NuxtLink :to="`/challenge/record/${id}`">
+                        <StHeaderButton
+                           text="提交记录"
+                           @click="navigateToCommitRecords">
+                           <History class="text-[1.25rem]" />
+                        </StHeaderButton>
+                     </NuxtLink>
                      <StHeaderButton
-                        text="提交记录"
-                        @click="navigateToCommitRecords">
-                        <History class="text-[1.25rem]" />
+                        @click="toggleDetailWindow"
+                        text="题目"
+                        class="!text-primary">
+                        <AlignTextLeftOne class="text-[1.25rem]" />
                      </StHeaderButton>
-                  </NuxtLink>
-                  <StHeaderButton
-                     @click="toggleDetailWindow"
-                     text="题目"
-                     class="!text-primary">
-                     <AlignTextLeftOne class="text-[1.25rem]" />
-                  </StHeaderButton>
-               </template>
-            </StSpace>
-         </template>
-         <template #right>
-            <StSpace gap="0.75rem" align="center">
-               <template v-if="mode === 'problem'">
-                  <StHeaderButton
-                     @click="emitCommitEvent"
-                     :disabled="!store.hasProjectInitialized"
-                     text="提交"
-                     class="!text-success">
-                     <UploadWeb class="text-[1.25rem]" />
-                  </StHeaderButton>
-                  <StHeaderButton class="!px-4 !text-warning">
-                     <Timer class="text-[1.25rem]" />
-                  </StHeaderButton>
+                  </template>
+               </StSpace>
+            </template>
+            <template #right>
+               <StSpace gap="0.75rem" align="center">
+                  <template v-if="mode === 'problem'">
+                     <StHeaderButton
+                        @click="emitCommitEvent"
+                        :disabled="!store.hasProjectInitialized"
+                        text="提交"
+                        class="!text-success">
+                        <UploadWeb class="text-[1.25rem]" />
+                     </StHeaderButton>
+                     <TimerWidget />
+                     <StHeaderButton class="!px-4">
+                        <LayoutFour class="text-[1.25rem]" />
+                     </StHeaderButton>
+                  </template>
                   <StHeaderButton class="!px-4">
-                     <LayoutFour class="text-[1.25rem]" />
+                     <SettingOne class="text-[1.25rem]" />
                   </StHeaderButton>
-               </template>
-               <StHeaderButton class="!px-4">
-                  <SettingOne class="text-[1.25rem]" />
-               </StHeaderButton>
-               <StAvatar class="w-10 h-10" :url="avatarUrl" />
-            </StSpace>
-         </template>
-      </StHeader>
-      <StMessageProvider>
+                  <StAvatar class="w-10 h-10" :url="avatarUrl" />
+               </StSpace>
+            </template>
+         </StHeader>
          <slot></slot>
-      </StMessageProvider>
 
-      <!-- 对话框覆盖层 -->
-      <DialogOverlay />
-   </StSpace>
+         <!-- 对话框覆盖层 -->
+         <DialogOverlay />
+      </StSpace>
+   </StMessageProvider>
 </template>
