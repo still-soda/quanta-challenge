@@ -17,7 +17,7 @@ const {
 
 const redirect = useQuery<string>('redirect');
 onAuthenticateSuccess(() => {
-   navigateTo(redirect.value ?? '/app/dashboard', { replace: true });
+   window.location.href = redirect.value ?? '/app/dashboard';
 });
 onAuthenticateError(() => {
    alert('Authentication Failed');

@@ -101,6 +101,11 @@ const avatarUrl = computed(() =>
             </StSpace>
          </template>
       </StHeader>
-      <slot></slot>
+      <StMessageProvider>
+         <slot></slot>
+      </StMessageProvider>
+
+      <!-- 对话框覆盖层 -->
+      <DialogOverlay />
    </StSpace>
 </template>

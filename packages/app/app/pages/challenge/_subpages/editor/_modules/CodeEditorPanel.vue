@@ -90,15 +90,23 @@ onModelChange((path) => {
    currentFilePath.value = path;
 });
 
-const setModel = (path: string | null) => {
+const setModel = (path: string | null, forceRecreate = false) => {
    onEditorInstanceReady((instance, monaco) => {
       if (!path) {
          instance.setModel(null);
          return;
       }
       const model = monaco.editor.getModel(monaco.Uri.file(path));
-      if (model) {
-         instance.setModel(model);
+
+      // 如果需要强制重新创建 model（例如处理 suspense 文件）
+      if (forceRecreate && model) {
+         model.dispose();
+      }
+
+      // 重新获取或创建 model
+      const existingModel = monaco.editor.getModel(monaco.Uri.file(path));
+      if (existingModel && !forceRecreate) {
+         instance.setModel(existingModel);
          currentFilePath.value = path;
       } else {
          const content = props.defaultFs?.[path]?.content;

@@ -81,16 +81,35 @@ watch(selectedPath, (newPath) => {
 
 // code editor
 const codeEditor = useTemplateRef('code-editor');
+const pathToRecreate = new Set<string>();
+
+const handleFileClick = (_: IFileSystemItem, wasSuspense: boolean) => {
+   // 如果点击的是 suspense 文件，标记需要强制重新创建 model
+   wasSuspense && pathToRecreate.add(_.path);
+};
+
 onMounted(() => {
    watch(selectedPath, (newPath) => {
-      newPath && codeEditor.value?.setModel(newPath);
+      if (!newPath) return;
+
+      codeEditor.value?.setModel(newPath, pathToRecreate.has(newPath));
+
+      pathToRecreate.delete(newPath);
    });
 
    const contentChangeCallback = (path: string, content: string) => {
-      if (!pathContentMap.value?.[path] || !pathTreeNodeMap.value?.[path])
+      // Monaco 传递的路径带前缀 `/`,需要移除以匹配 pathContentMap 和 pathTreeNodeMap 的 key
+      const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+
+      if (
+         !pathContentMap.value?.[normalizedPath] ||
+         !pathTreeNodeMap.value?.[normalizedPath]
+      ) {
          return;
-      pathContentMap.value[path].content = content;
-      pathTreeNodeMap.value[path].content = content;
+      }
+
+      pathContentMap.value[normalizedPath].content = content;
+      pathTreeNodeMap.value[normalizedPath].content = content;
       writeFile(path, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
@@ -106,15 +125,6 @@ const terminal = useTemplateRef('terminal');
 
 // run project
 const editorStore = useEditorStore();
-const appendNodeModulesFolder = () => {
-   if (!fsTree.value) return;
-   fsTree.value[0]!.children?.unshift({
-      name: 'node_modules',
-      path: '/project/node_modules',
-      type: 'folder',
-      suspense: true,
-   });
-};
 const runProject = async () => {
    editorStore.hasProjectInitialized = false;
    const installProcess = await runCommand('yarn --cwd ./project install');
@@ -124,7 +134,6 @@ const runProject = async () => {
    editorStore.hasProjectInitialized = true;
 
    await terminal.value?.writeTerminal('\n');
-   appendNodeModulesFolder();
 
    const shell = await runCommand('sh');
    const { writer } = await terminal.value!.attachProcess(shell);
@@ -146,9 +155,35 @@ const dirLoader = async (dirPath: string) => {
 const fileLoader = async (filePath: string) => {
    const webContainer = await getInstance();
    const content = await webContainer.fs.readFile(filePath, 'utf-8');
+
    if (pathContentMap.value) {
       pathContentMap.value[filePath] = { content, vid: '' };
    }
+
+   // 更新 pathTreeNodeMap,确保新创建的文件也能被监听到内容变化
+   if (pathTreeNodeMap.value && fsTree.value) {
+      const findNode = (
+         items: IFileSystemItem[],
+         targetPath: string
+      ): IFileSystemItem | null => {
+         for (const item of items) {
+            if (item.path === targetPath) {
+               return item;
+            }
+            if (item.type === 'folder' && item.children) {
+               const found = findNode(item.children, targetPath);
+               if (found) return found;
+            }
+         }
+         return null;
+      };
+
+      const node = findNode(fsTree.value, filePath);
+      if (node && !pathTreeNodeMap.value[filePath]) {
+         pathTreeNodeMap.value[filePath] = node;
+      }
+   }
+
    return content;
 };
 
@@ -189,6 +224,10 @@ const { operator } = useCommands({
 // 处理拖拽移动
 const handleMoveItem = async (oldPath: string, newPath: string) => {
    try {
+      if (!operator) {
+         console.error('Operator not ready');
+         return;
+      }
       await operator.moveItem(oldPath, newPath);
    } catch (error) {
       console.error('Failed to move item:', error);
@@ -227,7 +266,8 @@ useSeoMeta({
                   :file-loader="fileLoader"
                   :fs-tree="fsTree"
                   v-model:selected-path="selectedPath"
-                  @move-item="handleMoveItem" />
+                  @move-item="handleMoveItem"
+                  @file-click="handleFileClick" />
             </template>
             <template #end>
                <StSplitPanel

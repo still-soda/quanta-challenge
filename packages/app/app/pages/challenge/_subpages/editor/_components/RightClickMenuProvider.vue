@@ -5,6 +5,7 @@ import {
    Delete,
    AddText,
    Copy,
+   Clipboard,
 } from '@icon-park/vue-next';
 import type { DefineComponent } from 'vue';
 
@@ -37,12 +38,25 @@ export type CommandData = {
 
 const commandEmitter = useEventBus('right-click-menu-command');
 
+// 存储复制的项目
+const copiedItem = ref<{ type: 'file' | 'folder'; path: string } | null>(null);
+
+// 监听 copy 事件来更新 copiedItem
+const copyEventEmitter = useEventBus<{ type: 'file' | 'folder'; path: string }>(
+   'file-copy-event'
+);
+onMounted(() => {
+   copyEventEmitter.on((data) => {
+      copiedItem.value = data;
+   });
+});
+
 function constructCommandData(
    type: string,
    _command: CommandConfig[number][number],
    _target: HTMLElement | null
 ) {
-   commandEmitter.emit({
+   return {
       type,
       target: {
          type: _target?.getAttribute('data-type') as any,
@@ -52,10 +66,10 @@ function constructCommandData(
          command: _command,
          target: _target,
       },
-   });
+   };
 }
 
-const commandConfig: CommandConfig = [
+const commandConfig = computed<CommandConfig>(() => [
    [
       {
          icon: Copy,
@@ -64,6 +78,15 @@ const commandConfig: CommandConfig = [
             const data = constructCommandData('copy', _command, _target);
             commandEmitter.emit(data);
          },
+      },
+      {
+         icon: Clipboard,
+         label: '粘贴',
+         action: (_command, _target) => {
+            const data = constructCommandData('paste', _command, _target);
+            commandEmitter.emit(data);
+         },
+         disabled: !copiedItem.value,
       },
       {
          icon: AddText,
@@ -102,7 +125,7 @@ const commandConfig: CommandConfig = [
          },
       },
    ],
-];
+]);
 </script>
 
 <template>

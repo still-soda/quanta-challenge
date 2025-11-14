@@ -21,13 +21,15 @@ const sortedDirectory = computed(() => {
 });
 
 const emits = defineEmits<{
-   'file-or-folder-click': [item: IFileSystemItem];
+   'file-or-folder-click': [item: IFileSystemItem, wasSuspense: boolean];
    'drag-start': [item: IFileSystemItem];
    'drag-end': [];
    drop: [targetFolder: IFileSystemItem, draggedItem: IFileSystemItem];
 }>();
 
 const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
+   const wasSuspense = fileOrFolder.suspense === true;
+
    if (fileOrFolder.suspense) {
       if (fileOrFolder.type === 'folder' && props.dirLoader) {
          const dir = await props.dirLoader(fileOrFolder.path);
@@ -46,7 +48,7 @@ const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
          fileOrFolder.suspense = false;
       }
    }
-   emits('file-or-folder-click', fileOrFolder);
+   emits('file-or-folder-click', fileOrFolder, wasSuspense);
 };
 
 // 拖拽状态管理

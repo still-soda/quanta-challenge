@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
 import { useDefaultCursor } from '~/composables/use-default-cursor';
 
 const props = defineProps<{

@@ -83,6 +83,9 @@ onUnmounted(() => {
 
       <!-- 搜索覆盖层 -->
       <StSearchOverlay />
+
+      <!-- 对话框覆盖层 -->
+      <DialogOverlay />
    </div>
 </template>
 

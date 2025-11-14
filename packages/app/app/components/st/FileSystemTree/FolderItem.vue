@@ -86,10 +86,10 @@ const handleChildDrop = (
          data-type="folder"
          :data-path="props.folder.path"
          :style="{ paddingLeft: `${props.deep * 1 + 0.5}rem` }"
-         class="flex items-center gap-1 font-family-fira-code py-1 px-2 hover:cursor-pointer hover:bg-accent-600 w-full transition-colors"
+         class="flex items-center gap-1 font-family-fira-code py-1 px-2 hover:cursor-pointer hover:bg-accent-600 w-full transition-all border-transparent"
          :class="{
             'bg-accent-600': selected,
-            'bg-primary/30 border-l-2 border-primary': isDragOver,
+            'bg-primary/30 border-l-2 !border-primary': isDragOver,
          }"
          @click.stop="handleOpenedChange() && handleFileOrFolderClick(folder)"
          @dragstart="handleDragStart"

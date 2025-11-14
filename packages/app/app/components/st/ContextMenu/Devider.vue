@@ -1,3 +1,3 @@
 <template>
-   <hr class="border-t border-accent-500 my-1 w-full" />
+   <hr class="border-t border-accent-500 w-full" />
 </template>

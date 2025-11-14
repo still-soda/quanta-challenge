@@ -14,11 +14,20 @@ defineProps<{
 }>();
 
 const selectedPath = defineModel<string>('selectedPath');
-const onFileOrFolderClick = ({ path }: { path: string }) => {
-   selectedPath.value = path;
-};
 
-const emits = defineEmits(['addFile', 'addFolder', 'moveItem']);
+const emits = defineEmits<{
+   addFile: [];
+   addFolder: [];
+   moveItem: [oldPath: string, newPath: string];
+   fileClick: [item: IFileSystemItem, wasSuspense: boolean];
+}>();
+
+const onFileOrFolderClick = (item: IFileSystemItem, wasSuspense: boolean) => {
+   selectedPath.value = item.path;
+   if (item.type === 'file') {
+      emits('fileClick', item, wasSuspense);
+   }
+};
 
 const Operation: Component = (_, { slots }) => {
    return (

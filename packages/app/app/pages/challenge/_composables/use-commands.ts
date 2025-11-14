@@ -1,11 +1,16 @@
 import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import type { CommandData } from '../_subpages/editor/_components/RightClickMenuProvider.vue';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
+import { dialog } from '~/composables/use-dialog';
+import { useMessage } from '~/components/st/Message/use-message';
+
+type MessageAPI = ReturnType<typeof useMessage>;
 
 class FileSystemOperator {
    constructor(
       private getWebContainerInstance: () => Promise<WebContainer>,
-      private fsTree: Ref<IFileSystemItem[] | undefined>
+      private fsTree: Ref<IFileSystemItem[] | undefined>,
+      private message: MessageAPI
    ) {}
 
    private _traverseFindParent(path: string): IFileSystemItem | null {
@@ -32,35 +37,89 @@ class FileSystemOperator {
    async removeItem(path: string, type: 'file' | 'folder') {
       const wc = await this.getWebContainerInstance();
 
-      if (type === 'file' && confirm('你确定要删除该文件吗？')) {
-         await wc.fs.rm(path);
-      } else if (confirm('你确定要删除该文件夹吗？')) {
-         await wc.fs.rm(path, { recursive: true });
-      }
+      const confirmed = await dialog.confirm({
+         title: type === 'file' ? '删除文件' : '删除文件夹',
+         description:
+            type === 'file'
+               ? '确定要删除该文件吗？此操作无法撤销。'
+               : '确定要删除该文件夹及其所有内容吗？此操作无法撤销。',
+         variant: 'danger',
+         confirmText: '删除',
+         cancelText: '取消',
+      });
 
-      const parent = this._traverseFindParent(path);
-      if (parent && parent.children) {
-         parent.children = parent.children.filter((item) => item.path !== path);
+      if (!confirmed) return;
+
+      try {
+         if (type === 'file') {
+            await wc.fs.rm(path);
+         } else {
+            await wc.fs.rm(path, { recursive: true });
+         }
+
+         const parent = this._traverseFindParent(path);
+         if (parent && parent.children) {
+            parent.children = parent.children.filter(
+               (item) => item.path !== path
+            );
+         }
+
+         this.message.success(
+            `已成功删除${type === 'file' ? '文件' : '文件夹'}`
+         );
+      } catch (error) {
+         this.message.error(
+            `删除${type === 'file' ? '文件' : '文件夹'}时发生错误`
+         );
+         console.error('Failed to remove item:', error);
       }
    }
 
-   async renameItem(oldPath: string, newName: string) {
+   async renameItem(oldPath: string, defaultName: string) {
       const wc = await this.getWebContainerInstance();
+
+      const newName = await dialog.prompt({
+         title: '重命名',
+         description: '请输入新名称',
+         placeholder: '新名称',
+         defaultValue: defaultName,
+         validator: (value) => {
+            if (!value || value.trim().length === 0) {
+               return '名称不能为空';
+            }
+            if (value.includes('/')) {
+               return '名称不能包含斜杠';
+            }
+            return true;
+         },
+         confirmText: '重命名',
+         cancelText: '取消',
+      });
+
+      if (!newName) return;
 
       const pathParts = oldPath.split('/');
       pathParts[pathParts.length - 1] = newName;
       const newPath = pathParts.join('/');
 
-      await wc.fs.rename(oldPath, newPath);
+      try {
+         await wc.fs.rename(oldPath, newPath);
 
-      const parent = this._traverseFindParent(oldPath);
-      if (parent && parent.children) {
-         parent.children = parent.children.map((item) => {
-            if (item.path === oldPath) {
-               return { ...item, name: newName, path: newPath };
-            }
-            return item;
-         });
+         const parent = this._traverseFindParent(oldPath);
+         if (parent && parent.children) {
+            parent.children = parent.children.map((item) => {
+               if (item.path === oldPath) {
+                  return { ...item, name: newName, path: newPath };
+               }
+               return item;
+            });
+         }
+      } catch (error) {
+         this.message.error(
+            '重命名失败',
+            '重命名时发生错误，请检查名称是否已存在'
+         );
+         console.error('Failed to rename item:', error);
       }
    }
 
@@ -70,94 +129,308 @@ class FileSystemOperator {
       // 检查目标路径是否已存在
       try {
          await wc.fs.readFile(newPath);
-         alert('目标路径已存在！');
+         this.message.warning('移动失败', '目标路径已存在同名文件');
          return;
       } catch {
          try {
             await wc.fs.readdir(newPath);
-            alert('目标路径已存在！');
+            this.message.warning('移动失败', '目标路径已存在同名文件夹');
             return;
          } catch {
             // 不存在，继续
          }
       }
 
-      await wc.fs.rename(oldPath, newPath);
+      try {
+         await wc.fs.rename(oldPath, newPath);
 
-      // 从旧父节点中移除
-      const oldParent = this._traverseFindParent(oldPath);
-      let itemToMove: IFileSystemItem | undefined;
+         // 从旧父节点中移除
+         const oldParent = this._traverseFindParent(oldPath);
+         let itemToMove: IFileSystemItem | undefined;
 
-      if (oldParent && oldParent.children) {
-         itemToMove = oldParent.children.find((item) => item.path === oldPath);
-         if (itemToMove) {
-            oldParent.children = oldParent.children.filter(
-               (item) => item.path !== oldPath
+         if (oldParent && oldParent.children) {
+            itemToMove = oldParent.children.find(
+               (item) => item.path === oldPath
             );
-         }
-      } else if (this.fsTree.value) {
-         // 根级别的节点
-         itemToMove = this.fsTree.value.find((item) => item.path === oldPath);
-         if (itemToMove) {
-            this.fsTree.value = this.fsTree.value.filter(
-               (item) => item.path !== oldPath
+            if (itemToMove) {
+               oldParent.children = oldParent.children.filter(
+                  (item) => item.path !== oldPath
+               );
+            }
+         } else if (this.fsTree.value) {
+            // 根级别的节点
+            itemToMove = this.fsTree.value.find(
+               (item) => item.path === oldPath
             );
+            if (itemToMove) {
+               this.fsTree.value = this.fsTree.value.filter(
+                  (item) => item.path !== oldPath
+               );
+            }
          }
-      }
 
-      if (!itemToMove) return;
+         if (!itemToMove) return;
 
-      // 添加到新父节点
-      const newParent = this._traverseFindParent(newPath);
-      const newName = newPath.split('/').pop()!;
+         // 添加到新父节点
+         const newParent = this._traverseFindParent(newPath);
+         const newName = newPath.split('/').pop()!;
 
-      // 递归更新所有子节点的路径
-      const updatePaths = (
-         item: IFileSystemItem,
-         oldBasePath: string,
-         newBasePath: string
-      ) => {
-         item.path = item.path.replace(oldBasePath, newBasePath);
-         if (item.children) {
-            item.children.forEach((child) =>
-               updatePaths(child, oldBasePath, newBasePath)
-            );
+         // 递归更新所有子节点的路径
+         const updatePaths = (
+            item: IFileSystemItem,
+            oldBasePath: string,
+            newBasePath: string
+         ) => {
+            item.path = item.path.replace(oldBasePath, newBasePath);
+            if (item.children) {
+               item.children.forEach((child) =>
+                  updatePaths(child, oldBasePath, newBasePath)
+               );
+            }
+         };
+
+         const movedItem = {
+            ...itemToMove,
+            name: newName,
+            path: newPath,
+            suspense: true,
+         };
+         updatePaths(movedItem, oldPath, newPath);
+
+         if (newParent && newParent.children) {
+            newParent.children.push(movedItem);
+         } else if (this.fsTree.value) {
+            // 根级别的节点
+            this.fsTree.value.push(movedItem);
          }
-      };
-
-      const movedItem = { ...itemToMove, name: newName, path: newPath };
-      updatePaths(movedItem, oldPath, newPath);
-
-      if (newParent && newParent.children) {
-         newParent.children.push(movedItem);
-      } else if (this.fsTree.value) {
-         // 根级别的节点
-         this.fsTree.value.push(movedItem);
+      } catch (error) {
+         this.message.error('移动失败', '移动文件时发生错误');
+         console.error('Failed to move item:', error);
       }
    }
 
-   async createFile(path: string) {
+   async createFile(path: string, fileName?: string) {
       const wc = await this.getWebContainerInstance();
-      await wc.fs.writeFile(path, '');
 
-      this.fsTree.value?.push({
-         name: path.split('/').pop()!,
-         path,
-         type: 'file',
-      });
+      const name =
+         fileName ||
+         (await dialog.prompt({
+            title: '新建文件',
+            description: '请输入文件名',
+            placeholder: 'index.html',
+            defaultValue: 'new-file.txt',
+            validator: (value) => {
+               if (!value || value.trim().length === 0) {
+                  return '文件名不能为空';
+               }
+               if (value.includes('/')) {
+                  return '文件名不能包含斜杠';
+               }
+               return true;
+            },
+            confirmText: '创建',
+            cancelText: '取消',
+         }));
+
+      if (!name) return;
+
+      const filePath = `${path}/${name}`;
+
+      try {
+         await wc.fs.writeFile(filePath, ' ');
+
+         // 找到父节点并添加新文件
+         const parent = this._traverseFindParent(filePath);
+         const newFile: IFileSystemItem = {
+            name,
+            path: filePath,
+            type: 'file',
+            suspense: true, // 标记为悬空，让组件去加载内容
+         };
+
+         if (parent && parent.children) {
+            parent.children.push(newFile);
+         } else if (this.fsTree.value) {
+            // 根级别的文件
+            const pathParts = filePath.split('/').filter(Boolean);
+            if (pathParts.length === 1) {
+               this.fsTree.value.push(newFile);
+            }
+         }
+      } catch (error) {
+         this.message.error(
+            '创建失败',
+            '创建文件时发生错误，请检查文件名是否已存在'
+         );
+         console.error('Failed to create file:', error);
+      }
    }
 
-   async createDirectory(path: string) {
+   async createDirectory(path: string, dirName?: string) {
       const wc = await this.getWebContainerInstance();
-      await wc.fs.mkdir(path);
 
-      this.fsTree.value?.push({
-         name: path.split('/').pop()!,
-         path,
-         type: 'folder',
-         children: [],
-         suspense: true,
-      });
+      const name =
+         dirName ||
+         (await dialog.prompt({
+            title: '新建文件夹',
+            description: '请输入文件夹名',
+            placeholder: 'components',
+            defaultValue: 'new-folder',
+            validator: (value) => {
+               if (!value || value.trim().length === 0) {
+                  return '文件夹名不能为空';
+               }
+               if (value.includes('/')) {
+                  return '文件夹名不能包含斜杠';
+               }
+               return true;
+            },
+            confirmText: '创建',
+            cancelText: '取消',
+         }));
+
+      if (!name) return;
+
+      const dirPath = `${path}/${name}`;
+
+      try {
+         await wc.fs.mkdir(dirPath);
+
+         // 找到父节点并添加新文件夹
+         const parent = this._traverseFindParent(dirPath);
+         const newFolder: IFileSystemItem = {
+            name,
+            path: dirPath,
+            type: 'folder',
+            children: [],
+            suspense: true,
+         };
+
+         if (parent && parent.children) {
+            parent.children.push(newFolder);
+         } else if (this.fsTree.value) {
+            // 根级别的文件夹
+            const pathParts = dirPath.split('/').filter(Boolean);
+            if (pathParts.length === 1) {
+               this.fsTree.value.push(newFolder);
+            }
+         }
+      } catch (error) {
+         this.message.error(
+            '创建失败',
+            '创建文件夹时发生错误，请检查文件夹名是否已存在'
+         );
+         console.error('Failed to create directory:', error);
+      }
+   }
+
+   async copyItem(path: string, type: 'file' | 'folder') {
+      // 将复制的项目信息发送给 UI
+      const copyEventEmitter = useEventBus<{
+         type: 'file' | 'folder';
+         path: string;
+      }>('file-copy-event');
+      copyEventEmitter.emit({ type, path });
+
+      this.message.success(
+         `已复制${type === 'file' ? '文件' : '文件夹'}: ${path
+            .split('/')
+            .pop()}`
+      );
+   }
+
+   async pasteItem(
+      targetPath: string,
+      targetType: 'file' | 'folder',
+      copiedItem: { type: 'file' | 'folder'; path: string }
+   ) {
+      const wc = await this.getWebContainerInstance();
+
+      // 如果目标是文件,则粘贴到其父文件夹
+      const destDir =
+         targetType === 'file'
+            ? targetPath.split('/').slice(0, -1).join('/')
+            : targetPath;
+
+      const sourceName = copiedItem.path.split('/').pop()!;
+      const destPath = `${destDir}/${sourceName}`;
+
+      // 检查目标路径是否已存在
+      try {
+         if (copiedItem.type === 'file') {
+            await wc.fs.readFile(destPath);
+         } else {
+            await wc.fs.readdir(destPath);
+         }
+
+         this.message.warning('粘贴失败', '目标位置已存在同名文件或文件夹');
+         return;
+      } catch {
+         // 不存在，可以继续
+      }
+
+      try {
+         if (copiedItem.type === 'file') {
+            // 复制文件
+            const content = await wc.fs.readFile(copiedItem.path, 'utf-8');
+            await wc.fs.writeFile(destPath, content);
+         } else {
+            // 复制文件夹（递归）
+            await this._copyDirectory(wc, copiedItem.path, destPath);
+         }
+
+         // 添加到 fsTree
+         const parent = this._traverseFindParent(destPath);
+         const newItem: IFileSystemItem = {
+            name: sourceName,
+            path: destPath,
+            type: copiedItem.type,
+            ...(copiedItem.type === 'folder'
+               ? { children: [], suspense: true }
+               : { suspense: true }),
+         };
+
+         if (parent && parent.children) {
+            parent.children.push(newItem);
+         } else if (this.fsTree.value) {
+            const pathParts = destPath.split('/').filter(Boolean);
+            if (pathParts.length === 1) {
+               this.fsTree.value.push(newItem);
+            }
+         }
+
+         this.message.success(
+            `已成功粘贴${copiedItem.type === 'file' ? '文件' : '文件夹'}`
+         );
+      } catch (error) {
+         this.message.error('粘贴失败', '粘贴时发生错误');
+         console.error('Failed to paste item:', error);
+      }
+   }
+
+   private async _copyDirectory(
+      wc: WebContainer,
+      sourcePath: string,
+      destPath: string
+   ) {
+      // 创建目标文件夹
+      await wc.fs.mkdir(destPath);
+
+      // 读取源文件夹内容
+      const items = await wc.fs.readdir(sourcePath, { withFileTypes: true });
+
+      // 递归复制每个项目
+      for (const item of items) {
+         const sourceItemPath = `${sourcePath}/${item.name}`;
+         const destItemPath = `${destPath}/${item.name}`;
+
+         if (item.isDirectory()) {
+            await this._copyDirectory(wc, sourceItemPath, destItemPath);
+         } else {
+            const content = await wc.fs.readFile(sourceItemPath, 'utf-8');
+            await wc.fs.writeFile(destItemPath, content);
+         }
+      }
    }
 }
 
@@ -427,11 +700,6 @@ interface IUseCommandOptions {
 }
 
 export const useCommands = (props: IUseCommandOptions) => {
-   const operator = new FileSystemOperator(
-      props.getWebContainerInstance,
-      props.fsTree
-   );
-
    const dispatcher = new FileSystemDispatcher(
       props.getWebContainerInstance,
       props.fsTree
@@ -439,8 +707,47 @@ export const useCommands = (props: IUseCommandOptions) => {
 
    const commandEmitter = useEventBus<CommandData>('right-click-menu-command');
 
+   // 存储复制的项目
+   const copiedItem = ref<{ type: 'file' | 'folder'; path: string } | null>(
+      null
+   );
+   const copyEventEmitter = useEventBus<{
+      type: 'file' | 'folder';
+      path: string;
+   }>('file-copy-event');
+
+   // 在组件 setup 阶段立即初始化 message 和 operator
+   const message = useMessage();
+   const operator = new FileSystemOperator(
+      props.getWebContainerInstance,
+      props.fsTree,
+      message
+   );
+
+   onMounted(() => {
+      copyEventEmitter.on((data) => {
+         copiedItem.value = data;
+      });
+   });
+
    const listener = async (commandData: CommandData) => {
       switch (commandData.type) {
+         case 'copy': {
+            await operator.copyItem(
+               commandData.target.path,
+               commandData.target.type
+            );
+            break;
+         }
+         case 'paste': {
+            if (!copiedItem.value) return;
+            await operator.pasteItem(
+               commandData.target.path,
+               commandData.target.type,
+               copiedItem.value
+            );
+            break;
+         }
          case 'remove': {
             await operator.removeItem(
                commandData.target.path,
@@ -449,29 +756,40 @@ export const useCommands = (props: IUseCommandOptions) => {
             break;
          }
          case 'rename': {
-            const newName = prompt('Enter new name') || commandData.target.path;
-            if (!newName) return;
-            await operator.renameItem(commandData.target.path, newName);
+            const currentName = commandData.target.path.split('/').pop() || '';
+            await operator.renameItem(commandData.target.path, currentName);
             break;
          }
          case 'move': {
-            const newPath = prompt('Enter new path') || commandData.target.path;
+            // 通过 prompt 获取目标路径
+            const newPath = await dialog.prompt({
+               title: '移动',
+               description: '请输入目标路径',
+               placeholder: '/project/src',
+               defaultValue: commandData.target.path,
+               confirmText: '移动',
+               cancelText: '取消',
+            });
             if (!newPath) return;
             await operator.moveItem(commandData.target.path, newPath);
             break;
          }
          case 'add-file': {
-            const fileName = prompt('Enter file name') || 'new-file.txt';
-            if (!fileName) return;
-            await operator.createFile(commandData.target.path + '/' + fileName);
+            // 如果是文件，在其父文件夹创建；如果是文件夹，在其内部创建
+            const targetPath =
+               commandData.target.type === 'file'
+                  ? commandData.target.path.split('/').slice(0, -1).join('/')
+                  : commandData.target.path;
+            await operator.createFile(targetPath);
             break;
          }
-         case 'add-directory': {
-            const dirName = prompt('Enter directory name') || 'new-directory';
-            if (!dirName) return;
-            await operator.createDirectory(
-               commandData.target.path + '/' + dirName
-            );
+         case 'add-folder': {
+            // 如果是文件，在其父文件夹创建；如果是文件夹，在其内部创建
+            const targetPath =
+               commandData.target.type === 'file'
+                  ? commandData.target.path.split('/').slice(0, -1).join('/')
+                  : commandData.target.path;
+            await operator.createDirectory(targetPath);
             break;
          }
       }
