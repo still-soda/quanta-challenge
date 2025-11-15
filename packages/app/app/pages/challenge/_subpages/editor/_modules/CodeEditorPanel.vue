@@ -5,10 +5,10 @@ import { MoreOne, Setting } from '@icon-park/vue-next';
 import TabSkeleton from '../_skeletons/TabSkeleton.vue';
 import EditorSkeleton from '../_skeletons/EditorSkeleton.vue';
 import EditorSettingsModal from '../_components/EditorSettingsModal.vue';
-import { type EditorConfig, DEFAULT_EDITOR_CONFIG } from '../_configs';
 import type { WebContainer } from '@webcontainer/api';
 import { onClickOutside } from '@vueuse/core';
 import { useEditorConfig } from '../_composables/use-editor-config';
+import { useListenFileChanges } from '../_composables/use-listen-file-changes';
 
 const currentFilePath = defineModel<string>('currentFilePath');
 
@@ -150,13 +150,25 @@ onModelChange((path) => {
    currentFilePath.value = path;
 });
 
+useListenFileChanges({
+   openedTabs,
+   currentFilePath: currentFilePath as any,
+   onCloseTab,
+   defaultFs: props.defaultFs || {},
+   onEditorInstanceReady,
+});
+
 const setModel = (path: string | null, forceRecreate = false) => {
    onEditorInstanceReady((instance, monaco) => {
       if (!path) {
          instance.setModel(null);
          return;
       }
-      const model = monaco.editor.getModel(monaco.Uri.file(path));
+
+      // Monaco 需要以 / 开头的路径
+      const monacoPath = path.startsWith('/') ? path : '/' + path;
+
+      const model = monaco.editor.getModel(monaco.Uri.file(monacoPath));
 
       // 如果需要强制重新创建 model（例如处理 suspense 文件）
       if (forceRecreate && model) {
@@ -164,15 +176,21 @@ const setModel = (path: string | null, forceRecreate = false) => {
       }
 
       // 重新获取或创建 model
-      const existingModel = monaco.editor.getModel(monaco.Uri.file(path));
+      const existingModel = monaco.editor.getModel(monaco.Uri.file(monacoPath));
+
       if (existingModel && !forceRecreate) {
          instance.setModel(existingModel);
          currentFilePath.value = path;
       } else {
          const content = props.defaultFs?.[path]?.content;
          if (!content) return;
+
          instance.setModel(
-            monaco.editor.createModel(content, void 0, monaco.Uri.file(path))
+            monaco.editor.createModel(
+               content,
+               void 0,
+               monaco.Uri.file(monacoPath)
+            )
          );
       }
    });

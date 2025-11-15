@@ -9,10 +9,38 @@ import { useWebContainer } from '../../_composables/use-web-container';
 import DetailWindow from './_components/DetailWindow.vue';
 import CommitModal from './_components/CommitModal.vue';
 import { useCommands } from '../../_composables/use-commands';
+import { useFileChangeSync } from './_composables/use-file-change-sync';
+import { IGNORE_FILE_PATTERNS } from './_configs';
 
 const props = defineProps<{ id: number }>();
 
 const { $trpc } = useNuxtApp();
+
+// file change sync
+const { rm, mv, change } = useFileChangeSync({
+   ignorePatterns: IGNORE_FILE_PATTERNS,
+});
+
+// 监听文件移动/重命名事件
+const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
+   'file-move-event'
+);
+onMounted(() => {
+   fileMoveEmitter.on((data) => {
+      mv(data.oldPath, data.newPath);
+   });
+});
+
+// 监听文件删除事件
+const fileDeleteEmitter = useEventBus<{
+   path: string;
+   type: 'file' | 'folder';
+}>('file-delete-event');
+onMounted(() => {
+   fileDeleteEmitter.on((data) => {
+      rm(data.path);
+   });
+});
 
 // get and parse project file system
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
@@ -98,8 +126,6 @@ onMounted(() => {
    });
 
    const contentChangeCallback = (path: string, content: string) => {
-      console.log('change');
-
       const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
       if (
@@ -112,6 +138,9 @@ onMounted(() => {
       pathContentMap.value[normalizedPath].content = content;
       pathTreeNodeMap.value[normalizedPath].content = content;
       writeFile(path, content);
+
+      // 同步文件变化到云端
+      change(normalizedPath, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
    codeEditor.value?.onModelContentChange(debounceCallback);
@@ -174,6 +203,8 @@ const fileLoader = async (filePath: string) => {
    const webContainer = await getInstance();
    const content = await webContainer.fs.readFile(filePath, 'utf-8');
 
+   const isNewFile = !pathContentMap.value?.[filePath];
+
    if (pathContentMap.value) {
       pathContentMap.value[filePath] = { content, vid: '' };
    }
@@ -200,6 +231,11 @@ const fileLoader = async (filePath: string) => {
       if (node && !pathTreeNodeMap.value[filePath]) {
          pathTreeNodeMap.value[filePath] = node;
       }
+   }
+
+   // 如果是新文件，同步到云端
+   if (isNewFile) {
+      change(filePath, content);
    }
 
    return content;

@@ -41,7 +41,7 @@ watch(event, async () => {
       nextTick(() => fitAddon.fit());
       try {
          await runBuildStep();
-         const pack = await runPackStep();
+         const pack = await runPackStep('/project/dist');
          const recordId = await runUploadStep(pack);
          close(recordId);
       } catch (e) {
@@ -69,11 +69,11 @@ const runBuildStep = async () => {
    steps.value[1]!.status = 'inProgress';
 };
 
-const runPackStep = async () => {
+const runPackStep = async (distDir: string) => {
    const instance = await props.getWcInstance();
    // pack 'dist' dir
    const traverse = async (
-      dirPath: string = '/project/dist',
+      dirPath: string = distDir,
       pathContentMap: Record<string, string> = {}
    ) => {
       const files = await instance.fs.readdir(dirPath, {
@@ -91,7 +91,7 @@ const runPackStep = async () => {
          const encoding = acceptedBinaryExtensions.includes(extension)
             ? 'base64'
             : 'utf-8';
-         pathContentMap[path.slice('/project/dist'.length)] =
+         pathContentMap[path.slice(distDir.length)] =
             await instance.fs.readFile(path, encoding);
       }
 
@@ -124,10 +124,10 @@ const path = useParam<string[]>('path', {
    onError: () => navigateTo('/app/problems'),
 });
 const id = computed(() => Number(path.value?.[1] ?? 0));
-const close = (recordId: number) => {
+const close = (recordId?: number) => {
    runningProcess?.kill();
    opened.value = false;
-   navigateTo(`/challenge/record/${id.value}?id=${recordId}`);
+   recordId && navigateTo(`/challenge/record/${id.value}?id=${recordId}`);
 };
 
 const closable = computed(() => {

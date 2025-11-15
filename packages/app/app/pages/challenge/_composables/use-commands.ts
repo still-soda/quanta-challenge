@@ -64,6 +64,13 @@ class FileSystemOperator {
             );
          }
 
+         // 发送文件删除事件
+         const fileDeleteEmitter = useEventBus<{
+            path: string;
+            type: 'file' | 'folder';
+         }>('file-delete-event');
+         fileDeleteEmitter.emit({ path, type });
+
          this.message.success(
             `已成功删除${type === 'file' ? '文件' : '文件夹'}`
          );
@@ -114,6 +121,13 @@ class FileSystemOperator {
                return item;
             });
          }
+
+         // 发送文件移动事件（重命名也是路径变化）
+         const fileMoveEmitter = useEventBus<{
+            oldPath: string;
+            newPath: string;
+         }>('file-move-event');
+         fileMoveEmitter.emit({ oldPath, newPath });
       } catch (error) {
          this.message.error(
             '重命名失败',
@@ -203,6 +217,13 @@ class FileSystemOperator {
             // 根级别的节点
             this.fsTree.value.push(movedItem);
          }
+
+         // 发送文件移动事件
+         const fileMoveEmitter = useEventBus<{
+            oldPath: string;
+            newPath: string;
+         }>('file-move-event');
+         fileMoveEmitter.emit({ oldPath, newPath });
       } catch (error) {
          this.message.error('移动失败', '移动文件时发生错误');
          console.error('Failed to move item:', error);
