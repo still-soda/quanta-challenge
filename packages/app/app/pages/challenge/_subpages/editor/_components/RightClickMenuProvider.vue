@@ -6,6 +6,7 @@ import {
    AddText,
    Copy,
    Clipboard,
+   CuttingOne,
 } from '@icon-park/vue-next';
 import type { DefineComponent } from 'vue';
 
@@ -38,13 +39,19 @@ export type CommandData = {
 
 const commandEmitter = useEventBus('right-click-menu-command');
 
-// 存储复制的项目
-const copiedItem = ref<{ type: 'file' | 'folder'; path: string } | null>(null);
+// 存储复制/剪切的项目
+const copiedItem = ref<{
+   type: 'file' | 'folder';
+   path: string;
+   isCut: boolean;
+} | null>(null);
 
-// 监听 copy 事件来更新 copiedItem
-const copyEventEmitter = useEventBus<{ type: 'file' | 'folder'; path: string }>(
-   'file-copy-event'
-);
+// 监听 copy/cut 事件来更新 copiedItem
+const copyEventEmitter = useEventBus<{
+   type: 'file' | 'folder';
+   path: string;
+   isCut: boolean;
+}>('file-copy-event');
 onMounted(() => {
    copyEventEmitter.on((data) => {
       copiedItem.value = data;
@@ -76,6 +83,14 @@ const commandConfig = computed<CommandConfig>(() => [
          label: '复制',
          action: (_command, _target) => {
             const data = constructCommandData('copy', _command, _target);
+            commandEmitter.emit(data);
+         },
+      },
+      {
+         icon: CuttingOne,
+         label: '剪切',
+         action: (_command, _target) => {
+            const data = constructCommandData('cut', _command, _target);
             commandEmitter.emit(data);
          },
       },

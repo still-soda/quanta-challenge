@@ -329,8 +329,9 @@ class FileSystemOperator {
       const copyEventEmitter = useEventBus<{
          type: 'file' | 'folder';
          path: string;
+         isCut: boolean;
       }>('file-copy-event');
-      copyEventEmitter.emit({ type, path });
+      copyEventEmitter.emit({ type, path, isCut: false });
 
       this.message.success(
          `已复制${type === 'file' ? '文件' : '文件夹'}: ${path
@@ -339,10 +340,26 @@ class FileSystemOperator {
       );
    }
 
+   async cutItem(path: string, type: 'file' | 'folder') {
+      // 将剪切的项目信息发送给 UI
+      const copyEventEmitter = useEventBus<{
+         type: 'file' | 'folder';
+         path: string;
+         isCut: boolean;
+      }>('file-copy-event');
+      copyEventEmitter.emit({ type, path, isCut: true });
+
+      this.message.success(
+         `已剪切${type === 'file' ? '文件' : '文件夹'}: ${path
+            .split('/')
+            .pop()}`
+      );
+   }
+
    async pasteItem(
       targetPath: string,
       targetType: 'file' | 'folder',
-      copiedItem: { type: 'file' | 'folder'; path: string }
+      copiedItem: { type: 'file' | 'folder'; path: string; isCut: boolean }
    ) {
       const wc = await this.getWebContainerInstance();
 
@@ -354,6 +371,11 @@ class FileSystemOperator {
 
       const sourceName = copiedItem.path.split('/').pop()!;
       const destPath = `${destDir}/${sourceName}`;
+
+      // 如果是剪切操作且目标路径和源路径相同,则不执行
+      if (copiedItem.isCut && copiedItem.path === destPath) {
+         return;
+      }
 
       // 检查目标路径是否已存在
       try {
@@ -370,41 +392,53 @@ class FileSystemOperator {
       }
 
       try {
-         if (copiedItem.type === 'file') {
-            // 复制文件
-            const content = await wc.fs.readFile(copiedItem.path, 'utf-8');
-            await wc.fs.writeFile(destPath, content);
+         if (copiedItem.isCut) {
+            // 剪切操作：移动文件或文件夹
+            await this.moveItem(copiedItem.path, destPath);
+            this.message.success(
+               `已成功移动${copiedItem.type === 'file' ? '文件' : '文件夹'}`
+            );
          } else {
-            // 复制文件夹（递归）
-            await this._copyDirectory(wc, copiedItem.path, destPath);
-         }
-
-         // 添加到 fsTree
-         const parent = this._traverseFindParent(destPath);
-         const newItem: IFileSystemItem = {
-            name: sourceName,
-            path: destPath,
-            type: copiedItem.type,
-            ...(copiedItem.type === 'folder'
-               ? { children: [], suspense: true }
-               : { suspense: true }),
-         };
-
-         if (parent && parent.children) {
-            parent.children.push(newItem);
-         } else if (this.fsTree.value) {
-            const pathParts = destPath.split('/').filter(Boolean);
-            if (pathParts.length === 1) {
-               this.fsTree.value.push(newItem);
+            // 复制操作
+            if (copiedItem.type === 'file') {
+               // 复制文件
+               const content = await wc.fs.readFile(copiedItem.path, 'utf-8');
+               await wc.fs.writeFile(destPath, content);
+            } else {
+               // 复制文件夹（递归）
+               await this._copyDirectory(wc, copiedItem.path, destPath);
             }
-         }
 
-         this.message.success(
-            `已成功粘贴${copiedItem.type === 'file' ? '文件' : '文件夹'}`
-         );
+            // 添加到 fsTree
+            const parent = this._traverseFindParent(destPath);
+            const newItem: IFileSystemItem = {
+               name: sourceName,
+               path: destPath,
+               type: copiedItem.type,
+               ...(copiedItem.type === 'folder'
+                  ? { children: [], suspense: true }
+                  : { suspense: true }),
+            };
+
+            if (parent && parent.children) {
+               parent.children.push(newItem);
+            } else if (this.fsTree.value) {
+               const pathParts = destPath.split('/').filter(Boolean);
+               if (pathParts.length === 1) {
+                  this.fsTree.value.push(newItem);
+               }
+            }
+
+            this.message.success(
+               `已成功粘贴${copiedItem.type === 'file' ? '文件' : '文件夹'}`
+            );
+         }
       } catch (error) {
-         this.message.error('粘贴失败', '粘贴时发生错误');
-         console.error('Failed to paste item:', error);
+         this.message.error(
+            copiedItem.isCut ? '移动失败' : '粘贴失败',
+            copiedItem.isCut ? '移动时发生错误' : '粘贴时发生错误'
+         );
+         console.error('[ERROR] Failed to paste/move item:', error);
       }
    }
 
@@ -707,13 +741,16 @@ export const useCommands = (props: IUseCommandOptions) => {
 
    const commandEmitter = useEventBus<CommandData>('right-click-menu-command');
 
-   // 存储复制的项目
-   const copiedItem = ref<{ type: 'file' | 'folder'; path: string } | null>(
-      null
-   );
+   // 存储复制/剪切的项目
+   const copiedItem = ref<{
+      type: 'file' | 'folder';
+      path: string;
+      isCut: boolean;
+   } | null>(null);
    const copyEventEmitter = useEventBus<{
       type: 'file' | 'folder';
       path: string;
+      isCut: boolean;
    }>('file-copy-event');
 
    // 在组件 setup 阶段立即初始化 message 和 operator
@@ -739,6 +776,13 @@ export const useCommands = (props: IUseCommandOptions) => {
             );
             break;
          }
+         case 'cut': {
+            await operator.cutItem(
+               commandData.target.path,
+               commandData.target.type
+            );
+            break;
+         }
          case 'paste': {
             if (!copiedItem.value) return;
             await operator.pasteItem(
@@ -746,6 +790,10 @@ export const useCommands = (props: IUseCommandOptions) => {
                commandData.target.type,
                copiedItem.value
             );
+            // 如果是剪切操作，粘贴后清空剪切项
+            if (copiedItem.value.isCut) {
+               copiedItem.value = null;
+            }
             break;
          }
          case 'remove': {
