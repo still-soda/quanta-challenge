@@ -17,7 +17,7 @@ const props = defineProps<{ id: number }>();
 const { $trpc } = useNuxtApp();
 
 // file change sync
-const { rm, mv, change } = useFileChangeSync({
+const { rm, mv, change, create } = useFileChangeSync({
    ignorePatterns: IGNORE_FILE_PATTERNS,
 });
 
@@ -39,6 +39,17 @@ const fileDeleteEmitter = useEventBus<{
 onMounted(() => {
    fileDeleteEmitter.on((data) => {
       rm(data.path);
+   });
+});
+
+// 监听文件创建事件
+const fileCreateEmitter = useEventBus<{
+   path: string;
+   content: string;
+}>('file-create-event');
+onMounted(() => {
+   fileCreateEmitter.on((data) => {
+      create(data.path, data.content);
    });
 });
 
@@ -83,7 +94,9 @@ const getProject = async () => {
    mountFileSystem(contentMap).then(mounted.resolve);
    return result;
 };
-onMounted(getProject);
+onMounted(() => {
+   getProject().then(runProject);
+});
 
 // file manager
 const selectedPath = ref<string>();
@@ -180,7 +193,6 @@ const runProject = async () => {
    });
    writer.write('cd ./project && yarn dev\n');
 };
-onMounted(runProject);
 
 // handle add terminal
 const addTerminal = async () => {
@@ -233,9 +245,9 @@ const fileLoader = async (filePath: string) => {
       }
    }
 
-   // 如果是新文件，同步到云端
+   // 如果是新文件，同步到云端 (使用 create 而不是 change)
    if (isNewFile) {
-      change(filePath, content);
+      create(filePath, content);
    }
 
    return content;

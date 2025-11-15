@@ -28,11 +28,9 @@ const registerHighligher = (monaco: MonacoEditor) => {
 const autoRemeasureFont = (monaco: MonacoEditor, interval = 2000) => {
    let timer: ReturnType<typeof setInterval>;
 
-   onMounted(() => {
-      timer = setInterval(() => {
-         monaco.editor.remeasureFonts();
-      }, interval);
-   });
+   timer = setInterval(() => {
+      monaco.editor.remeasureFonts();
+   }, interval);
 
    onBeforeUnmount(() => {
       clearInterval(timer);

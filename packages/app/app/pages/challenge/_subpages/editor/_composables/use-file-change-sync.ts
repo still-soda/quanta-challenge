@@ -10,7 +10,8 @@ export interface IUseFileChangeSyncOptions {
 type Change =
    | { type: 'rm'; path: string }
    | { type: 'mv'; oldPath: string; newPath: string }
-   | { type: 'change'; path: string; content: string };
+   | { type: 'change'; path: string; content: string }
+   | { type: 'create'; path: string; content: string };
 
 /**
  * 监听文件系统变化，同步到云端
@@ -23,6 +24,10 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    const changeList: Change[] = [];
 
    const isIgnored = (path: string) => {
+      console.log(
+         path,
+         ignorePatterns.some((pattern) => minimatch(path, pattern))
+      );
       return ignorePatterns.some((pattern) => minimatch(path, pattern));
    };
 
@@ -48,6 +53,25 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
             '[ERROR] Inconsistent change type detected:',
             existingChange
          );
+      }
+   };
+
+   const create = (path: string, content: string) => {
+      if (isIgnored(path)) return;
+
+      // 检查是否已经存在相同路径的 create 或 change 操作
+      const existingChange = changeList.find(
+         (c) => (c.type === 'create' || c.type === 'change') && c.path === path
+      );
+
+      if (!existingChange) {
+         changeList.push({ type: 'create', path, content });
+      } else if (
+         existingChange.type === 'create' ||
+         existingChange.type === 'change'
+      ) {
+         // 如果已经存在，更新内容
+         existingChange.content = content;
       }
    };
 
@@ -98,5 +122,5 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
       alive = false;
    });
 
-   return { rm, mv, change };
+   return { rm, mv, change, create };
 };

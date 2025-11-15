@@ -258,7 +258,8 @@ class FileSystemOperator {
       const filePath = `${path}/${name}`;
 
       try {
-         await wc.fs.writeFile(filePath, ' ');
+         const initialContent = ' ';
+         await wc.fs.writeFile(filePath, initialContent);
 
          // 找到父节点并添加新文件
          const parent = this._traverseFindParent(filePath);
@@ -278,6 +279,13 @@ class FileSystemOperator {
                this.fsTree.value.push(newFile);
             }
          }
+
+         // 发送文件创建事件
+         const fileCreateEmitter = useEventBus<{
+            path: string;
+            content: string;
+         }>('file-create-event');
+         fileCreateEmitter.emit({ path: filePath, content: initialContent });
       } catch (error) {
          this.message.error(
             '创建失败',

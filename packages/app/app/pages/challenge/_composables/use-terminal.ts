@@ -55,7 +55,7 @@ export const useTerminal = (options?: IUseTerminalOptions) => {
       terminalInstance = new Terminal({
          convertEol: true,
          fontSize: 12,
-         fontFamily: '"FiraCode Nerd Font Mono", "Microsoft YaHei", monospace',
+         fontFamily: 'monospace',
       });
       fitAddonInstance = new FitAddon();
 
