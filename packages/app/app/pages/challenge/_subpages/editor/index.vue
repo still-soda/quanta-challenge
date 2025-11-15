@@ -17,9 +17,11 @@ const props = defineProps<{ id: number }>();
 const { $trpc } = useNuxtApp();
 
 // file change sync
-const { rm, mv, change, create } = useFileChangeSync({
-   ignorePatterns: IGNORE_FILE_PATTERNS,
-});
+const { rm, mv, change, create, lastSyncTime, isSyncing, syncStatus } =
+   useFileChangeSync({
+      problemId: props.id,
+      ignorePatterns: IGNORE_FILE_PATTERNS,
+   });
 
 // 监听文件移动/重命名事件
 const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
@@ -331,6 +333,9 @@ useSeoMeta({
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
                   :fs-tree="fsTree"
+                  :last-sync-time="lastSyncTime"
+                  :is-syncing="isSyncing"
+                  :sync-status="syncStatus"
                   v-model:selected-path="selectedPath"
                   @move-item="handleMoveItem"
                   @file-click="handleFileClick" />

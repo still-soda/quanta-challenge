@@ -3,6 +3,7 @@ import { DEFAULT_FILE_SYSTEM_SYNC_INTERVAL } from '../_configs';
 import { minimatch } from 'minimatch';
 
 export interface IUseFileChangeSyncOptions {
+   problemId: number;
    ignorePatterns?: string[];
    syncInterval?: number;
 }
@@ -18,34 +19,45 @@ type Change =
  */
 export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    const {
+      problemId,
       ignorePatterns = [],
       syncInterval = DEFAULT_FILE_SYSTEM_SYNC_INTERVAL,
    } = options;
    const changeList: Change[] = [];
 
    const isIgnored = (path: string) => {
-      console.log(
-         path,
-         ignorePatterns.some((pattern) => minimatch(path, pattern))
-      );
       return ignorePatterns.some((pattern) => minimatch(path, pattern));
    };
 
+   const formatPath = (path: string) => {
+      return path.startsWith('/') ? path : `/${path}`;
+   };
+
    const rm = (path: string) => {
-      !isIgnored(path) && changeList.push({ type: 'rm', path });
+      !isIgnored(path) &&
+         changeList.push({ type: 'rm', path: formatPath(path) });
    };
 
    const mv = (oldPath: string, newPath: string) => {
-      !isIgnored(newPath) && changeList.push({ type: 'mv', oldPath, newPath });
+      !isIgnored(newPath) &&
+         changeList.push({
+            type: 'mv',
+            oldPath: formatPath(oldPath),
+            newPath: formatPath(newPath),
+         });
    };
 
    const change = (path: string, value: string) => {
       const existingChange = changeList.find(
-         (c) => c.type === 'change' && c.path === path
+         (c) => c.type === 'change' && c.path === formatPath(path)
       );
       if (!existingChange) {
          !isIgnored(path) &&
-            changeList.push({ type: 'change', path, content: value });
+            changeList.push({
+               type: 'change',
+               path: formatPath(path),
+               content: value,
+            });
       } else if (existingChange.type === 'change') {
          existingChange.content = value;
       } else {
@@ -61,11 +73,13 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
 
       // 检查是否已经存在相同路径的 create 或 change 操作
       const existingChange = changeList.find(
-         (c) => (c.type === 'create' || c.type === 'change') && c.path === path
+         (c) =>
+            (c.type === 'create' || c.type === 'change') &&
+            c.path === formatPath(path)
       );
 
       if (!existingChange) {
-         changeList.push({ type: 'create', path, content });
+         changeList.push({ type: 'create', path: formatPath(path), content });
       } else if (
          existingChange.type === 'create' ||
          existingChange.type === 'change'
@@ -78,15 +92,61 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    let failedTime = 0;
    const maxFailedTime = 5;
    const message = useMessage();
-   const syncChangeToServer = async (changes: Change[]) => {
+   const { $trpc } = useNuxtApp();
+
+   // 同步状态
+   const lastSyncTime = ref<Date | null>(null);
+   const isSyncing = ref(false);
+   const syncStatus = ref<'idle' | 'syncing' | 'success' | 'error'>('idle');
+
+   let statusTimer: ReturnType<typeof setTimeout> | null = null;
+
+   const syncChangeToServer = async (changes: Change[], problemId: number) => {
+      // 清除之前的状态恢复定时器
+      if (statusTimer) {
+         clearTimeout(statusTimer);
+         statusTimer = null;
+      }
+
+      isSyncing.value = true;
+      syncStatus.value = 'syncing';
+
       try {
-         // TODO: 调用 API 同步文件变化到服务器
-         console.log('[SYNC]', JSON.stringify(changes));
+         const result = await atLeastTime(
+            1000,
+            $trpc.protected.fileSync.syncFileChanges.mutate({
+               problemId,
+               changes,
+            })
+         );
+         console.info(
+            `[SYNC] Successfully synced ${result.processedCount} changes to server`
+         );
          failedTime = 0;
+         lastSyncTime.value = new Date();
+         syncStatus.value = 'success';
+
+         // 成功状态保持 3 秒
+         statusTimer = setTimeout(() => {
+            if (syncStatus.value === 'success') {
+               syncStatus.value = 'idle';
+            }
+         }, 3000);
       } catch (error) {
          failedTime++;
          changeList.unshift(...changes);
+         console.error('[SYNC ERROR]', error);
          message.error('同步文件变化到服务器失败，请检查网络连接');
+         syncStatus.value = 'error';
+
+         // 错误状态保持 5 秒
+         statusTimer = setTimeout(() => {
+            if (syncStatus.value === 'error') {
+               syncStatus.value = 'idle';
+            }
+         }, 5000);
+      } finally {
+         isSyncing.value = false;
       }
    };
 
@@ -102,7 +162,7 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
          changeList.length = 0;
 
          // 调用同步函数
-         await syncChangeToServer(changesToSync);
+         await syncChangeToServer(changesToSync, problemId);
 
          // 继续下一个周期的同步
          if (failedTime < maxFailedTime) {
@@ -122,5 +182,13 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
       alive = false;
    });
 
-   return { rm, mv, change, create };
+   return {
+      rm,
+      mv,
+      change,
+      create,
+      lastSyncTime: readonly(lastSyncTime),
+      isSyncing: readonly(isSyncing),
+      syncStatus: readonly(syncStatus),
+   };
 };

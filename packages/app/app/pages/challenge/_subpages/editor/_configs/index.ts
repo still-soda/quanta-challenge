@@ -8,7 +8,7 @@ export const DEFAULT_EDITOR_CONFIG: EditorConfig = {
    fontSize: 16,
 };
 
-export const DEFAULT_FILE_SYSTEM_SYNC_INTERVAL = 10 * 1000; // 10 秒
+export const DEFAULT_FILE_SYSTEM_SYNC_INTERVAL = 5 * 1000;
 
 export const IGNORE_FILE_PATTERNS = [
    '**/node_modules/',

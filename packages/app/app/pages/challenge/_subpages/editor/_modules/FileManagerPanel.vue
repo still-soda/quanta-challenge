@@ -2,8 +2,21 @@
 import type { Component } from 'vue';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FsTreeSkeleton from '../_skeletons/FsTreeSkeleton.vue';
-import { FileAdditionOne, FolderPlus } from '@icon-park/vue-next';
+import {
+   FileAdditionOne,
+   FolderPlus,
+   LoadingFour,
+   LinkCloudFaild,
+   LinkCloudSucess,
+   DatabaseSync,
+} from '@icon-park/vue-next';
 import RightClickMenuProvider from '../_components/RightClickMenuProvider.vue';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/zh-cn';
+
+dayjs.extend(relativeTime);
+dayjs.locale('zh-cn');
 
 defineProps<{
    fsTree?: IFileSystemItem[];
@@ -11,6 +24,9 @@ defineProps<{
    dirLoader?: (
       path: string
    ) => Promise<{ name: string; type: 'file' | 'folder' }[]>;
+   lastSyncTime?: Date | null;
+   isSyncing?: boolean;
+   syncStatus?: 'idle' | 'syncing' | 'success' | 'error';
 }>();
 
 const selectedPath = defineModel<string>('selectedPath');
@@ -52,6 +68,35 @@ const handleDrop = (
 
    // 触发移动事件
    emits('moveItem', draggedItem.path, newPath);
+};
+
+// 获取完整的同步状态显示文本
+const getSyncDisplayText = (
+   status?: 'idle' | 'syncing' | 'success' | 'error',
+   lastSyncTime?: Date | null
+) => {
+   const timeStr = lastSyncTime ? dayjs(lastSyncTime).format('HH:mm:ss') : '';
+
+   switch (status) {
+      case 'syncing':
+         return {
+            Icon: LoadingFour,
+            text: '正在同步到云端...',
+            spinning: true,
+         };
+      case 'error':
+         return {
+            Icon: LinkCloudFaild,
+            text: timeStr ? `云同步失败 · 上次成功: ${timeStr}` : '同步失败',
+            spinning: false,
+         };
+      default:
+         return {
+            Icon: timeStr ? LinkCloudSucess : DatabaseSync,
+            text: timeStr ? `已同步到云端 · ${timeStr}` : '无需同步',
+            spinning: false,
+         };
+   }
 };
 </script>
 
@@ -98,6 +143,26 @@ const handleDrop = (
                   :directory="fsTree" />
             </RightClickMenuProvider>
          </StSkeleton>
+      </StSpace>
+
+      <!-- 同步状态显示 -->
+      <StSpace
+         fill-x
+         align="center"
+         gap="0.5rem"
+         class="bg-accent-600/50 rounded-lg px-4 py-3 text-accent-400">
+         <component
+            :is="getSyncDisplayText(syncStatus, lastSyncTime).Icon"
+            :class="
+               getSyncDisplayText(syncStatus, lastSyncTime).spinning
+                  ? 'animate-spin'
+                  : ''
+            "
+            :size="16"
+            :strokeWidth="3" />
+         <span class="text-xs">
+            {{ getSyncDisplayText(syncStatus, lastSyncTime).text }}
+         </span>
       </StSpace>
    </StSpace>
 </template>

@@ -6,6 +6,7 @@ import { problemRouter } from './problem';
 import { rankRouter } from './rank';
 import { userRouter } from './user';
 import { searchRouter } from './search';
+import { fileSyncRouter } from './file-sync';
 
 export const protectedRouter = router({
    problem: problemRouter,
@@ -15,4 +16,5 @@ export const protectedRouter = router({
    achievement: achievementRouter,
    user: userRouter,
    search: searchRouter,
+   fileSync: fileSyncRouter,
 });
