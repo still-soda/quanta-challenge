@@ -363,7 +363,7 @@ const progressPercent = computed(() => {
                            </button>
                            <button
                               @click="resetTimer"
-                              class="py-3 px-4 bg-accent-500 hover:bg-accent-400 rounded-lg text-white transition-colors">
+                              class="py-3 px-4 cursor-pointer bg-accent-500 hover:bg-accent-400 rounded-lg text-white transition-colors">
                               <Refresh class="text-lg" />
                            </button>
                         </div>

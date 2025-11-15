@@ -98,8 +98,9 @@ onMounted(() => {
    });
 
    const contentChangeCallback = (path: string, content: string) => {
-      // Monaco 传递的路径带前缀 `/`,需要移除以匹配 pathContentMap 和 pathTreeNodeMap 的 key
-      const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+      console.log('change');
+
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
       if (
          !pathContentMap.value?.[normalizedPath] ||
@@ -126,20 +127,37 @@ const terminal = useTemplateRef('terminal');
 // run project
 const editorStore = useEditorStore();
 const runProject = async () => {
+   const terminalInstance = await terminal.value?.createTerminal();
+   const terminalId = terminalInstance?.id;
+
    editorStore.hasProjectInitialized = false;
    const installProcess = await runCommand('yarn --cwd ./project install');
    await mounted.promise;
-   await terminal.value!.attachProcess(installProcess);
+   await terminal.value!.attachProcess({
+      process: installProcess,
+      id: terminalId,
+      name: 'install',
+   });
    await installProcess.exit;
    editorStore.hasProjectInitialized = true;
 
    await terminal.value?.writeTerminal('\n');
 
    const shell = await runCommand('sh');
-   const { writer } = await terminal.value!.attachProcess(shell);
+   const { writer } = await terminal.value!.attachProcess({
+      process: shell,
+      id: terminalId,
+      name: 'dev-server',
+   });
    writer.write('cd ./project && yarn dev\n');
 };
-runProject();
+onMounted(runProject);
+
+// handle add terminal
+const addTerminal = async () => {
+   const process = await runCommand('sh');
+   await terminal.value?.createTerminal({ process, name: 'jsh' });
+};
 
 // file system loader
 const dirLoader = async (dirPath: string) => {
@@ -221,7 +239,7 @@ const { operator } = useCommands({
    fsTree,
 });
 
-// 处理拖拽移动
+// handle move item
 const handleMoveItem = async (oldPath: string, newPath: string) => {
    try {
       if (!operator) {
@@ -287,7 +305,9 @@ useSeoMeta({
                               :default-fs="pathContentMap" />
                         </template>
                         <template #end>
-                           <TerminalPanel ref="terminal" />
+                           <TerminalPanel
+                              ref="terminal"
+                              @add-terminal="addTerminal" />
                         </template>
                      </StSplitPanel>
                   </template>

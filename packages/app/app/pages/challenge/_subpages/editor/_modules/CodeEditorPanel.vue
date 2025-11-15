@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { useMonacoEditor } from '../../../_composables/use-monaco-editor';
 import Tab from '../_components/Tab.vue';
-import { MoreOne } from '@icon-park/vue-next';
+import { MoreOne, Setting } from '@icon-park/vue-next';
 import TabSkeleton from '../_skeletons/TabSkeleton.vue';
 import EditorSkeleton from '../_skeletons/EditorSkeleton.vue';
+import EditorSettingsModal from '../_components/EditorSettingsModal.vue';
+import { type EditorConfig, DEFAULT_EDITOR_CONFIG } from '../_configs';
 import type { WebContainer } from '@webcontainer/api';
+import { onClickOutside } from '@vueuse/core';
+import { useEditorConfig } from '../_composables/use-editor-config';
 
 const currentFilePath = defineModel<string>('currentFilePath');
 
@@ -29,19 +33,36 @@ watch(
 
 const onCloseTab = (tab: ITab) => {
    const idx = openedTabs.value.indexOf(tab);
+
+   // 先确定目标路径
+   let targetPath: string | null = null;
    if (tab.path === currentFilePath.value) {
       if (idx > 0) {
-         currentFilePath.value = openedTabs.value[idx - 1]?.path;
-         setModel(currentFilePath.value!);
+         targetPath = openedTabs.value[idx - 1]!.path;
       } else if (openedTabs.value.length > 1) {
-         currentFilePath.value = openedTabs.value[idx + 1]?.path;
-         setModel(currentFilePath.value!);
-      } else {
-         currentFilePath.value = '';
-         setModel(null);
+         targetPath = openedTabs.value[idx + 1]!.path;
       }
    }
-   openedTabs.value.splice(openedTabs.value.indexOf(tab), 1);
+
+   // 先删除 tab
+   openedTabs.value.splice(idx, 1);
+
+   // 然后设置新的当前文件
+   if (targetPath !== null) {
+      // 使用 nextTick 确保在下一个 tick 设置，避免 watch 冲突
+      nextTick(() => {
+         currentFilePath.value = targetPath!;
+         setModel(targetPath!);
+      });
+   } else if (
+      tab.path === currentFilePath.value &&
+      openedTabs.value.length === 0
+   ) {
+      nextTick(() => {
+         currentFilePath.value = '';
+         setModel(null);
+      });
+   }
 };
 
 const onClickTab = (tab: ITab) => {
@@ -64,6 +85,45 @@ const {
 } = useMonacoEditor();
 
 const hasEditorReady = ref(false);
+
+// 下拉菜单状态
+const isDropdownOpen = ref(false);
+const dropdownButtonRef = ref<HTMLElement>();
+const dropdownMenuRef = ref<HTMLElement>();
+
+// 配置 Modal 状态
+const isSettingsModalOpen = ref(false);
+
+const { popperKey, containerKey: popperContainerKey } = usePopper({
+   options: {
+      placement: 'bottom-end',
+      modifiers: [
+         {
+            name: 'offset',
+            options: {
+               offset: [0, 8],
+            },
+         },
+      ],
+   },
+});
+
+const { editorConfig } = useEditorConfig({ onEditorInstanceReady });
+
+// 打开配置 Modal
+const openSettingsModal = () => {
+   isSettingsModalOpen.value = true;
+   isDropdownOpen.value = false;
+};
+
+// 点击外部关闭下拉菜单
+onClickOutside(
+   dropdownMenuRef,
+   () => {
+      isDropdownOpen.value = false;
+   },
+   { ignore: [dropdownButtonRef] }
+);
 onEditorInstanceReady(() => {
    hasEditorReady.value = true;
    const disposeWatcher = watch(
@@ -154,12 +214,36 @@ defineExpose({ setModel, onModelContentChange, addExtraLibs });
                </StSkeleton>
             </StSpace>
          </StSpace>
-         <StSpace
-            center
-            class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-200 bg-accent-500">
-            <MoreOne />
-         </StSpace>
+         <div class="relative">
+            <div
+               :ref="popperContainerKey"
+               class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-200 bg-accent-500 cursor-pointer hover:bg-accent-400 transition-colors flex items-center justify-center"
+               @click="isDropdownOpen = !isDropdownOpen">
+               <MoreOne />
+            </div>
+
+            <!-- 下拉菜单 -->
+            <Teleport to="body">
+               <div
+                  :ref="popperKey"
+                  class="absolute transition-all flex gap-0 flex-col py-1 bg-accent-600 rounded-lg shadow-lg overflow-hidden z-[10003] min-w-[9rem] border border-accent-500"
+                  :class="{
+                     '-translate-y-2 opacity-0 pointer-events-none':
+                        !isDropdownOpen,
+                  }">
+                  <StSpace
+                     align="center"
+                     gap="0.5rem"
+                     class="w-full px-4 py-2.5 text-left text-accent-100 hover:bg-accent-500 transition-colors st-font-body-normal cursor-pointer text-nowrap whitespace-nowrap"
+                     @click="openSettingsModal">
+                     <Setting />
+                     编辑器设置
+                  </StSpace>
+               </div>
+            </Teleport>
+         </div>
       </StSpace>
+
       <StSpace fill class="relative bg-[#1C1C1C] border border-[#1F1F1F]">
          <EditorSkeleton v-if="!hasEditorReady" />
          <main
@@ -168,6 +252,12 @@ defineExpose({ setModel, onModelContentChange, addExtraLibs });
             class="absolute top-0 left-0 size-full"></main>
       </StSpace>
    </StSpace>
+
+   <!-- 编辑器设置 Modal -->
+   <EditorSettingsModal
+      v-model:opened="isSettingsModalOpen"
+      :config="editorConfig"
+      @update:config="(newConfig) => Object.assign(editorConfig, newConfig)" />
 </template>
 
 <style scoped src="@/assets/css/utils.css" />

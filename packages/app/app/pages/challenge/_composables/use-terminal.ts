@@ -4,9 +4,16 @@ import type { FitAddon } from 'xterm-addon-fit';
 
 type TerminalReadyCallback = (terminal: Terminal, fitAddon: FitAddon) => void;
 
-export const useTerminal = () => {
-   const containerKey = 'terminal-container';
-   const container = useTemplateRef<HTMLElement>(containerKey);
+export interface IUseTerminalOptions {
+   containerKey?: string;
+   containerElement?: HTMLElement;
+}
+
+export const useTerminal = (options?: IUseTerminalOptions) => {
+   const containerKey = options?.containerKey ?? 'terminal-container';
+   const container = options?.containerElement
+      ? ref(options.containerElement)
+      : useTemplateRef<HTMLElement>(containerKey);
 
    let terminalInstance: Terminal | null = null;
    let fitAddonInstance: FitAddon | null = null;
@@ -28,6 +35,38 @@ export const useTerminal = () => {
             resolve({ terminal, fitAddon });
          });
       });
+   };
+
+   const initializeTerminal = async () => {
+      if (terminalInstance) {
+         return; // 已经初始化过了
+      }
+
+      if (!container.value) {
+         throw new Error('Terminal container not found');
+      }
+
+      const [{ Terminal }, { FitAddon }] = await Promise.all([
+         import('xterm'),
+         import('xterm-addon-fit'),
+         import('xterm/css/xterm.css'),
+      ]);
+
+      terminalInstance = new Terminal({
+         convertEol: true,
+         fontSize: 12,
+         fontFamily: '"FiraCode Nerd Font Mono", "Microsoft YaHei", monospace',
+      });
+      fitAddonInstance = new FitAddon();
+
+      terminalInstance.open(container.value);
+      terminalInstance.loadAddon(fitAddonInstance);
+      fitAddonInstance.fit();
+
+      terminalReadyCallbacks.forEach((callback) =>
+         callback(terminalInstance!, fitAddonInstance!)
+      );
+      terminalReadyCallbacks.clear();
    };
 
    const attachProcess = async (
@@ -66,34 +105,14 @@ export const useTerminal = () => {
    };
 
    onMounted(async () => {
-      if (!container.value) {
-         throw new Error('Terminal container not found');
-      }
-      const [{ Terminal }, { FitAddon }] = await Promise.all([
-         import('xterm'),
-         import('xterm-addon-fit'),
-         import('xterm/css/xterm.css'),
-      ]);
-      terminalInstance = new Terminal({
-         convertEol: true,
-         fontSize: 12,
-         fontFamily: '"FiraCode Nerd Font Mono", "Microsoft YaHei", monospace',
-      });
-      fitAddonInstance = new FitAddon();
-
-      terminalInstance.open(container.value);
-      terminalInstance.loadAddon(fitAddonInstance);
-      fitAddonInstance.fit();
-
-      terminalReadyCallbacks.forEach((callback) =>
-         callback(terminalInstance!, fitAddonInstance!)
-      );
+      await initializeTerminal();
    });
 
    return {
       containerKey,
       onTerminalReady,
       getInstance,
+      initializeTerminal,
       container,
       attachProcess,
    };

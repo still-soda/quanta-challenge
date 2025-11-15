@@ -17,11 +17,12 @@ export const defaultEditorOptions: editor.IStandaloneEditorConstructionOptions =
       theme: 'ayu-dark',
       automaticLayout: true,
       fontSize: 14,
+      fontFamily: 'FiraCode Nerd Font Mono, monospace',
       autoClosingBrackets: 'languageDefined',
       tabSize: 2,
       minimap: { enabled: false },
       cursorSmoothCaretAnimation: 'on',
-      autoClosingQuotes: 'always',
+      autoClosingQuotes: 'languageDefined',
       stickyScroll: {
          enabled: false,
       },

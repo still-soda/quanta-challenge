@@ -25,6 +25,20 @@ const registerHighligher = (monaco: MonacoEditor) => {
    shikiToMonaco(highlighter, monaco);
 };
 
+const autoRemeasureFont = (monaco: MonacoEditor, interval = 2000) => {
+   let timer: ReturnType<typeof setInterval>;
+
+   onMounted(() => {
+      timer = setInterval(() => {
+         monaco.editor.remeasureFonts();
+      }, interval);
+   });
+
+   onBeforeUnmount(() => {
+      clearInterval(timer);
+   });
+};
+
 interface IUseMonacoEditorOptions {
    options?: editor.IStandaloneEditorConstructionOptions;
    getWorker?: (label: string) => Promise<Worker | undefined>;
@@ -152,6 +166,7 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
       }
       // 加载 Monaco 编辑器
       const monacoModule = await import('monaco-editor').catch((error) => {
+         console.error('[ERROR]', 'Failed to load monaco editor');
          throw error;
       });
       monaco = monacoModule;
@@ -189,6 +204,9 @@ export const useMonacoEditor = (options?: IUseMonacoEditorOptions) => {
 
       // 附加高亮器
       registerHighligher(monaco);
+
+      // 自动重新测量字体
+      autoRemeasureFont(monaco);
 
       // 创建编辑器实例
       const instance = monaco.editor.create(container.value, {

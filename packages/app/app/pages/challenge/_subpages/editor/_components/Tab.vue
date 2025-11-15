@@ -10,15 +10,13 @@ defineEmits(['remove']);
 
 <template>
    <StSpace
-      gap="0.4rem"
+      gap="0.5rem"
       align="center"
-      class="px-2 py-[0.25rem] rounded-[0.375rem] text-xs bg-accent-500 text-accent-200 select-none cursor-pointer border border-transparent hover:border-primary">
-      <div class="font-family-fira-code text-nowrap whitespace-nowrap">
+      class="p-1 px-2 rounded-[0.375rem] text-xs bg-accent-500 text-accent-200 select-none cursor-pointer border border-transparent hover:border-primary">
+      <div class="text-nowrap whitespace-nowrap font-mono">
          {{ content }}
       </div>
-      <div
-         class="cursor-pointer hover:text-red-700"
-         @click.stop="$emit('remove')">
+      <div class="cursor-pointer" @click.stop="$emit('remove')">
          <slot name="remove-icon">
             <Close />
          </slot>

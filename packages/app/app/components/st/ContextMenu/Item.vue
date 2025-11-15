@@ -19,7 +19,7 @@ defineEmits<{
       align="center"
       class="px-2 py-1 rounded-sm text-sm bg-transparent"
       :class="{
-         'hover:bg-accent-600 hover:cursor-pointer': !disabled,
+         'hover:bg-accent-500 hover:cursor-pointer': !disabled,
          'opacity-50 cursor-not-allowed': disabled,
       }"
       @click="!disabled && $emit('action')">

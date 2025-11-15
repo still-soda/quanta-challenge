@@ -5,29 +5,141 @@ import { DeleteFour, Plus } from '@icon-park/vue-next';
 import type { WebContainerProcess } from '@webcontainer/api';
 import TabSkeleton from '../_skeletons/TabSkeleton.vue';
 
-const { containerKey, attachProcess, onTerminalReady, container, getInstance } =
-   useTerminal();
+type UseTerminalInstance = ReturnType<typeof useTerminal>;
 
-onTerminalReady((_, fitAddon) => {
-   const debounceFit = useDebounceFn(() => {
-      fitAddon.fit();
-   }, 200);
-   const resizeObserver = new ResizeObserver(debounceFit);
-   resizeObserver.observe(container.value!);
+type Terminal = {
+   id: string;
+   currentProcess: WebContainerProcess;
+   terminalInstance: UseTerminalInstance;
+   name: string;
+};
+
+const terminals = ref<Array<Terminal>>([]);
+
+const hasProcessReady = ref(false);
+
+const terminalRefs = ref<Record<string, HTMLElement>>({});
+
+const createTerminal = async (props?: {
+   process?: WebContainerProcess;
+   silence?: boolean;
+   name?: string;
+}) => {
+   const { process, silence, name } = props ?? {};
+
+   const id = `terminal-${Date.now()}`;
+   terminals.value.push({ id, name: name ?? 'jsh' } as any);
+   const terminal = terminals.value.find((t) => t.id === id)!;
+
+   // 等待 DOM 更新，确保元素已经渲染
+   await nextTick();
+
+   // 等待一帧，确保 ref 已经绑定
+   await new Promise((resolve) => requestAnimationFrame(resolve));
+
+   // 手动获取 DOM 元素
+   const containerElement = terminalRefs.value[id];
+   if (!containerElement) {
+      console.error('[ERROR] Terminal container not found for id:', id);
+      throw new Error(`Terminal container not found for id: ${id}`);
+   }
+
+   const terminalInstance = useTerminal({
+      containerKey: id,
+      containerElement: containerElement,
+   });
+
+   terminalInstance.onTerminalReady((_, fitAddon) => {
+      const debounceFit = useDebounceFn(() => {
+         fitAddon.fit();
+      }, 200);
+      const resizeObserver = new ResizeObserver(debounceFit);
+      resizeObserver.observe(containerElement);
+   });
+
+   terminal.terminalInstance = terminalInstance as any;
+   terminal.currentProcess = process!;
+
+   // 手动初始化 terminal
+   await terminalInstance.initializeTerminal();
+
+   let attachResult = null;
+   if (process) {
+      hasProcessReady.value = true;
+      // attach process
+      attachResult = await terminalInstance.attachProcess(process);
+      process.exit.then(async (code) => {
+         const { terminal } = await terminalInstance.getInstance();
+         terminal.write(`\nProcess has exited with code ${code}.\n`);
+      });
+   }
+
+   if (!silence) {
+      currentTerminalId.value = id;
+   }
+
+   return { ...terminalInstance, attachResult, id };
+};
+
+const currentTerminalId = defineModel<string>('currentTerminalId', {
+   default: '',
 });
 
-const writeTerminal = async (str: string) => {
-   const instance = await getInstance();
+const writeTerminal = async (str: string, id?: string) => {
+   const terminalId = id || currentTerminalId.value;
+   const terminal = terminals.value.find((t) => t.id === terminalId);
+   if (!terminal) {
+      console.info('[ERROR]', `terminal ${terminalId} is not found`, {
+         str,
+         id,
+      });
+      return;
+   }
+   const instance = await terminal.terminalInstance.getInstance();
    instance.terminal.write(str);
 };
 
-const hasProcessReady = ref(false);
+const attachProcess = async (props: {
+   process: WebContainerProcess;
+   id?: string;
+   name?: string;
+}) => {
+   const { process, id, name } = props;
+   let terminalId = id || currentTerminalId.value;
+   let terminal = terminals.value.find((t) => t.id === terminalId);
+   if (!terminal) {
+      const { attachResult } = await createTerminal({ process, name });
+      return attachResult!;
+   }
+   terminal.name = name || terminal.name;
+   hasProcessReady.value = true;
+   return await terminal.terminalInstance.attachProcess(process);
+};
+
+const removeTerminal = async (id: string) => {
+   const terminal = terminals.value.find((item) => item.id === id);
+   if (!terminal) return;
+
+   terminal.currentProcess.kill();
+
+   const instance = await terminal.terminalInstance.getInstance();
+   instance.terminal.dispose();
+
+   terminals.value = terminals.value.filter((item) => item !== terminal);
+   currentTerminalId.value = terminals.value[0]?.id ?? '';
+};
+
+const emits = defineEmits<{
+   (e: 'addTerminal'): void;
+}>();
+const addTerminal = async () => {
+   emits('addTerminal');
+};
+
 defineExpose({
-   attachProcess: async (process: WebContainerProcess) => {
-      hasProcessReady.value = true;
-      return await attachProcess(process);
-   },
+   attachProcess,
    writeTerminal,
+   createTerminal,
 });
 </script>
 
@@ -52,16 +164,24 @@ defineExpose({
                      <TabSkeleton :count="2" />
                   </template>
                   <Tab
-                     content="jsh"
+                     v-for="terminal in terminals"
+                     :key="terminal.id"
+                     :content="terminal.name"
                      :class="{
-                        '!bg-secondary !text-background hover:!border-secondary !pl-3': true,
-                     }">
+                        '!bg-secondary !text-background hover:!border-secondary':
+                           currentTerminalId === terminal.id,
+                        'bg-accent-500 text-accent-200 hover:border-secondary border border-transparent':
+                           currentTerminalId !== terminal.id,
+                     }"
+                     @remove="removeTerminal(terminal.id)"
+                     @click="currentTerminalId = terminal.id">
                      <template #remove-icon>
                         <DeleteFour />
                      </template>
                   </Tab>
                   <StSpace
-                     class="p-[0.25rem] rounded-[0.375rem] bg-accent-500 text-accent-200 hover:border-secondary border border-transparent cursor-pointer">
+                     @click="addTerminal"
+                     class="p-[0.25rem] rounded-[0.375rem] bg-accent-500 hover:bg-accent-400 transition-colors text-accent-200 cursor-pointer">
                      <Plus />
                   </StSpace>
                </StSkeleton>
@@ -71,8 +191,10 @@ defineExpose({
       <StSpace fill class="relative overflow-hidden">
          <StSpace fill class="relative my-2 mx-3">
             <main
-               v-show="hasProcessReady"
-               :ref="containerKey"
+               v-for="terminal in terminals"
+               :key="terminal.id"
+               v-show="hasProcessReady && currentTerminalId === terminal.id"
+               :ref="(el: any) => el && (terminalRefs[terminal.id] = el)"
                class="absolute left-0 top-0 w-full h-[calc(100%-1rem)]"></main>
          </StSpace>
       </StSpace>
