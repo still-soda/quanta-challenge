@@ -125,6 +125,9 @@ export default defineNuxtConfig({
          refreshToken:
             import.meta.env.REFRESH_TOKEN_SECRET ||
             'default_refresh_token_secret',
+         accessTokenExpiresIn: import.meta.env.ACCESS_TOKEN_EXPIRES_IN || '15m',
+         refreshTokenExpiresIn:
+            import.meta.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
       },
       redis: {
          host: import.meta.env.REDIS_HOST || 'localhost',
@@ -143,6 +146,11 @@ export default defineNuxtConfig({
          globalCacheTTL: import.meta.env.GLOBAL_RANKING_CACHE_TTL
             ? parseInt(import.meta.env.GLOBAL_RANKING_CACHE_TTL)
             : 60, // 默认缓存1分钟
+      },
+      fileSync: {
+         maxChangesPerSync: import.meta.env.FILE_SYNC_MAX_CHANGES
+            ? parseInt(import.meta.env.FILE_SYNC_MAX_CHANGES)
+            : 50,
       },
    },
 });

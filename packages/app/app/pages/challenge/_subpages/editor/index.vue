@@ -141,21 +141,25 @@ onMounted(() => {
    });
 
    const contentChangeCallback = (path: string, content: string) => {
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+      // Monaco 传递的路径带前导斜杠 (如 /project/xxx)
+      // 但 pathContentMap 和 pathTreeNodeMap 使用不带前导斜杠的键 (如 project/xxx)
+      const pathWithoutLeadingSlash = path.startsWith('/')
+         ? path.slice(1)
+         : path;
 
       if (
-         !pathContentMap.value?.[normalizedPath] ||
-         !pathTreeNodeMap.value?.[normalizedPath]
+         !pathContentMap.value?.[pathWithoutLeadingSlash] ||
+         !pathTreeNodeMap.value?.[pathWithoutLeadingSlash]
       ) {
          return;
       }
 
-      pathContentMap.value[normalizedPath].content = content;
-      pathTreeNodeMap.value[normalizedPath].content = content;
-      writeFile(path, content);
+      pathContentMap.value[pathWithoutLeadingSlash].content = content;
+      pathTreeNodeMap.value[pathWithoutLeadingSlash].content = content;
+      writeFile(pathWithoutLeadingSlash, content);
 
       // 同步文件变化到云端
-      change(normalizedPath, content);
+      change(pathWithoutLeadingSlash, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
    codeEditor.value?.onModelContentChange(debounceCallback);
@@ -293,12 +297,53 @@ const { operator } = useCommands({
 const handleMoveItem = async (oldPath: string, newPath: string) => {
    try {
       if (!operator) {
-         console.error('Operator not ready');
+         console.error('[ERROR] Operator not ready');
          return;
       }
       await operator.moveItem(oldPath, newPath);
    } catch (error) {
-      console.error('Failed to move item:', error);
+      console.error('[ERROR] Failed to move item:', error);
+   }
+};
+
+// handle add file
+const handleAddFile = async () => {
+   try {
+      if (!operator) {
+         console.error('[ERROR] Operator not ready');
+         return;
+      }
+      const folderPath: string = selectedPath.value
+         ? isFolder(selectedPath.value)
+            ? selectedPath.value
+            : selectedPath.value?.split('/').slice(0, -1).join('/')
+         : '/project';
+      await operator.createFile(folderPath);
+   } catch (error) {
+      console.error('[ERROR] Failed to add file:', error);
+   }
+};
+
+const isFolder = (path: string) => {
+   const node = pathTreeNodeMap.value?.[`/${path}`];
+   return !node || node?.type === 'folder';
+};
+
+// handle add folder
+const handleAddFolder = async () => {
+   try {
+      if (!operator) {
+         console.error('[ERROR] Operator not ready');
+         return;
+      }
+      const folderPath: string = selectedPath.value
+         ? isFolder(selectedPath.value)
+            ? selectedPath.value
+            : selectedPath.value?.split('/').slice(0, -1).join('/')
+         : '/project';
+      await operator.createDirectory(folderPath);
+   } catch (error) {
+      console.error('[ERROR] Failed to add folder:', error);
    }
 };
 
@@ -338,7 +383,9 @@ useSeoMeta({
                   :sync-status="syncStatus"
                   v-model:selected-path="selectedPath"
                   @move-item="handleMoveItem"
-                  @file-click="handleFileClick" />
+                  @file-click="handleFileClick"
+                  @add-file="handleAddFile"
+                  @add-folder="handleAddFolder" />
             </template>
             <template #end>
                <StSplitPanel

@@ -48,14 +48,16 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    };
 
    const change = (path: string, value: string) => {
+      const formattedPath = formatPath(path);
       const existingChange = changeList.find(
-         (c) => c.type === 'change' && c.path === formatPath(path)
+         (c) => c.type === 'change' && c.path === formattedPath
       );
+
       if (!existingChange) {
          !isIgnored(path) &&
             changeList.push({
                type: 'change',
-               path: formatPath(path),
+               path: formattedPath,
                content: value,
             });
       } else if (existingChange.type === 'change') {
@@ -71,15 +73,17 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    const create = (path: string, content: string) => {
       if (isIgnored(path)) return;
 
+      const formattedPath = formatPath(path);
+
       // 检查是否已经存在相同路径的 create 或 change 操作
       const existingChange = changeList.find(
          (c) =>
             (c.type === 'create' || c.type === 'change') &&
-            c.path === formatPath(path)
+            c.path === formattedPath
       );
 
       if (!existingChange) {
-         changeList.push({ type: 'create', path: formatPath(path), content });
+         changeList.push({ type: 'create', path: formattedPath, content });
       } else if (
          existingChange.type === 'create' ||
          existingChange.type === 'change'

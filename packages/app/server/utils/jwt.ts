@@ -10,16 +10,20 @@ export interface ITokenPayload {
  * 生成双 token
  */
 export const generateTokens = (payload: ITokenPayload) => {
-   const { accessToken: accessSecret, refreshToken: refreshSecret } =
-      useRuntimeConfig().secret;
+   const {
+      accessToken: accessSecret,
+      refreshToken: refreshSecret,
+      accessTokenExpiresIn,
+      refreshTokenExpiresIn,
+   } = useRuntimeConfig().secret;
 
    const refreshToken = jwt.sign(payload, refreshSecret, {
       algorithm: 'HS256',
-      expiresIn: '7days',
+      expiresIn: refreshTokenExpiresIn as any,
    });
    const accessToken = jwt.sign(payload, accessSecret, {
       algorithm: 'HS256',
-      expiresIn: '5s',
+      expiresIn: accessTokenExpiresIn as any,
    });
 
    return { accessToken, refreshToken };

@@ -47,6 +47,18 @@ const syncFileChangesProcedure = protectedProcedure
          return { success: true, processedCount: 0 };
       }
 
+      const { maxChangesPerSync } = useRuntimeConfig().fileSync;
+      if (changes.length > maxChangesPerSync) {
+         console.info(
+            `[ERROR] Too many changes in one sync: ${changes.length}`,
+            changes
+         );
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `Too many changes in one sync. Maximum allowed is ${maxChangesPerSync}.`,
+         });
+      }
+
       try {
          await prisma.$transaction(async (tx) => {
             // 获取用户的项目和文件系统
