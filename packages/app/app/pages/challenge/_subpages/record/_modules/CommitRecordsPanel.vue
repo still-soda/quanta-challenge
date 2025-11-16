@@ -21,15 +21,22 @@ const {
    data: records,
    pending: loading,
    refresh,
+   execute,
 } = await useAsyncData('commit-records', getRecords);
 
-onMounted(async () => {
-   const hasPending = computed(
-      () =>
-         !records.value ||
-         records.value.some((record) => record.result === 'pending')
-   );
+execute().then(() => {
+   isFirstLoading.value = false;
+});
 
+const isFirstLoading = ref(true);
+
+const hasPending = computed(
+   () =>
+      !records.value ||
+      records.value.some((record) => record.result === 'pending')
+);
+
+const startPolling = async () => {
    let waitTime = 1000;
    const polling = async () => {
       await refresh();
@@ -41,6 +48,28 @@ onMounted(async () => {
    if (hasPending.value) {
       setTimeout(polling, waitTime);
    }
+};
+
+onMounted(startPolling);
+
+const commitEmitter = useEventBus<number>('challenge-commit');
+commitEmitter.on((id) => {
+   // 提交后重新获取记录
+   refresh().then(() => {
+      isFirstLoading.value = false;
+      const record =
+         records.value?.find((r) => r.id === id) ?? records.value![0]!;
+      selectRecord(record);
+      startPolling();
+   });
+});
+
+watchEffect(() => {
+   console.log(
+      loading.value && isFirstLoading.value,
+      loading.value,
+      isFirstLoading.value
+   );
 });
 
 const currentComponent = inject<Ref<'editor' | 'record'> | undefined>(
@@ -52,7 +81,7 @@ watch(currentComponent, async (newVal) => {
    if (opened && !loading.value) {
       records.value = await getRecords();
       selectedRecord.value = records.value[0] ?? null;
-      eventBus.emit(selectedRecord.value!, true);
+      recordSelectEmitter.emit(selectedRecord.value!, true);
    }
 });
 
@@ -112,17 +141,19 @@ const CommitRecord = ({
    );
 };
 
-const eventBus = useEventBus<CommitRecordType, boolean>('commit-record-select');
+const recordSelectEmitter = useEventBus<CommitRecordType, boolean>(
+   'commit-record-select'
+);
 
 const selectedRecord = ref<CommitRecordType | null>(records.value?.[0] ?? null);
-eventBus.emit(selectedRecord.value!, true);
+recordSelectEmitter.emit(selectedRecord.value!, true);
 const selectRecord = (record: CommitRecordType) => {
    selectedRecord.value = record;
 };
 
 watch(selectedRecord, (newRecord) => {
    if (newRecord) {
-      eventBus.emit(newRecord);
+      recordSelectEmitter.emit(newRecord);
    }
 });
 </script>
@@ -149,7 +180,7 @@ watch(selectedRecord, (newRecord) => {
             fill
             gap="0.5rem"
             class="absolute left-0 top-0">
-            <StSkeleton :loading="loading">
+            <StSkeleton :loading="loading && isFirstLoading">
                <template #loading>
                   <CommitRecordSkeleton />
                </template>

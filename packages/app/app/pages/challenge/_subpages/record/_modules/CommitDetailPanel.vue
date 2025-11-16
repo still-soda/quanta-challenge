@@ -13,7 +13,7 @@ import {
 import dayjs from 'dayjs';
 import { DataBlock, Divider, JudgeStatus } from '../_components/DetailItems';
 import CommitDetailSkeleton from '../_skeletons/CommitDetailSkeleton.vue';
-import { logger } from '~~/lib/logger';
+import JudgeResultSkeleton from '../_skeletons/JudgeResultSkeleton.vue';
 
 const props = defineProps<{
    problemId: number;
@@ -27,8 +27,21 @@ const recordCache = new Map<number, CommitDetailType>();
 const aheadCache = new Map<number, string>();
 const recordId = ref<number | null>(null);
 
-const eventBus = useEventBus<CommitRecordType, boolean>('commit-record-select');
-eventBus.on((record, init) => {
+const commitEmitter = useEventBus<number>('challenge-commit');
+commitEmitter.on((id) => {
+   // 提交后清空缓存
+   recordCache.clear();
+   aheadCache.clear();
+   // 重新获取详情和排名
+   recordId.value = id;
+   getDetail();
+   getRank();
+});
+
+const commitRecordSelectEmitter = useEventBus<CommitRecordType, boolean>(
+   'commit-record-select'
+);
+commitRecordSelectEmitter.on((record, init) => {
    recordId.value = record.id;
    if (!init) {
       getDetail();
@@ -52,7 +65,7 @@ const getDetail = async () => {
    loading.value = true;
    // @ts-ignore
    detail.value = await atLeastTime(
-      300,
+      500,
       $trpc.protected.problem.getCommitRecordDetail.query({
          judgeRecordId: recordId.value,
       })
@@ -139,11 +152,11 @@ const judgeResult = computed<any>(() => {
 
 const StatusIcon = () => {
    if (detail.value?.result === 'success') {
-      return <CheckSmall class='text-success' />;
+      return <CheckSmall class='text-success' size='20' />;
    } else if (detail.value?.result === 'failed') {
-      return <CloseSmall class='text-error' />;
+      return <CloseSmall class='text-error' size='20' />;
    } else {
-      return <LoadingFour class='animate-spin text-warning' />;
+      return <LoadingFour class='animate-spin text-warning' size='20' />;
    }
 };
 </script>
@@ -153,22 +166,26 @@ const StatusIcon = () => {
       direction="vertical"
       fill
       align="center"
-      class="bg-[#1C1C1C] rounded-xl p-3">
+      class="bg-[#1C1C1C] rounded-xl p-4">
       <div class="w-[38rem] h-full relative overflow-auto hide-scrollbar">
          <StSkeleton :loading="loading || !detail">
             <template #loading>
                <CommitDetailSkeleton />
             </template>
             <StSpace
-               class="w-[38rem] min-h-full absolute top-0 left-0"
-               gap="0.75rem"
+               class="w-[38rem] min-h-full absolute top-0 left-0 mt-1"
+               gap="1rem"
                direction="vertical">
-               <StSpace fill-x justify="between" align="center">
-                  <StSpace gap="0.25rem" align="center">
-                     <span class="!font-family-manrope font-bold text-warning">
+               <StSpace
+                  fill-x
+                  justify="between"
+                  align="end"
+                  class="bg-accent-[#1C1C1C]">
+                  <StSpace gap="0.5rem" align="end">
+                     <span class="st-font-third-bold text-warning">
                         #{{ recordId }}
                      </span>
-                     <span class="st-font-body-normal">
+                     <span class="st-font-third-normal">
                         {{ detail?.problem.title }}
                      </span>
                   </StSpace>
@@ -176,7 +193,7 @@ const StatusIcon = () => {
                </StSpace>
                <StSpace
                   fill-x
-                  class="py-4 px-5 rounded-[0.375rem] border border-secondary"
+                  class="py-4 px-5 rounded-[0.375rem] border border-secondary relative z-10"
                   direction="vertical"
                   gap="1.5rem">
                   <StSpace fill-x gap="0.75rem" align="center">
@@ -235,7 +252,8 @@ const StatusIcon = () => {
                         <DocDetail />
                         <span class="st-font-body-bold">判题详情</span>
                      </StSpace>
-                     <StJudgeResult :judge-result="judgeResult" />
+                     <JudgeResultSkeleton v-if="detail?.result === 'pending'" />
+                     <StJudgeResult v-else :judge-result="judgeResult" />
                   </StSpace>
                </StSpace>
             </StSpace>

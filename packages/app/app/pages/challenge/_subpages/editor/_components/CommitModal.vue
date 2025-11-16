@@ -124,9 +124,11 @@ const path = useParam<string[]>('path', {
    onError: () => navigateTo('/app/problems'),
 });
 const id = computed(() => Number(path.value?.[1] ?? 0));
+const commitEmitter = useEventBus<number>('challenge-commit');
 const close = (recordId?: number) => {
    runningProcess?.kill();
    opened.value = false;
+   commitEmitter.emit(recordId);
    recordId && navigateTo(`/challenge/record/${id.value}?id=${recordId}`);
 };
 
@@ -143,7 +145,7 @@ const closable = computed(() => {
          @close="close"
          title="正在准备提交"
          :closable="closable"
-         class="border border-secondary w-[31.25rem]">
+         class="border border-accent-500 w-[31.25rem]">
          <StSpace fill-x gap="1.25rem" direction="vertical" align="center">
             <StProgress
                direction="horizontal"
