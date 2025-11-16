@@ -9,7 +9,7 @@ import PreviewPanel from './_modules/PreviewPanel.vue';
 import { useWebContainer } from '../../_composables/use-web-container';
 import DetailWindow from './_components/DetailWindow.vue';
 import CommitModal from './_components/CommitModal.vue';
-import { useCommands } from '../../_composables/use-commands';
+import { useCommands } from '../../_composables/use-commands/index';
 import { useFileChangeSync } from './_composables/use-file-change-sync';
 import { IGNORE_FILE_PATTERNS } from './_configs';
 
@@ -18,11 +18,10 @@ const props = defineProps<{ id: number }>();
 const { $trpc } = useNuxtApp();
 
 // file change sync
-const { rm, mv, change, create, lastSyncTime, isSyncing, syncStatus } =
-   useFileChangeSync({
-      problemId: props.id,
-      ignorePatterns: IGNORE_FILE_PATTERNS,
-   });
+const fileSync = useFileChangeSync({
+   problemId: props.id,
+   ignorePatterns: IGNORE_FILE_PATTERNS,
+});
 
 // 监听文件移动/重命名事件
 const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
@@ -30,7 +29,7 @@ const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
 );
 onMounted(() => {
    fileMoveEmitter.on((data) => {
-      mv(data.oldPath, data.newPath);
+      fileSync.mv(data.oldPath, data.newPath);
    });
 });
 
@@ -41,7 +40,7 @@ const fileDeleteEmitter = useEventBus<{
 }>('file-delete-event');
 onMounted(() => {
    fileDeleteEmitter.on((data) => {
-      rm(data.path);
+      fileSync.rm(data.path);
    });
 });
 
@@ -52,19 +51,7 @@ const fileCreateEmitter = useEventBus<{
 }>('file-create-event');
 onMounted(() => {
    fileCreateEmitter.on((data) => {
-      create(data.path, data.content);
-   });
-});
-
-// 监听文件打开请求事件（从右键菜单创建文件）
-const fileOpenEmitter = useEventBus<string>('file-open-request');
-onMounted(() => {
-   fileOpenEmitter.on((filePath) => {
-      if (pathContentMap.value) {
-         pathContentMap.value[filePath] ||= { vid: '', content: '' };
-      }
-      pathToRecreate.add(filePath);
-      selectedFilePath.value = filePath;
+      fileSync.create(data.path, data.content);
    });
 });
 
@@ -166,7 +153,7 @@ onMounted(() => {
       pathContentMap.value![normalizedPath].content = content;
       pathTreeNodeMap.value![normalizedPath].content = content;
       writeFile(normalizedPath, content);
-      change(normalizedPath, content);
+      fileSync.change(normalizedPath, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
    codeEditor.value?.onModelContentChange(debounceCallback);
@@ -262,7 +249,7 @@ const fileLoader = async (filePath: string) => {
 
    // 如果是新文件，同步到云端 (使用 create 而不是 change)
    if (isNewFile) {
-      create(filePath, content);
+      fileSync.create(filePath, content);
    }
 
    return content;
@@ -327,10 +314,7 @@ const handleAddFile = async () => {
             ? normalizePath(selectedPath.value)
             : getParentPath(normalizePath(selectedPath.value))
          : '/project';
-      const createdFilePath = await operator.createFile(folderPath);
-
-      // 如果文件创建成功，自动打开该文件
-      createdFilePath && fileOpenEmitter.emit(createdFilePath);
+      await operator.createFile(folderPath);
    } catch (error) {
       console.error('[ERROR] Failed to add file:', error);
    }
@@ -359,6 +343,14 @@ const handleAddFolder = async () => {
       console.error('[ERROR] Failed to add folder:', error);
    }
 };
+
+// prevent leave
+usePreventLeave({
+   onPrevent: () => {
+      // 离开页面前强制同步
+      fileSync.forceSync();
+   },
+});
 
 // seo enhancement
 useSeoMeta({
@@ -391,9 +383,9 @@ useSeoMeta({
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
                   :fs-tree="fsTree"
-                  :last-sync-time="lastSyncTime"
-                  :is-syncing="isSyncing"
-                  :sync-status="syncStatus"
+                  :last-sync-time="fileSync.lastSyncTime.value"
+                  :is-syncing="fileSync.isSyncing.value"
+                  :sync-status="fileSync.syncStatus.value"
                   v-model:selected-path="selectedPath"
                   @move-item="handleMoveItem"
                   @file-click="handleFileClick"

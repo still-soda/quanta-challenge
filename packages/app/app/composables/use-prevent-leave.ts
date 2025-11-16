@@ -1,10 +1,15 @@
-export const usePreventLeave = () => {
+export interface IUsePreventLeaveOptions {
+   onPrevent: () => void;
+}
+
+export const usePreventLeave = (options?: IUsePreventLeaveOptions) => {
    const enable = ref(true);
 
    const listener = (e: BeforeUnloadEvent) => {
       if (!enable.value) return;
       e.preventDefault();
       e.returnValue = '';
+      options?.onPrevent();
       return '';
    };
 

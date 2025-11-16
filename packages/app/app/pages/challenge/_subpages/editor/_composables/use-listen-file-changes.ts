@@ -110,6 +110,28 @@ export const useListenFileChanges = (props: IFileChangeListenerProps) => {
       });
    });
 
+   const _removeModels = (paths: string[]) => {
+      if (paths.length === 0) return;
+      const pathsSet = new Set(paths);
+      onEditorInstanceReady((_, monaco) => {
+         const allModels = monaco.editor.getModels();
+         allModels.forEach((model) => {
+            const modelPath = model.uri.path;
+            const normalizedModelPath = modelPath.startsWith('/')
+               ? modelPath.slice(1)
+               : modelPath;
+
+            if (pathsSet.has(normalizedModelPath)) {
+               model.dispose();
+               // 更新 defaultFs
+               if (defaultFs && defaultFs[normalizedModelPath]) {
+                  delete defaultFs[normalizedModelPath];
+               }
+            }
+         });
+      });
+   };
+
    // 监听文件删除事件
    const fileDeleteEmitter = useEventBus<{
       path: string;
@@ -125,6 +147,7 @@ export const useListenFileChanges = (props: IFileChangeListenerProps) => {
                (tab) => tab.path === path
             );
             if (tabToRemove) {
+               _removeModels([path]);
                onCloseTab(tabToRemove);
             }
          } else {
@@ -132,7 +155,10 @@ export const useListenFileChanges = (props: IFileChangeListenerProps) => {
             const tabsToRemove = openedTabs.value.filter((tab) =>
                tab.path.startsWith(path + '/')
             );
-            tabsToRemove.forEach((tab) => onCloseTab(tab));
+            _removeModels(tabsToRemove.map((tab) => tab.path));
+            tabsToRemove.forEach((tab) => {
+               onCloseTab(tab);
+            });
          }
       });
    });

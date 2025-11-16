@@ -154,6 +154,15 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
       }
    };
 
+   const forceSync = async () => {
+      if (changeList.length === 0) return;
+      const changesToSync = [...changeList];
+      changeList.length = 0;
+
+      // 调用同步函数
+      await syncChangeToServer(changesToSync, problemId);
+   };
+
    let alive = true;
    const startSync = () => {
       setTimeout(async () => {
@@ -191,6 +200,7 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
       mv,
       change,
       create,
+      forceSync,
       lastSyncTime: readonly(lastSyncTime),
       isSyncing: readonly(isSyncing),
       syncStatus: readonly(syncStatus),

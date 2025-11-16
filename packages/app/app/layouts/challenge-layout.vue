@@ -17,8 +17,6 @@ const toggleDetailWindow = () => {
    store.detailWindowOpened = !store.detailWindowOpened;
 };
 
-usePreventLeave();
-
 const { emit: emitCommitEvent } = useEventEmitter('challenge-layout', 'commit');
 
 const path = useParam<string[]>('path', { required: true });
