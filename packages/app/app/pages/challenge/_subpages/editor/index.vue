@@ -18,7 +18,7 @@ const props = defineProps<{ id: number }>();
 const { $trpc } = useNuxtApp();
 
 // file change sync
-const fileSync = useFileChangeSync({
+const fileChangeSync = useFileChangeSync({
    problemId: props.id,
    ignorePatterns: IGNORE_FILE_PATTERNS,
 });
@@ -29,7 +29,7 @@ const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
 );
 onMounted(() => {
    fileMoveEmitter.on((data) => {
-      fileSync.mv(data.oldPath, data.newPath);
+      fileChangeSync.mv(data.oldPath, data.newPath);
    });
 });
 
@@ -40,7 +40,7 @@ const fileDeleteEmitter = useEventBus<{
 }>('file-delete-event');
 onMounted(() => {
    fileDeleteEmitter.on((data) => {
-      fileSync.rm(data.path);
+      fileChangeSync.rm(data.path);
    });
 });
 
@@ -51,7 +51,7 @@ const fileCreateEmitter = useEventBus<{
 }>('file-create-event');
 onMounted(() => {
    fileCreateEmitter.on((data) => {
-      fileSync.create(data.path, data.content);
+      fileChangeSync.create(data.path, data.content);
    });
 });
 
@@ -153,7 +153,7 @@ onMounted(() => {
       pathContentMap.value![normalizedPath].content = content;
       pathTreeNodeMap.value![normalizedPath].content = content;
       writeFile(normalizedPath, content);
-      fileSync.change(normalizedPath, content);
+      fileChangeSync.change(normalizedPath, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
    codeEditor.value?.onModelContentChange(debounceCallback);
@@ -249,7 +249,7 @@ const fileLoader = async (filePath: string) => {
 
    // 如果是新文件，同步到云端 (使用 create 而不是 change)
    if (isNewFile) {
-      fileSync.create(filePath, content);
+      fileChangeSync.create(filePath, content);
    }
 
    return content;
@@ -348,7 +348,7 @@ const handleAddFolder = async () => {
 usePreventLeave({
    onPrevent: () => {
       // 离开页面前强制同步
-      fileSync.forceSync();
+      fileChangeSync.forceSync();
    },
 });
 
@@ -383,9 +383,9 @@ useSeoMeta({
                   :dir-loader="dirLoader"
                   :file-loader="fileLoader"
                   :fs-tree="fsTree"
-                  :last-sync-time="fileSync.lastSyncTime.value"
-                  :is-syncing="fileSync.isSyncing.value"
-                  :sync-status="fileSync.syncStatus.value"
+                  :last-sync-time="fileChangeSync.lastSyncTime.value"
+                  :is-syncing="fileChangeSync.isSyncing.value"
+                  :sync-status="fileChangeSync.syncStatus.value"
                   v-model:selected-path="selectedPath"
                   @move-item="handleMoveItem"
                   @file-click="handleFileClick"

@@ -3,6 +3,7 @@
 ## 概述
 
 全局搜索功能已实现，包含：
+
 - 搜索覆盖层（StSearchOverlay）
 - 搜索状态管理（useSearch composable）
 - 键盘快捷键支持（Cmd/Ctrl + K）
@@ -10,9 +11,11 @@
 ## 组件结构
 
 ### 1. StSearchOverlay
+
 位置：`packages/app/app/components/st/SearchOverlay/index.vue`
 
 这是搜索界面的主组件，包含：
+
 - 搜索输入框
 - 搜索结果展示区
 - 加载状态
@@ -20,6 +23,7 @@
 - 键盘快捷键提示
 
 ### 2. useSearch Composable
+
 位置：`packages/app/app/composables/use-search.ts`
 
 提供以下功能：
@@ -64,7 +68,6 @@ const performSearch = async (query: string) => {
   searchQuery.value = query;
 
   try {
-    // TODO: 替换为实际的搜索 API 调用
     // 示例：
     const results = await $fetch('/api/search', { 
       query: { 
@@ -115,7 +118,7 @@ interface SearchResult {
     v-for="(result, index) in searchResults"
     :key="index"
     class="px-6 py-4 hover:bg-accent-600 transition-colors cursor-pointer">
-    <!-- TODO: 根据结果类型展示不同的内容 -->
+    
     <div class="text-white st-font-body-bold">
       {{ result.title }}
     </div>
@@ -138,6 +141,7 @@ interface SearchResult {
 ## 键盘导航（预留）
 
 底部提示栏显示了键盘操作提示：
+
 - `↑` `↓`：选择搜索结果（待实现）
 - `Enter`：打开选中的结果（待实现）
 - `ESC`：关闭搜索框（已实现）
