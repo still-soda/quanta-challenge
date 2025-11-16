@@ -60,7 +60,8 @@ const handleDrop = (e: DragEvent) => {
    e.preventDefault();
    e.stopPropagation();
    isDragOver.value = false;
-   emits('drop', props.folder, null as any); // 将在父组件中处理
+   // 不传递具体的 draggedItem，让父组件使用自己维护的 draggedItem
+   emits('drop', props.folder, null as any);
 };
 
 const handleChildDragStart = (item: IFileSystemItem) => {

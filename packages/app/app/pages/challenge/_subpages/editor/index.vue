@@ -56,6 +56,18 @@ onMounted(() => {
    });
 });
 
+// 监听文件打开请求事件（从右键菜单创建文件）
+const fileOpenEmitter = useEventBus<string>('file-open-request');
+onMounted(() => {
+   fileOpenEmitter.on((filePath) => {
+      if (pathContentMap.value) {
+         pathContentMap.value[filePath] ||= { vid: '', content: '' };
+      }
+      pathToRecreate.add(filePath);
+      selectedFilePath.value = filePath;
+   });
+});
+
 // get and parse project file system
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
 const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
@@ -315,7 +327,10 @@ const handleAddFile = async () => {
             ? normalizePath(selectedPath.value)
             : getParentPath(normalizePath(selectedPath.value))
          : '/project';
-      await operator.createFile(folderPath);
+      const createdFilePath = await operator.createFile(folderPath);
+
+      // 如果文件创建成功，自动打开该文件
+      createdFilePath && fileOpenEmitter.emit(createdFilePath);
    } catch (error) {
       console.error('[ERROR] Failed to add file:', error);
    }

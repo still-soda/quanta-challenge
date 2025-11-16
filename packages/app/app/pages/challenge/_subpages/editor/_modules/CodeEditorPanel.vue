@@ -188,7 +188,7 @@ const setModel = (path: string | null, forceRecreate = false) => {
          currentFilePath.value = normalizedPath;
       } else {
          const content = props.defaultFs?.[normalizedPath]?.content;
-         if (!content) return;
+         if (typeof content === 'undefined') return;
 
          instance.setModel(
             monaco.editor.createModel(

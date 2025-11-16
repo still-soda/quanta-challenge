@@ -27,6 +27,17 @@ const emits = defineEmits<{
    drop: [targetFolder: IFileSystemItem, draggedItem: IFileSystemItem];
 }>();
 
+// 全局拖拽状态管理 - 使用 provide/inject 确保跨层级共享
+const injectedDraggedItem = inject<Ref<IFileSystemItem | null>>(
+   'fs-tree-dragged-item',
+   ref(null)
+);
+
+// 如果是根节点，提供全局状态
+if (props.deep === undefined || props.deep === 0) {
+   provide('fs-tree-dragged-item', injectedDraggedItem);
+}
+
 const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
    const wasSuspense = fileOrFolder.suspense === true;
 
@@ -51,16 +62,13 @@ const handleFileOrFolderClick = async (fileOrFolder: IFileSystemItem) => {
    emits('file-or-folder-click', fileOrFolder, wasSuspense);
 };
 
-// 拖拽状态管理
-const draggedItem = ref<IFileSystemItem | null>(null);
-
 const handleDragStart = (item: IFileSystemItem) => {
-   draggedItem.value = item;
+   injectedDraggedItem.value = item;
    emits('drag-start', item);
 };
 
 const handleDragEnd = () => {
-   draggedItem.value = null;
+   injectedDraggedItem.value = null;
    emits('drag-end');
 };
 
@@ -68,14 +76,26 @@ const handleDrop = (
    targetFolder: IFileSystemItem,
    _draggedItem: IFileSystemItem | null
 ) => {
-   if (!draggedItem.value) return;
+   // 优先使用传递过来的 draggedItem，如果没有则使用全局的
+   const itemToDrop = _draggedItem || injectedDraggedItem.value;
+
+   if (!itemToDrop) {
+      console.warn('[FileSystemTree] Drop failed: no dragged item found');
+      return;
+   }
 
    // 防止将文件夹拖到自己或自己的子文件夹中
-   if (draggedItem.value.path === targetFolder.path) return;
-   if (targetFolder.path.startsWith(draggedItem.value.path + '/')) return;
+   if (itemToDrop.path === targetFolder.path) {
+      console.warn('[FileSystemTree] Cannot drop folder into itself');
+      return;
+   }
+   if (targetFolder.path.startsWith(itemToDrop.path + '/')) {
+      console.warn('[FileSystemTree] Cannot drop folder into its subfolder');
+      return;
+   }
 
-   emits('drop', targetFolder, draggedItem.value);
-   draggedItem.value = null;
+   emits('drop', targetFolder, itemToDrop);
+   injectedDraggedItem.value = null;
 };
 </script>
 

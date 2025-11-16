@@ -9,7 +9,6 @@ import {
    getBaseName,
    splitPath,
    joinPath,
-   isChildPath,
    replaceBasePath,
 } from '~/utils/path-utils';
 
@@ -171,9 +170,7 @@ class FileSystemOperator {
             await wc.fs.readdir(newPathForWC);
             this.message.warning('移动失败', '目标路径已存在同名文件夹');
             return;
-         } catch {
-            // 不存在，继续
-         }
+         } catch {}
       }
 
       try {
@@ -232,12 +229,10 @@ class FileSystemOperator {
          };
          updatePaths(movedItem, normalizedOldPath, normalizedNewPath);
 
-         if (newParent && newParent.children) {
-            newParent.children.push(movedItem);
-         } else if (this.fsTree.value) {
-            // 根级别的节点
-            this.fsTree.value.push(movedItem);
+         if (!newParent || !newParent.children) {
+            return;
          }
+         newParent.children.push(movedItem);
 
          // 发送文件移动事件
          const fileMoveEmitter = useEventBus<{
@@ -283,7 +278,7 @@ class FileSystemOperator {
       const filePath = joinPath(normalizedPath, name);
 
       try {
-         const initialContent = ' ';
+         const initialContent = '';
          // WebContainer API 不需要前置 /
          const filePathForWC = filePath.slice(1);
          await wc.fs.writeFile(filePathForWC, initialContent);
@@ -313,12 +308,16 @@ class FileSystemOperator {
             content: string;
          }>('file-create-event');
          fileCreateEmitter.emit({ path: filePath, content: initialContent });
+
+         // 返回新创建的文件路径，用于后续打开
+         return filePath;
       } catch (error) {
          this.message.error(
             '创建失败',
             '创建文件时发生错误，请检查文件名是否已存在'
          );
          console.error('Failed to create file:', error);
+         return null;
       }
    }
 
@@ -920,7 +919,13 @@ export const useCommands = (props: IUseCommandOptions) => {
                commandData.target.type === 'file'
                   ? getParentPath(normalizedPath)
                   : normalizedPath;
-            await operator.createFile(targetPath);
+            const createdFilePath = await operator.createFile(targetPath);
+
+            // 如果文件创建成功，发送打开文件事件
+            if (createdFilePath) {
+               const fileOpenEmitter = useEventBus<string>('file-open-request');
+               fileOpenEmitter.emit(createdFilePath);
+            }
             break;
          }
          case 'add-folder': {

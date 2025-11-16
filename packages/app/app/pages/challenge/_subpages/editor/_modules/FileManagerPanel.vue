@@ -58,6 +58,7 @@ const handleDrop = (
    targetFolder: IFileSystemItem,
    draggedItem: IFileSystemItem
 ) => {
+   console.log(targetFolder, draggedItem);
    if (!targetFolder || !draggedItem) return;
 
    // 构建新路径
