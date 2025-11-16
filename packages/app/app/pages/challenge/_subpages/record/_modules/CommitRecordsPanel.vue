@@ -17,18 +17,12 @@ const getRecords = async () => {
       problemId: props.id,
    });
 };
-const {
-   data: records,
-   pending: loading,
-   refresh,
-   execute,
-} = await useAsyncData('commit-records', getRecords);
+const { data: records, refresh } = await useAsyncData(
+   'commit-records',
+   getRecords
+);
 
-execute().then(() => {
-   isFirstLoading.value = false;
-});
-
-const isFirstLoading = ref(true);
+const loading = computed(() => !records.value);
 
 const hasPending = computed(
    () =>
@@ -56,20 +50,11 @@ const commitEmitter = useEventBus<number>('challenge-commit');
 commitEmitter.on((id) => {
    // 提交后重新获取记录
    refresh().then(() => {
-      isFirstLoading.value = false;
       const record =
          records.value?.find((r) => r.id === id) ?? records.value![0]!;
       selectRecord(record);
       startPolling();
    });
-});
-
-watchEffect(() => {
-   console.log(
-      loading.value && isFirstLoading.value,
-      loading.value,
-      isFirstLoading.value
-   );
 });
 
 const currentComponent = inject<Ref<'editor' | 'record'> | undefined>(
@@ -180,7 +165,7 @@ watch(selectedRecord, (newRecord) => {
             fill
             gap="0.5rem"
             class="absolute left-0 top-0">
-            <StSkeleton :loading="loading && isFirstLoading">
+            <StSkeleton :loading="loading">
                <template #loading>
                   <CommitRecordSkeleton />
                </template>
