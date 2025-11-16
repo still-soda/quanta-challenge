@@ -100,35 +100,35 @@ const syncFileChangesProcedure = protectedProcedure
                            where: { vid: file.vid },
                         });
                         existingFiles.delete(change.path);
-                        console.log('[REMOVE]', file);
-                     } else {
-                        // 可能是文件夹，删除所有匹配前缀的文件
-                        const folderPrefix = change.path.endsWith('/')
-                           ? change.path
-                           : change.path + '/';
-                        const filesToDelete: string[] = [];
+                        console.log('[REMOVE] remove file', file);
+                        break;
+                     }
 
-                        for (const [filePath, fileData] of existingFiles) {
+                     // 可能是文件夹，删除所有匹配前缀的文件
+                     const folderPrefix = change.path.endsWith('/')
+                        ? change.path
+                        : change.path + '/';
+                     const filesToDelete: string[] = [];
+
+                     for (const [filePath, fileData] of existingFiles) {
+                        if (filePath.startsWith(folderPrefix)) {
+                           filesToDelete.push(fileData.vid);
+                        }
+                     }
+                     // 批量删除文件夹内的所有文件
+                     if (filesToDelete.length > 0) {
+                        await tx.virtualFiles.deleteMany({
+                           where: {
+                              vid: { in: filesToDelete },
+                           },
+                        });
+                        // 从缓存中移除
+                        for (const [filePath] of existingFiles) {
                            if (filePath.startsWith(folderPrefix)) {
-                              filesToDelete.push(fileData.vid);
+                              existingFiles.delete(filePath);
                            }
                         }
-
-                        // 批量删除文件夹内的所有文件
-                        if (filesToDelete.length > 0) {
-                           await tx.virtualFiles.deleteMany({
-                              where: {
-                                 vid: { in: filesToDelete },
-                              },
-                           });
-
-                           // 从缓存中移除
-                           for (const [filePath] of existingFiles) {
-                              if (filePath.startsWith(folderPrefix)) {
-                                 existingFiles.delete(filePath);
-                              }
-                           }
-                        }
+                        console.log('[REMOVE] remove folder', change.path);
                      }
                      break;
                   }
@@ -136,6 +136,8 @@ const syncFileChangesProcedure = protectedProcedure
                   case 'mv': {
                      // 移动/重命名文件
                      const file = existingFiles.get(change.oldPath);
+
+                     // 移动文件夹
                      if (file) {
                         // 提取新路径（移除 /project/ 前缀）
                         const newPath = change.newPath.replace(
@@ -151,7 +153,49 @@ const syncFileChangesProcedure = protectedProcedure
                            ...file,
                            path: newPath,
                         });
+                        console.log(
+                           '[MOVE] move file',
+                           change.oldPath,
+                           change.newPath
+                        );
+                        break;
                      }
+
+                     // 移动文件夹，更新所有匹配前缀的文件路径
+                     const oldFolderPrefix = change.oldPath.endsWith('/')
+                        ? change.oldPath
+                        : change.oldPath + '/';
+                     const newFolderPrefix = change.newPath.endsWith('/')
+                        ? change.newPath
+                        : change.newPath + '/';
+
+                     for (const [filePath, fileData] of existingFiles) {
+                        if (filePath.startsWith(oldFolderPrefix)) {
+                           const relativePath = filePath.slice(
+                              oldFolderPrefix.length
+                           );
+                           const updatedPath = newFolderPrefix + relativePath;
+                           const newDbPath = updatedPath.replace(
+                              /^\/project\//,
+                              ''
+                           );
+
+                           await tx.virtualFiles.update({
+                              where: { vid: fileData.vid },
+                              data: { path: newDbPath },
+                           });
+                           existingFiles.delete(filePath);
+                           existingFiles.set(updatedPath, {
+                              ...fileData,
+                              path: newDbPath,
+                           });
+                        }
+                     }
+                     console.log(
+                        '[MOVE] move folder',
+                        change.oldPath,
+                        change.newPath
+                     );
                      break;
                   }
 

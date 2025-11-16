@@ -3,6 +3,7 @@ import type {
    FileNode,
    FileSystemTree,
 } from '@WebContainer/api';
+import { normalizePath } from '~/utils/path-utils';
 
 const isFileNode = (node: any): node is FileNode => {
    return typeof node === 'object' && 'file' in node;
@@ -21,18 +22,24 @@ const uint8ArrayToBase64 = (bytes: Uint8Array) => {
    return btoa(binary);
 };
 
+/**
+ * 将 WebContainer 的 FileSystemTree 转换为路径内容映射
+ * 所有路径都以 / 开头（规范化格式）
+ */
 export const convertToPathContentMap = (fsTree: FileSystemTree) => {
    const pathContentMap: Record<string, string> = {};
 
    const traverse = (fsTree: FileSystemTree, currentPath: string) => {
       Object.entries(fsTree).forEach(([name, node]) => {
          if (isFileNode(node)) {
-            pathContentMap[currentPath + name] =
+            // 使用 normalizePath 确保路径格式统一
+            const filePath = normalizePath(`${currentPath}/${name}`);
+            pathContentMap[filePath] =
                node.file.contents instanceof Uint8Array
                   ? uint8ArrayToBase64(node.file.contents)
                   : node.file.contents;
          } else if (isDirectoryNode(node)) {
-            traverse(node.directory, currentPath + name + '/');
+            traverse(node.directory, `${currentPath}/${name}`);
          }
       });
    };

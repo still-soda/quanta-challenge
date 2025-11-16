@@ -1,6 +1,7 @@
 import { useMessage } from '~/components/st/Message/use-message';
 import { DEFAULT_FILE_SYSTEM_SYNC_INTERVAL } from '../_configs';
 import { minimatch } from 'minimatch';
+import { normalizePath } from '~/utils/path-utils';
 
 export interface IUseFileChangeSyncOptions {
    problemId: number;
@@ -29,35 +30,34 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
       return ignorePatterns.some((pattern) => minimatch(path, pattern));
    };
 
-   const formatPath = (path: string) => {
-      return path.startsWith('/') ? path : `/${path}`;
-   };
-
    const rm = (path: string) => {
-      !isIgnored(path) &&
-         changeList.push({ type: 'rm', path: formatPath(path) });
+      const normalizedPath = normalizePath(path);
+      !isIgnored(normalizedPath) &&
+         changeList.push({ type: 'rm', path: normalizedPath });
    };
 
    const mv = (oldPath: string, newPath: string) => {
-      !isIgnored(newPath) &&
+      const normalizedOldPath = normalizePath(oldPath);
+      const normalizedNewPath = normalizePath(newPath);
+      !isIgnored(normalizedNewPath) &&
          changeList.push({
             type: 'mv',
-            oldPath: formatPath(oldPath),
-            newPath: formatPath(newPath),
+            oldPath: normalizedOldPath,
+            newPath: normalizedNewPath,
          });
    };
 
    const change = (path: string, value: string) => {
-      const formattedPath = formatPath(path);
+      const normalizedPath = normalizePath(path);
       const existingChange = changeList.find(
-         (c) => c.type === 'change' && c.path === formattedPath
+         (c) => c.type === 'change' && c.path === normalizedPath
       );
 
       if (!existingChange) {
-         !isIgnored(path) &&
+         !isIgnored(normalizedPath) &&
             changeList.push({
                type: 'change',
-               path: formattedPath,
+               path: normalizedPath,
                content: value,
             });
       } else if (existingChange.type === 'change') {
@@ -71,19 +71,19 @@ export const useFileChangeSync = (options: IUseFileChangeSyncOptions) => {
    };
 
    const create = (path: string, content: string) => {
-      if (isIgnored(path)) return;
+      const normalizedPath = normalizePath(path);
 
-      const formattedPath = formatPath(path);
+      if (isIgnored(normalizedPath)) return;
 
       // 检查是否已经存在相同路径的 create 或 change 操作
       const existingChange = changeList.find(
          (c) =>
             (c.type === 'create' || c.type === 'change') &&
-            c.path === formattedPath
+            c.path === normalizedPath
       );
 
       if (!existingChange) {
-         changeList.push({ type: 'create', path: formattedPath, content });
+         changeList.push({ type: 'create', path: normalizedPath, content });
       } else if (
          existingChange.type === 'create' ||
          existingChange.type === 'change'

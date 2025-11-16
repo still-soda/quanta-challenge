@@ -1,4 +1,5 @@
 import type { DirectoryNode, FileSystemTree } from '@WebContainer/api';
+import { normalizePath, splitPath } from '~/utils/path-utils';
 
 const base64ToUint8Array = (base64: string) => {
    const binaryString = atob(base64);
@@ -40,12 +41,23 @@ const writeFile = (
    );
 };
 
+/**
+ * 将路径内容映射转换为 WebContainer 的 FileSystemTree
+ * 输入的路径可以是任意格式，会自动规范化
+ */
 export const convertToFsTree = (pathContentMap: Record<string, string>) => {
    const fsTree: FileSystemTree = {};
    Object.entries(pathContentMap).forEach(([path, content]) => {
-      const pathSegments = path.split('/').filter(Boolean);
-      const fileName = pathSegments.pop()!;
-      writeFile(fsTree, pathSegments, fileName, content);
+      // 规范化路径并分割
+      const normalizedPath = normalizePath(path);
+      const segments = splitPath(normalizedPath);
+
+      if (segments.length === 0) return; // 忽略根路径
+
+      const fileName = segments[segments.length - 1]!;
+      const dirSegments = segments.slice(0, -1);
+
+      writeFile(fsTree, dirSegments, fileName, content);
    });
    return fsTree;
 };

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { buildFileSystemTree } from '~/utils/fs-tree';
+import { normalizePath, getParentPath, splitPath } from '~/utils/path-utils';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import FileManagerPanel from './_modules/FileManagerPanel.vue';
 import CodeEditorPanel from './_modules/CodeEditorPanel.vue';
@@ -74,6 +75,7 @@ const getProject = async () => {
          vid: file.vid,
       };
    });
+
    const contentMap = objectMap(
       pathContentMap.value,
       ({ value }) => value.content
@@ -89,16 +91,14 @@ const getProject = async () => {
    }
    pathTreeNodeMap.value = {};
    buildResult.fileNodes.forEach((file) => {
-      const path = `/${file.path}`;
+      const path = file.path.startsWith('/') ? file.path : `/${file.path}`;
       pathTreeNodeMap.value![path] = file;
    });
 
    mountFileSystem(contentMap).then(mounted.resolve);
    return result;
 };
-onMounted(() => {
-   getProject().then(runProject);
-});
+onMounted(getProject);
 
 // file manager
 const selectedPath = ref<string>();
@@ -110,7 +110,8 @@ watch(selectedFilePath, (newPath) => {
 
 watch(selectedPath, (newPath) => {
    if (!newPath) return;
-   const segments = newPath.split('/').filter(Boolean).slice(1);
+   const normalizedPath = normalizePath(newPath);
+   const segments = splitPath(normalizedPath).slice(1); // 跳过第一级 (project)
    let currentNode = fsTree.value?.[0]!;
    segments.forEach((segment) => {
       currentNode = currentNode.children!.find(
@@ -118,7 +119,7 @@ watch(selectedPath, (newPath) => {
       )!;
    });
    if (currentNode.type === 'file') {
-      selectedFilePath.value = newPath;
+      selectedFilePath.value = normalizedPath;
    }
 });
 
@@ -141,25 +142,19 @@ onMounted(() => {
    });
 
    const contentChangeCallback = (path: string, content: string) => {
-      // Monaco 传递的路径带前导斜杠 (如 /project/xxx)
-      // 但 pathContentMap 和 pathTreeNodeMap 使用不带前导斜杠的键 (如 project/xxx)
-      const pathWithoutLeadingSlash = path.startsWith('/')
-         ? path.slice(1)
-         : path;
+      const normalizedPath = normalizePath(path);
 
       if (
-         !pathContentMap.value?.[pathWithoutLeadingSlash] ||
-         !pathTreeNodeMap.value?.[pathWithoutLeadingSlash]
+         !pathContentMap.value?.[normalizedPath] ||
+         !pathTreeNodeMap.value?.[normalizedPath]
       ) {
          return;
       }
 
-      pathContentMap.value[pathWithoutLeadingSlash].content = content;
-      pathTreeNodeMap.value[pathWithoutLeadingSlash].content = content;
-      writeFile(pathWithoutLeadingSlash, content);
-
-      // 同步文件变化到云端
-      change(pathWithoutLeadingSlash, content);
+      pathContentMap.value![normalizedPath].content = content;
+      pathTreeNodeMap.value![normalizedPath].content = content;
+      writeFile(normalizedPath, content);
+      change(normalizedPath, content);
    };
    const debounceCallback = useDebounceFn(contentChangeCallback, 300);
    codeEditor.value?.onModelContentChange(debounceCallback);
@@ -178,9 +173,10 @@ const runProject = async () => {
    const terminalInstance = await terminal.value?.createTerminal();
    const terminalId = terminalInstance?.id;
 
+   await mounted.promise;
+
    editorStore.hasProjectInitialized = false;
    const installProcess = await runCommand('yarn --cwd ./project install');
-   await mounted.promise;
    await terminal.value!.attachProcess({
       process: installProcess,
       id: terminalId,
@@ -199,6 +195,7 @@ const runProject = async () => {
    });
    writer.write('cd ./project && yarn dev\n');
 };
+onMounted(runProject);
 
 // handle add terminal
 const addTerminal = async () => {
@@ -315,8 +312,8 @@ const handleAddFile = async () => {
       }
       const folderPath: string = selectedPath.value
          ? isFolder(selectedPath.value)
-            ? selectedPath.value
-            : selectedPath.value?.split('/').slice(0, -1).join('/')
+            ? normalizePath(selectedPath.value)
+            : getParentPath(normalizePath(selectedPath.value))
          : '/project';
       await operator.createFile(folderPath);
    } catch (error) {
@@ -325,7 +322,8 @@ const handleAddFile = async () => {
 };
 
 const isFolder = (path: string) => {
-   const node = pathTreeNodeMap.value?.[`/${path}`];
+   const normalizedPath = normalizePath(path);
+   const node = pathTreeNodeMap.value?.[normalizedPath];
    return !node || node?.type === 'folder';
 };
 
@@ -338,8 +336,8 @@ const handleAddFolder = async () => {
       }
       const folderPath: string = selectedPath.value
          ? isFolder(selectedPath.value)
-            ? selectedPath.value
-            : selectedPath.value?.split('/').slice(0, -1).join('/')
+            ? normalizePath(selectedPath.value)
+            : getParentPath(normalizePath(selectedPath.value))
          : '/project';
       await operator.createDirectory(folderPath);
    } catch (error) {

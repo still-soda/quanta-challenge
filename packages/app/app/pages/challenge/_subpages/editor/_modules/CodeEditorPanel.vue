@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMonacoEditor } from '../../../_composables/use-monaco-editor';
+import { normalizePath, getBaseName } from '~/utils/path-utils';
 import Tab from '../_components/Tab.vue';
 import { MoreOne, Setting } from '@icon-park/vue-next';
 import TabSkeleton from '../_skeletons/TabSkeleton.vue';
@@ -21,12 +22,14 @@ const openedTabs = ref<ITab[]>([]);
 watch(
    currentFilePath,
    (newPath) => {
-      newPath &&
-         !openedTabs.value.find((tab) => tab.path === newPath) &&
+      if (!newPath) return;
+      const normalizedPath = normalizePath(newPath);
+      if (!openedTabs.value.find((tab) => tab.path === normalizedPath)) {
          openedTabs.value.push({
-            path: newPath,
-            name: newPath.split('/').pop() || 'Untitled',
+            path: normalizedPath,
+            name: getBaseName(normalizedPath) || 'Untitled',
          });
+      }
    },
    { immediate: true }
 );
@@ -165,10 +168,10 @@ const setModel = (path: string | null, forceRecreate = false) => {
          return;
       }
 
-      // Monaco 需要以 / 开头的路径
-      const monacoPath = path.startsWith('/') ? path : '/' + path;
+      // 统一规范化路径为前置 / 格式
+      const normalizedPath = normalizePath(path);
 
-      const model = monaco.editor.getModel(monaco.Uri.file(monacoPath));
+      const model = monaco.editor.getModel(monaco.Uri.file(normalizedPath));
 
       // 如果需要强制重新创建 model（例如处理 suspense 文件）
       if (forceRecreate && model) {
@@ -176,20 +179,22 @@ const setModel = (path: string | null, forceRecreate = false) => {
       }
 
       // 重新获取或创建 model
-      const existingModel = monaco.editor.getModel(monaco.Uri.file(monacoPath));
+      const existingModel = monaco.editor.getModel(
+         monaco.Uri.file(normalizedPath)
+      );
 
       if (existingModel && !forceRecreate) {
          instance.setModel(existingModel);
-         currentFilePath.value = path;
+         currentFilePath.value = normalizedPath;
       } else {
-         const content = props.defaultFs?.[path]?.content;
+         const content = props.defaultFs?.[normalizedPath]?.content;
          if (!content) return;
 
          instance.setModel(
             monaco.editor.createModel(
                content,
                void 0,
-               monaco.Uri.file(monacoPath)
+               monaco.Uri.file(normalizedPath)
             )
          );
       }

@@ -7,6 +7,7 @@ import { ignores } from '~/components/st/DropUploader/default-ignore';
 import type { StForm } from '#components';
 import { useProblemPublicationForm } from './_composables/use-problem-publication-form';
 import { UploadTwo } from '@icon-park/vue-next';
+import { normalizePath, joinPath } from '~/utils/path-utils';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });
 
@@ -51,9 +52,9 @@ const fetchProblemDetail = async () => {
 
    const files = problem.Project[0]?.FileSystem[0]?.files ?? [];
    for (const file of files) {
-      // 去掉开头的斜杠
-      const path = file.path.startsWith('/') ? file.path.slice(1) : file.path;
-      draft.value.answerTemplate[`/answer-template/${path}`] = file.content;
+      // 统一规范化路径为前置 / 格式
+      const normalizedPath = normalizePath(file.path);
+      draft.value.answerTemplate[joinPath('/answer-template', normalizedPath)] = file.content;
    }
 };
 onMounted(() => {

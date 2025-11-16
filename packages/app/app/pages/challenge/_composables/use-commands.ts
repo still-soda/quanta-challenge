@@ -3,6 +3,15 @@ import type { CommandData } from '../_subpages/editor/_components/RightClickMenu
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
 import { dialog } from '~/composables/use-dialog';
 import { useMessage } from '~/components/st/Message/use-message';
+import {
+   normalizePath,
+   getParentPath,
+   getBaseName,
+   splitPath,
+   joinPath,
+   isChildPath,
+   replaceBasePath,
+} from '~/utils/path-utils';
 
 type MessageAPI = ReturnType<typeof useMessage>;
 
@@ -14,7 +23,8 @@ class FileSystemOperator {
    ) {}
 
    private _traverseFindParent(path: string): IFileSystemItem | null {
-      const pathParts = path.split('/');
+      const normalizedPath = normalizePath(path);
+      const pathParts = splitPath(normalizedPath);
       const node = this.fsTree.value;
       if (!node) return null;
 
@@ -36,6 +46,7 @@ class FileSystemOperator {
 
    async removeItem(path: string, type: 'file' | 'folder') {
       const wc = await this.getWebContainerInstance();
+      const normalizedPath = normalizePath(path);
 
       const confirmed = await dialog.confirm({
          title: type === 'file' ? '删除文件' : '删除文件夹',
@@ -51,16 +62,18 @@ class FileSystemOperator {
       if (!confirmed) return;
 
       try {
+         // WebContainer API 不需要前置 /
+         const pathForWC = normalizedPath.slice(1);
          if (type === 'file') {
-            await wc.fs.rm(path);
+            await wc.fs.rm(pathForWC);
          } else {
-            await wc.fs.rm(path, { recursive: true });
+            await wc.fs.rm(pathForWC, { recursive: true });
          }
 
-         const parent = this._traverseFindParent(path);
+         const parent = this._traverseFindParent(normalizedPath);
          if (parent && parent.children) {
             parent.children = parent.children.filter(
-               (item) => item.path !== path
+               (item) => item.path !== normalizedPath
             );
          }
 
@@ -69,7 +82,7 @@ class FileSystemOperator {
             path: string;
             type: 'file' | 'folder';
          }>('file-delete-event');
-         fileDeleteEmitter.emit({ path, type });
+         fileDeleteEmitter.emit({ path: normalizedPath, type });
 
          this.message.success(
             `已成功删除${type === 'file' ? '文件' : '文件夹'}`
@@ -84,6 +97,7 @@ class FileSystemOperator {
 
    async renameItem(oldPath: string, defaultName: string) {
       const wc = await this.getWebContainerInstance();
+      const normalizedOldPath = normalizePath(oldPath);
 
       const newName = await dialog.prompt({
          title: '重命名',
@@ -105,17 +119,19 @@ class FileSystemOperator {
 
       if (!newName) return;
 
-      const pathParts = oldPath.split('/');
-      pathParts[pathParts.length - 1] = newName;
-      const newPath = pathParts.join('/');
+      const parentPath = getParentPath(normalizedOldPath);
+      const newPath = joinPath(parentPath, newName);
 
       try {
-         await wc.fs.rename(oldPath, newPath);
+         // WebContainer API 不需要前置 /
+         const oldPathForWC = normalizedOldPath.slice(1);
+         const newPathForWC = newPath.slice(1);
+         await wc.fs.rename(oldPathForWC, newPathForWC);
 
-         const parent = this._traverseFindParent(oldPath);
+         const parent = this._traverseFindParent(normalizedOldPath);
          if (parent && parent.children) {
             parent.children = parent.children.map((item) => {
-               if (item.path === oldPath) {
+               if (item.path === normalizedOldPath) {
                   return { ...item, name: newName, path: newPath };
                }
                return item;
@@ -127,7 +143,7 @@ class FileSystemOperator {
             oldPath: string;
             newPath: string;
          }>('file-move-event');
-         fileMoveEmitter.emit({ oldPath, newPath });
+         fileMoveEmitter.emit({ oldPath: normalizedOldPath, newPath });
       } catch (error) {
          this.message.error(
             '重命名失败',
@@ -139,15 +155,20 @@ class FileSystemOperator {
 
    async moveItem(oldPath: string, newPath: string) {
       const wc = await this.getWebContainerInstance();
+      const normalizedOldPath = normalizePath(oldPath);
+      const normalizedNewPath = normalizePath(newPath);
 
       // 检查目标路径是否已存在
+      const oldPathForWC = normalizedOldPath.slice(1);
+      const newPathForWC = normalizedNewPath.slice(1);
+
       try {
-         await wc.fs.readFile(newPath);
+         await wc.fs.readFile(newPathForWC);
          this.message.warning('移动失败', '目标路径已存在同名文件');
          return;
       } catch {
          try {
-            await wc.fs.readdir(newPath);
+            await wc.fs.readdir(newPathForWC);
             this.message.warning('移动失败', '目标路径已存在同名文件夹');
             return;
          } catch {
@@ -156,29 +177,29 @@ class FileSystemOperator {
       }
 
       try {
-         await wc.fs.rename(oldPath, newPath);
+         await wc.fs.rename(oldPathForWC, newPathForWC);
 
          // 从旧父节点中移除
-         const oldParent = this._traverseFindParent(oldPath);
+         const oldParent = this._traverseFindParent(normalizedOldPath);
          let itemToMove: IFileSystemItem | undefined;
 
          if (oldParent && oldParent.children) {
             itemToMove = oldParent.children.find(
-               (item) => item.path === oldPath
+               (item) => item.path === normalizedOldPath
             );
             if (itemToMove) {
                oldParent.children = oldParent.children.filter(
-                  (item) => item.path !== oldPath
+                  (item) => item.path !== normalizedOldPath
                );
             }
          } else if (this.fsTree.value) {
             // 根级别的节点
             itemToMove = this.fsTree.value.find(
-               (item) => item.path === oldPath
+               (item) => item.path === normalizedOldPath
             );
             if (itemToMove) {
                this.fsTree.value = this.fsTree.value.filter(
-                  (item) => item.path !== oldPath
+                  (item) => item.path !== normalizedOldPath
                );
             }
          }
@@ -186,8 +207,8 @@ class FileSystemOperator {
          if (!itemToMove) return;
 
          // 添加到新父节点
-         const newParent = this._traverseFindParent(newPath);
-         const newName = newPath.split('/').pop()!;
+         const newParent = this._traverseFindParent(normalizedNewPath);
+         const newName = getBaseName(normalizedNewPath);
 
          // 递归更新所有子节点的路径
          const updatePaths = (
@@ -195,7 +216,7 @@ class FileSystemOperator {
             oldBasePath: string,
             newBasePath: string
          ) => {
-            item.path = item.path.replace(oldBasePath, newBasePath);
+            item.path = replaceBasePath(item.path, oldBasePath, newBasePath);
             if (item.children) {
                item.children.forEach((child) =>
                   updatePaths(child, oldBasePath, newBasePath)
@@ -206,10 +227,10 @@ class FileSystemOperator {
          const movedItem = {
             ...itemToMove,
             name: newName,
-            path: newPath,
+            path: normalizedNewPath,
             suspense: true,
          };
-         updatePaths(movedItem, oldPath, newPath);
+         updatePaths(movedItem, normalizedOldPath, normalizedNewPath);
 
          if (newParent && newParent.children) {
             newParent.children.push(movedItem);
@@ -223,7 +244,10 @@ class FileSystemOperator {
             oldPath: string;
             newPath: string;
          }>('file-move-event');
-         fileMoveEmitter.emit({ oldPath, newPath });
+         fileMoveEmitter.emit({
+            oldPath: normalizedOldPath,
+            newPath: normalizedNewPath,
+         });
       } catch (error) {
          this.message.error('移动失败', '移动文件时发生错误');
          console.error('Failed to move item:', error);
@@ -232,6 +256,7 @@ class FileSystemOperator {
 
    async createFile(path: string, fileName?: string) {
       const wc = await this.getWebContainerInstance();
+      const normalizedPath = normalizePath(path);
 
       const name =
          fileName ||
@@ -255,11 +280,13 @@ class FileSystemOperator {
 
       if (!name) return;
 
-      const filePath = `${path}/${name}`;
+      const filePath = joinPath(normalizedPath, name);
 
       try {
          const initialContent = ' ';
-         await wc.fs.writeFile(filePath, initialContent);
+         // WebContainer API 不需要前置 /
+         const filePathForWC = filePath.slice(1);
+         await wc.fs.writeFile(filePathForWC, initialContent);
 
          // 找到父节点并添加新文件
          const parent = this._traverseFindParent(filePath);
@@ -274,7 +301,7 @@ class FileSystemOperator {
             parent.children.push(newFile);
          } else if (this.fsTree.value) {
             // 根级别的文件
-            const pathParts = filePath.split('/').filter(Boolean);
+            const pathParts = splitPath(filePath);
             if (pathParts.length === 1) {
                this.fsTree.value.push(newFile);
             }
@@ -297,6 +324,7 @@ class FileSystemOperator {
 
    async createDirectory(path: string, dirName?: string) {
       const wc = await this.getWebContainerInstance();
+      const normalizedPath = normalizePath(path);
 
       const name =
          dirName ||
@@ -320,10 +348,12 @@ class FileSystemOperator {
 
       if (!name) return;
 
-      const dirPath = `${path}/${name}`;
+      const dirPath = joinPath(normalizedPath, name);
 
       try {
-         await wc.fs.mkdir(dirPath);
+         // WebContainer API 不需要前置 /
+         const dirPathForWC = dirPath.slice(1);
+         await wc.fs.mkdir(dirPathForWC);
 
          // 找到父节点并添加新文件夹
          const parent = this._traverseFindParent(dirPath);
@@ -339,7 +369,7 @@ class FileSystemOperator {
             parent.children.push(newFolder);
          } else if (this.fsTree.value) {
             // 根级别的文件夹
-            const pathParts = dirPath.split('/').filter(Boolean);
+            const pathParts = splitPath(dirPath);
             if (pathParts.length === 1) {
                this.fsTree.value.push(newFolder);
             }
@@ -354,34 +384,36 @@ class FileSystemOperator {
    }
 
    async copyItem(path: string, type: 'file' | 'folder') {
+      const normalizedPath = normalizePath(path);
+
       // 将复制的项目信息发送给 UI
       const copyEventEmitter = useEventBus<{
          type: 'file' | 'folder';
          path: string;
          isCut: boolean;
       }>('file-copy-event');
-      copyEventEmitter.emit({ type, path, isCut: false });
+      copyEventEmitter.emit({ type, path: normalizedPath, isCut: false });
 
+      const itemName = getBaseName(normalizedPath);
       this.message.success(
-         `已复制${type === 'file' ? '文件' : '文件夹'}: ${path
-            .split('/')
-            .pop()}`
+         `已复制${type === 'file' ? '文件' : '文件夹'}: ${itemName}`
       );
    }
 
    async cutItem(path: string, type: 'file' | 'folder') {
+      const normalizedPath = normalizePath(path);
+
       // 将剪切的项目信息发送给 UI
       const copyEventEmitter = useEventBus<{
          type: 'file' | 'folder';
          path: string;
          isCut: boolean;
       }>('file-copy-event');
-      copyEventEmitter.emit({ type, path, isCut: true });
+      copyEventEmitter.emit({ type, path: normalizedPath, isCut: true });
 
+      const itemName = getBaseName(normalizedPath);
       this.message.success(
-         `已剪切${type === 'file' ? '文件' : '文件夹'}: ${path
-            .split('/')
-            .pop()}`
+         `已剪切${type === 'file' ? '文件' : '文件夹'}: ${itemName}`
       );
    }
 
@@ -391,27 +423,33 @@ class FileSystemOperator {
       copiedItem: { type: 'file' | 'folder'; path: string; isCut: boolean }
    ) {
       const wc = await this.getWebContainerInstance();
+      const normalizedTargetPath = normalizePath(targetPath);
+      const normalizedCopiedPath = normalizePath(copiedItem.path);
 
       // 如果目标是文件,则粘贴到其父文件夹
       const destDir =
          targetType === 'file'
-            ? targetPath.split('/').slice(0, -1).join('/')
-            : targetPath;
+            ? getParentPath(normalizedTargetPath)
+            : normalizedTargetPath;
 
-      const sourceName = copiedItem.path.split('/').pop()!;
-      const destPath = `${destDir}/${sourceName}`;
+      const sourceName = getBaseName(normalizedCopiedPath);
+      const destPath = joinPath(destDir, sourceName);
 
       // 如果是剪切操作且目标路径和源路径相同,则不执行
-      if (copiedItem.isCut && copiedItem.path === destPath) {
+      if (copiedItem.isCut && normalizedCopiedPath === destPath) {
          return;
       }
 
       // 检查目标路径是否已存在
+      // WebContainer API 不需要前置 /
+      const destPathForWC = destPath.slice(1);
+      const copiedPathForWC = normalizedCopiedPath.slice(1);
+
       try {
          if (copiedItem.type === 'file') {
-            await wc.fs.readFile(destPath);
+            await wc.fs.readFile(destPathForWC);
          } else {
-            await wc.fs.readdir(destPath);
+            await wc.fs.readdir(destPathForWC);
          }
 
          this.message.warning('粘贴失败', '目标位置已存在同名文件或文件夹');
@@ -423,7 +461,7 @@ class FileSystemOperator {
       try {
          if (copiedItem.isCut) {
             // 剪切操作：移动文件或文件夹
-            await this.moveItem(copiedItem.path, destPath);
+            await this.moveItem(normalizedCopiedPath, destPath);
             this.message.success(
                `已成功移动${copiedItem.type === 'file' ? '文件' : '文件夹'}`
             );
@@ -431,11 +469,11 @@ class FileSystemOperator {
             // 复制操作
             if (copiedItem.type === 'file') {
                // 复制文件
-               const content = await wc.fs.readFile(copiedItem.path, 'utf-8');
-               await wc.fs.writeFile(destPath, content);
+               const content = await wc.fs.readFile(copiedPathForWC, 'utf-8');
+               await wc.fs.writeFile(destPathForWC, content);
             } else {
                // 复制文件夹（递归）
-               await this._copyDirectory(wc, copiedItem.path, destPath);
+               await this._copyDirectory(wc, copiedPathForWC, destPathForWC);
             }
 
             // 添加到 fsTree
@@ -452,7 +490,7 @@ class FileSystemOperator {
             if (parent && parent.children) {
                parent.children.push(newItem);
             } else if (this.fsTree.value) {
-               const pathParts = destPath.split('/').filter(Boolean);
+               const pathParts = splitPath(destPath);
                if (pathParts.length === 1) {
                   this.fsTree.value.push(newItem);
                }
@@ -476,6 +514,8 @@ class FileSystemOperator {
       sourcePath: string,
       destPath: string
    ) {
+      // 注意：sourcePath 和 destPath 已经是去掉前置 / 的格式（WebContainer 格式）
+
       // 创建目标文件夹
       await wc.fs.mkdir(destPath);
 
@@ -533,7 +573,9 @@ class FileSystemDispatcher {
 
    private async _handleFsEvent(event: string, path: string) {
       if (event === 'rename') {
-         this.changePaths.add(path);
+         // 规范化路径后添加到变更集合
+         const normalizedPath = normalizePath(`/${path}`);
+         this.changePaths.add(normalizedPath);
          // 防抖处理：延迟一段时间后批量处理变更
          this._scheduleDispatch();
       }
@@ -575,21 +617,23 @@ class FileSystemDispatcher {
       const root: ChangeTreeItem[] = [];
 
       for (const path of paths) {
-         const parts = path.split('/').filter(Boolean);
+         const normalizedPath = normalizePath(path);
+         const parts = splitPath(normalizedPath);
          let currentLevel = root;
-         let currentPath = '';
+         let builtPath = '';
 
          for (let i = 0; i < parts.length; i++) {
             const part = parts[i];
-            currentPath += (currentPath ? '/' : '') + part;
+            if (!part) continue;
+            builtPath = joinPath(builtPath, part);
 
             let existingNode = currentLevel.find(
-               (node) => node.path === currentPath
+               (node) => node.path === builtPath
             );
 
             if (!existingNode) {
                existingNode = {
-                  path: currentPath,
+                  path: builtPath,
                   children: i < parts.length - 1 ? [] : undefined,
                };
                currentLevel.push(existingNode);
@@ -611,17 +655,20 @@ class FileSystemDispatcher {
       const wc = await this.getWebContainerInstance();
 
       for (const node of tree) {
+         const normalizedPath = normalizePath(node.path);
          // 在 fsTree 中查找对应的节点
-         const fsNode = this._findNodeInFsTree(node.path);
+         const fsNode = this._findNodeInFsTree(normalizedPath);
 
          // 检查 wc 中是否存在该路径
+         // WebContainer API 不需要前置 /
+         const pathForWC = normalizedPath.slice(1);
          let existsInWc = false;
          try {
-            await wc.fs.readdir(node.path);
+            await wc.fs.readdir(pathForWC);
             existsInWc = true;
          } catch {
             try {
-               await wc.fs.readFile(node.path);
+               await wc.fs.readFile(pathForWC);
                existsInWc = true;
             } catch {
                existsInWc = false;
@@ -630,10 +677,13 @@ class FileSystemDispatcher {
 
          if (existsInWc && !fsNode) {
             // wc 中存在但 fs 中不存在，需要新增
-            await this._addNodeToFsTree(node.path, node.children !== undefined);
+            await this._addNodeToFsTree(
+               normalizedPath,
+               node.children !== undefined
+            );
          } else if (!existsInWc && fsNode) {
             // wc 中不存在但 fs 中存在，需要删除
-            this._removeNodeFromFsTree(node.path);
+            this._removeNodeFromFsTree(normalizedPath);
          } else if (
             existsInWc &&
             fsNode &&
@@ -652,7 +702,8 @@ class FileSystemDispatcher {
    }
 
    private _findNodeInFsTree(path: string): IFileSystemItem | null {
-      const pathParts = path.split('/').filter(Boolean);
+      const normalizedPath = normalizePath(path);
+      const pathParts = splitPath(normalizedPath);
       const node = this.fsTree.value;
       if (!node) return null;
 
@@ -660,6 +711,8 @@ class FileSystemDispatcher {
 
       for (let i = 0; i < pathParts.length; i++) {
          const part = pathParts[i];
+         if (!part) continue;
+
          const nextItem = currentItems.find((item) => item.name === part);
          if (!nextItem) return null;
 
@@ -679,15 +732,16 @@ class FileSystemDispatcher {
 
    private async _addNodeToFsTree(path: string, isFolder: boolean) {
       const wc = await this.getWebContainerInstance();
-      const pathParts = path.split('/').filter(Boolean);
-      const name = pathParts[pathParts.length - 1];
+      const normalizedPath = normalizePath(path);
+      const pathParts = splitPath(normalizedPath);
+      const name = getBaseName(normalizedPath);
 
       if (!name) return;
 
-      const parent = this._traverseFindParentInDispatcher(path);
+      const parent = this._traverseFindParentInDispatcher(normalizedPath);
       const newNode: IFileSystemItem = {
          name,
-         path,
+         path: normalizedPath,
          type: isFolder ? 'folder' : 'file',
          suspense: true, // 统一标记为 suspense，让组件去加载内容
          ...(isFolder ? { children: [] } : {}),
@@ -696,7 +750,7 @@ class FileSystemDispatcher {
       if (parent && parent.children) {
          // 检查是否已存在，避免重复添加
          const existingIndex = parent.children.findIndex(
-            (item) => item.path === path
+            (item) => item.path === normalizedPath
          );
          if (existingIndex >= 0) {
             // 已存在则更新
@@ -707,7 +761,7 @@ class FileSystemDispatcher {
       } else if (pathParts.length === 1 && this.fsTree.value) {
          // 根级别的节点
          const existingIndex = this.fsTree.value.findIndex(
-            (item) => item.path === path
+            (item) => item.path === normalizedPath
          );
          if (existingIndex >= 0) {
             this.fsTree.value[existingIndex] = newNode;
@@ -718,15 +772,18 @@ class FileSystemDispatcher {
    }
 
    private _removeNodeFromFsTree(path: string) {
-      const parent = this._traverseFindParentInDispatcher(path);
+      const normalizedPath = normalizePath(path);
+      const parent = this._traverseFindParentInDispatcher(normalizedPath);
       if (parent && parent.children) {
-         parent.children = parent.children.filter((item) => item.path !== path);
+         parent.children = parent.children.filter(
+            (item) => item.path !== normalizedPath
+         );
       } else if (this.fsTree.value) {
          // 根级别的节点
-         const pathParts = path.split('/').filter(Boolean);
+         const pathParts = splitPath(normalizedPath);
          if (pathParts.length === 1) {
             this.fsTree.value = this.fsTree.value.filter(
-               (item) => item.path !== path
+               (item) => item.path !== normalizedPath
             );
          }
       }
@@ -735,7 +792,8 @@ class FileSystemDispatcher {
    private _traverseFindParentInDispatcher(
       path: string
    ): IFileSystemItem | null {
-      const pathParts = path.split('/').filter(Boolean);
+      const normalizedPath = normalizePath(path);
+      const pathParts = splitPath(normalizedPath);
       const node = this.fsTree.value;
       if (!node) return null;
 
@@ -744,6 +802,8 @@ class FileSystemDispatcher {
 
       for (let i = 0; i < pathParts.length - 1; i++) {
          const part = pathParts[i];
+         if (!part) continue;
+
          const nextItem = currentItems.find((item) => item.name === part);
          if (!nextItem || nextItem.type !== 'folder') {
             return null;
@@ -833,39 +893,43 @@ export const useCommands = (props: IUseCommandOptions) => {
             break;
          }
          case 'rename': {
-            const currentName = commandData.target.path.split('/').pop() || '';
-            await operator.renameItem(commandData.target.path, currentName);
+            const normalizedPath = normalizePath(commandData.target.path);
+            const currentName = getBaseName(normalizedPath);
+            await operator.renameItem(normalizedPath, currentName);
             break;
          }
          case 'move': {
+            const normalizedPath = normalizePath(commandData.target.path);
             // 通过 prompt 获取目标路径
             const newPath = await dialog.prompt({
                title: '移动',
                description: '请输入目标路径',
                placeholder: '/project/src',
-               defaultValue: commandData.target.path,
+               defaultValue: normalizedPath,
                confirmText: '移动',
                cancelText: '取消',
             });
             if (!newPath) return;
-            await operator.moveItem(commandData.target.path, newPath);
+            await operator.moveItem(normalizedPath, newPath);
             break;
          }
          case 'add-file': {
             // 如果是文件，在其父文件夹创建；如果是文件夹，在其内部创建
+            const normalizedPath = normalizePath(commandData.target.path);
             const targetPath =
                commandData.target.type === 'file'
-                  ? commandData.target.path.split('/').slice(0, -1).join('/')
-                  : commandData.target.path;
+                  ? getParentPath(normalizedPath)
+                  : normalizedPath;
             await operator.createFile(targetPath);
             break;
          }
          case 'add-folder': {
             // 如果是文件，在其父文件夹创建；如果是文件夹，在其内部创建
+            const normalizedPath = normalizePath(commandData.target.path);
             const targetPath =
                commandData.target.type === 'file'
-                  ? commandData.target.path.split('/').slice(0, -1).join('/')
-                  : commandData.target.path;
+                  ? getParentPath(normalizedPath)
+                  : normalizedPath;
             await operator.createDirectory(targetPath);
             break;
          }

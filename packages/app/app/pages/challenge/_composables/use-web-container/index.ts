@@ -66,19 +66,40 @@ export const useWebContainer = (options?: IUseWebContainerOptions) => {
 
    const writeFile = async (path: string, content: string | Uint8Array) => {
       const instance = await getInstance();
-      const dir = path.split('/').slice(0, -1).filter(Boolean).join('/');
+      const { getParentPath, normalizePath } = await import(
+         '~/utils/path-utils'
+      );
+
+      // 规范化路径
+      const normalizedPath = normalizePath(path);
+      const parentPath = getParentPath(normalizedPath);
+
       try {
-         await instance.fs.mkdir(dir, { recursive: true });
-         await instance.fs.writeFile(path, content);
+         // 如果有父目录且不是根目录，创建父目录
+         if (parentPath !== '/') {
+            // WebContainer 的 mkdir 不需要前置 /
+            const dirForWC = parentPath.slice(1);
+            await instance.fs.mkdir(dirForWC, { recursive: true });
+         }
+         // WebContainer 的 writeFile 不需要前置 /
+         const pathForWC = normalizedPath.slice(1);
+         await instance.fs.writeFile(pathForWC, content);
       } catch (error) {
-         throw new Error(`Failed to create directory: ${error}`);
+         throw new Error(`Failed to write file: ${error}`);
       }
    };
 
    const removeFile = async (path: string) => {
       const instance = await getInstance();
+      const { normalizePath } = await import('~/utils/path-utils');
+
+      // 规范化路径
+      const normalizedPath = normalizePath(path);
+
       try {
-         await instance.fs.rm(path, { recursive: true, force: true });
+         // WebContainer 的 rm 不需要前置 /
+         const pathForWC = normalizedPath.slice(1);
+         await instance.fs.rm(pathForWC, { recursive: true, force: true });
       } catch (error) {
          throw new Error(`Failed to remove file: ${error}`);
       }

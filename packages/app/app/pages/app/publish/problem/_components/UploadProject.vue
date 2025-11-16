@@ -2,6 +2,8 @@
 import { DeleteFour } from '@icon-park/vue-next';
 import type { IDirectory } from '~/components/st/DropUploader/walk-file-list';
 import type { IFileSystemItem } from '~/components/st/FileSystemTree/type';
+import { normalizePath, getBaseName, joinPath } from '~/utils/path-utils';
+import { buildFileSystemTree } from '~/utils/fs-tree';
 
 const props = defineProps<{
    placeholder?: string;
@@ -23,17 +25,17 @@ const walkDirectory = () => {
          return typeof value !== 'string' && value !== null;
       };
       return Object.entries(dir).map(([key, value]) => {
+         const itemPath = normalizePath(joinPath(root, key));
          if (!isFolder(value)) {
-            const path = `${root}/${key}`;
-            project[path] = value;
+            project[itemPath] = value;
          }
          return {
-            name: key.split('/').pop() ?? '',
-            path: key,
+            name: getBaseName(itemPath),
+            path: itemPath,
             type: isFolder(value) ? 'folder' : 'file',
             content: isFolder(value) ? undefined : value,
             children: isFolder(value)
-               ? flatDirectory(value, `${root}/${key}`)
+               ? flatDirectory(value, itemPath)
                : undefined,
          };
       });
@@ -70,69 +72,12 @@ const handleRemoveFile = () => {
 };
 
 // 从 projectFs 重建 FileSystemItem[]
+// 使用统一的工具函数
 const restoreFileSystemItem = () => {
    if (!projectFs.value) return;
 
-   const filePathsMap = new Map<string, IFileSystemItem>();
-   const rootItems: IFileSystemItem[] = [];
-
-   // 首先创建所有文件节点
-   Object.entries(projectFs.value).forEach(([path, content]) => {
-      const segments = path.split('/').filter(Boolean); // 移除空字符串
-      const fileName = segments[segments.length - 1] ?? '';
-
-      const fileItem: IFileSystemItem = {
-         name: fileName,
-         path: segments.join('/'),
-         type: 'file',
-         content,
-      };
-
-      filePathsMap.set(segments.join('/'), fileItem);
-   });
-
-   // 然后创建所有必要的文件夹节点
-   const allPaths = Array.from(filePathsMap.keys());
-   const folderPaths = new Set<string>();
-
-   allPaths.forEach((filePath) => {
-      const segments = filePath.split('/');
-      // 为每个文件路径创建所有父级文件夹
-      for (let i = 1; i < segments.length; i++) {
-         const folderPath = segments.slice(0, i).join('/');
-         if (!folderPaths.has(folderPath) && !filePathsMap.has(folderPath)) {
-            folderPaths.add(folderPath);
-            const folderName = segments[i - 1] ?? '';
-            const folderItem: IFileSystemItem = {
-               name: folderName,
-               path: folderPath,
-               type: 'folder',
-               children: [],
-            };
-            filePathsMap.set(folderPath, folderItem);
-         }
-      }
-   });
-
-   // 构建树形结构
-   const sortedPaths = Array.from(filePathsMap.keys()).sort();
-
-   sortedPaths.forEach((path) => {
-      const item = filePathsMap.get(path)!;
-      const segments = path.split('/');
-      if (segments.length === 1) {
-         rootItems.push(item);
-      } else {
-         const parentPath = segments.slice(0, -1).join('/');
-         const parent = filePathsMap.get(parentPath);
-         if (parent && parent.type === 'folder') {
-            parent.children = parent.children || [];
-            parent.children.push(item);
-         }
-      }
-   });
-
-   fileSystemItems.value = rootItems;
+   const { rootNodes } = buildFileSystemTree(projectFs.value);
+   fileSystemItems.value = rootNodes;
 };
 restoreFileSystemItem();
 </script>
