@@ -12,6 +12,7 @@ import CommitModal from './_components/CommitModal.vue';
 import { useCommands } from '../../_composables/use-commands/index';
 import { useFileChangeSync } from './_composables/use-file-change-sync';
 import { IGNORE_FILE_PATTERNS } from './_configs';
+import { handleCommands } from './_utils/handle-commands';
 
 const props = defineProps<{ id: number }>();
 
@@ -172,27 +173,43 @@ const runProject = async () => {
    const terminalInstance = await terminal.value?.createTerminal();
    const terminalId = terminalInstance?.id;
 
-   await mounted.promise;
+   await Promise.all([mounted.promise, loaded.promise]);
 
+   // run boot commands
    editorStore.hasProjectInitialized = false;
-   const installProcess = await runCommand('yarn --cwd ./project install');
-   await terminal.value!.attachProcess({
-      process: installProcess,
-      id: terminalId,
-      name: 'install',
-   });
-   await installProcess.exit;
+
+   if (problem.value?.bootCommand) {
+      const bootCommands = handleCommands(problem.value.bootCommand);
+      for (const { command, title } of bootCommands) {
+         const process = await runCommand(command);
+         await terminal.value!.attachProcess({
+            process: process,
+            id: terminalId,
+            name: title || 'boot-command',
+         });
+         await process.exit;
+      }
+   }
    editorStore.hasProjectInitialized = true;
 
    await terminal.value?.writeTerminal('\n');
 
-   const shell = await runCommand('sh');
-   const { writer } = await terminal.value!.attachProcess({
-      process: shell,
-      id: terminalId,
-      name: 'dev-server',
-   });
-   writer.write('cd ./project && yarn dev\n');
+   // run shell command (init commands)
+   if (problem.value?.initCommand) {
+      const shell = await runCommand('sh');
+      const initCommands = handleCommands(problem.value.initCommand).slice(
+         0,
+         1
+      );
+      for (const { command, title } of initCommands) {
+         const { writer } = await terminal.value!.attachProcess({
+            process: shell,
+            id: terminalId,
+            name: title ?? 'init-command',
+         });
+         writer.write(`${command}\n`);
+      }
+   }
 };
 onMounted(runProject);
 
@@ -279,6 +296,8 @@ const { data: problem } = await useAsyncData(
    `problem-detail-${props.id}`,
    getProblemDetail
 );
+const loaded = Promise.withResolvers<void>();
+watch(problem, () => problem.value && loaded.resolve(), { immediate: true });
 
 const appBaseUrl = useRuntimeConfig().public.appBaseUrl;
 
@@ -372,6 +391,8 @@ useSeoMeta({
       <CommitModal
          :run-commands="runCommand"
          :get-wc-instance="getInstance"
+         :build-command="problem?.buildCommand ?? void 0"
+         :upload-dir="problem?.judgeUploadPath ?? void 0"
          :problem-id="id!" />
       <StSpace fill class="p-4 pt-0">
          <StSplitPanel

@@ -35,6 +35,10 @@ const handleCreateVersion = async (options: {
          totalScore: input.totalScore,
          status: 'draft',
          coverImageId: input.coverImageId,
+         bootCommand: input.bootCommand,
+         initCommand: input.initCommand,
+         buildCommand: input.buildCommand,
+         judgeUploadPath: input.judgeUploadPath,
          tags: {
             connect: input.tagIds.map((id) => ({
                tid: id,

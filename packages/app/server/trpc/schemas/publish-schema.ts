@@ -26,6 +26,10 @@ export const UploadSchema = z
          .optional(),
       coverMode: z.enum(['default', 'custom']),
       coverImageId: z.string().optional(),
+      bootCommand: z.string().optional(),
+      initCommand: z.string().optional(),
+      buildCommand: z.string().optional(),
+      judgeUploadPath: z.string(),
    })
    .refine(
       (data) => {

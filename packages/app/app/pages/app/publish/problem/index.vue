@@ -54,7 +54,8 @@ const fetchProblemDetail = async () => {
    for (const file of files) {
       // 统一规范化路径为前置 / 格式
       const normalizedPath = normalizePath(file.path);
-      draft.value.answerTemplate[joinPath('/answer-template', normalizedPath)] = file.content;
+      draft.value.answerTemplate[joinPath('/answer-template', normalizedPath)] =
+         file.content;
    }
 };
 onMounted(() => {
@@ -90,6 +91,10 @@ const handleSubmit = async () => {
          answerTemplateSnapshot: removeRootDir(draft.value.answerTemplate),
          referenceAnswerSnapshot: removeRootDir(draft.value.referenceAnswer),
          coverMode: draft.value.coverMode,
+         bootCommand: draft.value.bootCommand,
+         buildCommand: draft.value.buildCommand,
+         initCommand: draft.value.initCommand,
+         judgeUploadPath: draft.value.judgeUploadPath,
       });
    };
    submitLoading.value = true;
@@ -184,6 +189,31 @@ const handleSubmit = async () => {
                      "
                      placeholder="上传打包后的参考答案文件夹"
                      v-model:project-fs="draft.referenceAnswer" />
+               </StFormItem>
+               <StFormItem name="bootCommand" label="启动命令">
+                  <StTextarea
+                     rows="3"
+                     placeholder="请输入启动命令（一行一条命令，顺序执行，不可取消）"
+                     v-model:value="draft.bootCommand"
+                     :outer-class />
+               </StFormItem>
+               <StFormItem name="initCommand" label="初始化命令">
+                  <StInput
+                     placeholder="请输入初始化 Shell 脚本（可取消）"
+                     v-model:value="draft.initCommand"
+                     :outer-class />
+               </StFormItem>
+               <StFormItem name="buildCommand" label="构建命令">
+                  <StInput
+                     v-model:value="draft.buildCommand"
+                     placeholder="请输入构建命令"
+                     :outer-class />
+               </StFormItem>
+               <StFormItem name="judgeUploadPath" label="打包上传路径" required>
+                  <StInput
+                     v-model:value="draft.judgeUploadPath"
+                     placeholder="请输入打包上传路径"
+                     :outer-class />
                </StFormItem>
             </StSpace>
             <StSpace justify="between" align="center" class="px-2 mt-[2.13rem]">

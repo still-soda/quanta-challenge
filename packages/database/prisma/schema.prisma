@@ -179,18 +179,22 @@ model BaseProblems {
 
 // 问题版本表
 model Problems {
-  pid          Int        @id @default(autoincrement())
-  baseId       Int
-  title        String
-  detail       String
-  isDeprecated Boolean    @default(false)
-  difficulty   Difficulty
-  totalScore   Int
-  status       Status
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  coverImageId String?
-  tags         Tags[]
+  pid             Int        @id @default(autoincrement())
+  baseId          Int
+  title           String
+  detail          String
+  isDeprecated    Boolean    @default(false)
+  difficulty      Difficulty
+  totalScore      Int
+  status          Status
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  coverImageId    String?
+  bootCommand     String?
+  initCommand     String?
+  buildCommand    String?
+  judgeUploadPath String
+  tags            Tags[]
 
   AuditRecord                 AuditRecords[]
   StatusTransitions           StatusTransitions[]

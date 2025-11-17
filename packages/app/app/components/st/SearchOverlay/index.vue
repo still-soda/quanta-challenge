@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { StSearchOverlayRecentAndQuickAccess } from '#components';
-import { Search, Close } from '@icon-park/vue-next';
+import { Search, Close, LoadingFour } from '@icon-park/vue-next';
 import {
    CalendarThirtyTwo,
    ListView,
@@ -289,7 +289,10 @@ const isWindows = computed(() => {
                   <!-- 搜索输入区 -->
                   <div
                      class="flex items-center gap-3 p-4 bg-accent-700 rounded-xl border border-secondary ring-4 ring-secondary/10">
-                     <Search class="text-xl text-accent-300 shrink-0" />
+                     <LoadingFour
+                        v-if="isSearching"
+                        class="text-xl text-accent-300 animate-spin shrink-0" />
+                     <Search v-else class="text-xl text-accent-300 shrink-0" />
                      <input
                         ref="inputRef"
                         v-model="localQuery"

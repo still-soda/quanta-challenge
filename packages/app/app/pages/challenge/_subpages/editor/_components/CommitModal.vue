@@ -10,6 +10,8 @@ const props = defineProps<{
    getWcInstance: () => Promise<WebContainer>;
    runCommands: (command: string) => Promise<WebContainerProcess>;
    problemId: number;
+   buildCommand?: string;
+   uploadDir?: string;
 }>();
 
 const opened = defineModel<boolean>('opened');
@@ -32,7 +34,7 @@ watch(event, async () => {
    if (!editorStore.hasProjectInitialized) return;
    opened.value = true;
 
-   if (isCommitting.value) return;
+   if (isCommitting.value || !props.buildCommand || !props.uploadDir) return;
    isCommitting.value = true;
 
    initSteps();
@@ -41,7 +43,7 @@ watch(event, async () => {
       nextTick(() => fitAddon.fit());
       try {
          await runBuildStep();
-         const pack = await runPackStep('/project/dist');
+         const pack = await runPackStep(props.uploadDir!);
          const recordId = await runUploadStep(pack);
          close(recordId);
       } catch (e) {
@@ -56,7 +58,7 @@ watch(event, async () => {
 
 let runningProcess: WebContainerProcess | null = null;
 const runBuildStep = async () => {
-   runningProcess = await props.runCommands('yarn --cwd ./project build');
+   runningProcess = await props.runCommands(props.buildCommand!);
    await attachProcess(runningProcess);
 
    const code = await runningProcess.exit;

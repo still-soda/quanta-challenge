@@ -32,6 +32,9 @@ const mode = computed<'problem' | 'record'>(() => {
 });
 
 const authStore = useAuthStore();
+const { $trpc } = useNuxtApp();
+await authStore.fetchUserInfo($trpc);
+
 const avatarUrl = computed(() =>
    authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
 );

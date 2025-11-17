@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DEFAULT_PROFILE_BANNER from '@/assets/images/default-profile-banner.png';
+import DEFAULT_AVATAR_URL from '@/assets/images/default-avatar.png';
 import useAuthStore from '~/stores/auth-store';
 
 const { $trpc } = useNuxtApp();
@@ -20,7 +21,9 @@ const username = computed(
 );
 
 const avatarUrl = computed(() =>
-   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
+   authStore.user?.imageId
+      ? `/api/static/${authStore.user.imageId}.jpg`
+      : DEFAULT_AVATAR_URL
 );
 
 const description = computed(() => {
@@ -44,6 +47,7 @@ const description = computed(() => {
             <StImage
                v-else
                :src="avatarUrl"
+               :fallback="DEFAULT_AVATAR_URL"
                class="!rounded-full z-10 border-4 border-accent-600"
                width="5.25rem"
                height="5.25rem" />

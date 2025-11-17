@@ -33,6 +33,10 @@ export const useProblemPublicationForm = (storageName: string) => {
       referenceAnswer: {} as Record<string, string>,
       coverMode: 'default' as 'default' | 'custom',
       coverImageId: undefined as string | undefined,
+      bootCommand: '',
+      initCommand: '',
+      buildCommand: '',
+      judgeUploadPath: '',
    });
    const draft = useDebounce(formdata, 200);
 
@@ -102,6 +106,13 @@ export const useProblemPublicationForm = (storageName: string) => {
          required: draft.value.coverMode === 'custom',
          validator(value) {
             return draft.value.coverMode === 'default' || value;
+         },
+      },
+      {
+         field: 'judgeUploadPath',
+         required: true,
+         validator(value) {
+            return value && value.length > 0;
          },
       },
    ]);
