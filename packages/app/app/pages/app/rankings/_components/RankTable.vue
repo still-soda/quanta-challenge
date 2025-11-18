@@ -70,9 +70,11 @@ defineProps<{
                         height="2.25rem"
                         object="cover"
                         class="rounded-lg" />
-                     <span class="st-font-body-bold text-white">
+                     <NuxtLink
+                        :to="`/app/space/${item.uid}`"
+                        class="st-font-body-bold text-white cursor-pointer hover:text-primary transition-all">
                         {{ item.userName }}
-                     </span>
+                     </NuxtLink>
                   </td>
                   <td
                      class="pr-3 py-4 text-white text-left font-family-manrope font-bold">

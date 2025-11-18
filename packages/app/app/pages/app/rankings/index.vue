@@ -23,6 +23,7 @@ const { data: rankings, pending: loadingRankings } = useAsyncData(
             score: item.score,
             submissions: item.passCount,
             userName: item.userName,
+            uid: item.uid,
          })),
    }
 );

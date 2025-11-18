@@ -11,6 +11,7 @@ interface GlobalRankingWithUserInfo {
    passCount: number;
    totalScore: number;
    userId: string;
+   uid: string;
 }
 
 const getGlobalRankingsProcedure = publicProcedure.query<
@@ -32,6 +33,7 @@ const getGlobalRankingsProcedure = publicProcedure.query<
       select: {
          id: true,
          name: true,
+         displayName: true,
          avatar: {
             select: { name: true },
          },
@@ -51,7 +53,8 @@ const getGlobalRankingsProcedure = publicProcedure.query<
       return {
          rank: idx + 1,
          score: r.score,
-         userName: user?.name || '匿名用户',
+         uid: user?.name,
+         userName: user?.displayName || user?.name || '匿名用户',
          userId: user?.id || 'unknown',
          avatarUrl: user?.avatar?.name
             ? `/api/static/${user?.avatar?.name}`

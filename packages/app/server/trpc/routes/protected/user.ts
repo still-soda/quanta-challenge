@@ -157,8 +157,147 @@ const uploadImageProcedure = protectedProcedure
       });
    });
 
+const getUserByNameProcedure = protectedProcedure
+   .input(z.object({ name: z.string() }))
+   .query(async ({ input }) => {
+      const { name } = input;
+
+      const user = await prisma.user.findUnique({
+         where: { name },
+         select: {
+            id: true,
+            name: true,
+            displayName: true,
+            imageId: true,
+            createdAt: true,
+            avatar: {
+               select: {
+                  name: true,
+               },
+            },
+            UserInfo: {
+               include: {
+                  bannerImage: {
+                     select: {
+                        name: true,
+                     },
+                  },
+               },
+            },
+         },
+      });
+
+      if (!user) {
+         throw new Error('用户不存在');
+      }
+
+      return {
+         ...user,
+         avatarUrl: user.avatar?.name
+            ? `/api/static/${user.avatar.name}`
+            : null,
+         bannerImageUrl: user.UserInfo?.bannerImage?.name
+            ? `/api/static/${user.UserInfo.bannerImage.name}`
+            : null,
+      };
+   });
+
+const getUserSpaceConfigProcedure = protectedProcedure
+   .input(z.object({ name: z.string() }))
+   .query(async ({ input }) => {
+      const { name } = input;
+
+      const user = await prisma.user.findUnique({
+         where: { name },
+         select: { id: true },
+      });
+
+      if (!user) {
+         throw new Error('用户不存在');
+      }
+
+      let config = await prisma.userSpaceConfig.findUnique({
+         where: { userId: user.id },
+      });
+
+      // 如果配置不存在，创建默认配置
+      if (!config) {
+         config = await prisma.userSpaceConfig.create({
+            data: {
+               userId: user.id,
+               showSubmissionStatus: true,
+               showAchievements: true,
+               personalInfoVisibility: {
+                  birthday: true,
+                  email: true,
+                  identifier: true,
+                  major: true,
+               },
+            },
+         });
+      }
+
+      return config;
+   });
+
+const UpdateUserSpaceConfigSchema = z.object({
+   showSubmissionStatus: z.boolean().optional(),
+   showAchievements: z.boolean().optional(),
+   personalInfoVisibility: z
+      .object({
+         birthday: z.boolean().optional(),
+         email: z.boolean().optional(),
+         identifier: z.boolean().optional(),
+         major: z.boolean().optional(),
+      })
+      .optional(),
+});
+
+const updateUserSpaceConfigProcedure = protectedProcedure
+   .input(UpdateUserSpaceConfigSchema)
+   .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx.user;
+
+      // 查找或创建配置
+      const existingConfig = await prisma.userSpaceConfig.findUnique({
+         where: { userId },
+      });
+
+      if (existingConfig) {
+         // 更新现有配置
+         return await prisma.userSpaceConfig.update({
+            where: { userId },
+            data: {
+               showSubmissionStatus: input.showSubmissionStatus,
+               showAchievements: input.showAchievements,
+               personalInfoVisibility: input.personalInfoVisibility
+                  ? input.personalInfoVisibility
+                  : undefined,
+            },
+         });
+      } else {
+         // 创建新配置
+         return await prisma.userSpaceConfig.create({
+            data: {
+               userId,
+               showSubmissionStatus: input.showSubmissionStatus ?? true,
+               showAchievements: input.showAchievements ?? true,
+               personalInfoVisibility: input.personalInfoVisibility ?? {
+                  birthday: true,
+                  email: true,
+                  identifier: true,
+                  major: true,
+               },
+            },
+         });
+      }
+   });
+
 export const userRouter = router({
    getUserInfo: getUserInfoProcedure,
    updateUserInfo: updateUserInfoProcedure,
    uploadImage: uploadImageProcedure,
+   getUserByName: getUserByNameProcedure,
+   getUserSpaceConfig: getUserSpaceConfigProcedure,
+   updateUserSpaceConfig: updateUserSpaceConfigProcedure,
 });

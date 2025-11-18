@@ -6,4 +6,5 @@ export interface IRanking {
    correctRate: number;
    submissions: number;
    imageUrl: string;
+   uid: string;
 }
