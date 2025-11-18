@@ -3,6 +3,8 @@ import { Fire } from '@icon-park/vue-next';
 
 const props = defineProps<{
    status?: 'dashboard' | 'personal-space';
+   isVisitor?: boolean;
+   username?: string;
 }>();
 
 const card = useTemplateRef('card');
@@ -19,11 +21,18 @@ onMounted(() => {
 
 const { $trpc } = useNuxtApp();
 const { data: submissionStatusData, pending: loading } = useAsyncData(
-   'submission-status-data',
-   () =>
-      $trpc.protected.dashboard.getSubmissionStatus.query().then((res) => {
-         return res;
-      })
+   props.isVisitor
+      ? 'submission-status-data-visitor'
+      : 'submission-status-data-self',
+   () => {
+      if (props.isVisitor && props.username) {
+         return $trpc.public.dashboard.getSubmissionStatus.query({
+            username: props.username,
+         });
+      } else {
+         return $trpc.protected.dashboard.getSubmissionStatus.query();
+      }
+   }
 );
 
 const scrollContainer = useTemplateRef('scrollContainer');

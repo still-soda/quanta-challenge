@@ -9,7 +9,6 @@ import {
 } from '@icon-park/vue-next';
 import { useEventEmitter } from '~/composables/use-event-emitter';
 import { useParam } from '~/composables/use-param';
-import { usePreventLeave } from '~/composables/use-prevent-leave';
 import useAuthStore from '~/stores/auth-store';
 
 const store = useEditorStore();
@@ -57,11 +56,11 @@ const avatarUrl = computed(() =>
                   </template>
 
                   <template v-if="mode === 'problem'">
-                     <a href="/app/problems">
+                     <!-- <a href="/app/problems">
                         <StHeaderButton class="!px-4">
                            <Return class="text-[1.25rem]" />
                         </StHeaderButton>
-                     </a>
+                     </a> -->
                      <NuxtLink :to="`/challenge/record/${id}`">
                         <StHeaderButton
                            text="提交记录"

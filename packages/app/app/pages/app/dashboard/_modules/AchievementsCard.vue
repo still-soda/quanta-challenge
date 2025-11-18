@@ -3,15 +3,27 @@ import { Box, FiveStarBadge } from '@icon-park/vue-next';
 import dayjs from 'dayjs';
 import LinkButton from '../_components/LinkButton.vue';
 
-defineProps<{
+const props = defineProps<{
    status?: 'dashboard' | 'personal-space';
+   isVisitor?: boolean;
+   username?: string;
 }>();
 
 const { $trpc } = useNuxtApp();
 
 const { data: achievements, pending: loading } = useAsyncData(
-   'achieved-achievements',
-   () => $trpc.protected.achievement.getAchievedAchievements.query()
+   props.isVisitor
+      ? 'achieved-achievements-visitor'
+      : 'achieved-achievements-self',
+   () => {
+      if (props.isVisitor && props.username) {
+         return $trpc.public.dashboard.getAchievements.query({
+            username: props.username,
+         });
+      } else {
+         return $trpc.protected.achievement.getAchievedAchievements.query();
+      }
+   }
 );
 
 const formatAchievedDate = (date: string) => {

@@ -53,9 +53,8 @@ const handleLogout = async () => {
       localStorage.removeItem('csrfToken');
    }
 
-   // 清除 cookies（通过调用服务端，或者直接导航到登录页，cookies会在服务端清除）
    // 跳转到认证页面
-   await navigateTo('/auth');
+   await navigateTo('/auth/login');
 
    // 刷新页面以清除状态
    if (import.meta.client) {

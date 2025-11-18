@@ -248,6 +248,8 @@ const width = ref(38.625);
          <SubmissionStatusCard
             v-if="isOwnSpace || spaceConfig?.showSubmissionStatus"
             status="personal-space"
+            :is-visitor="!isOwnSpace"
+            :username="targetUser?.name"
             class="!mt-0 min-h-[18.625rem]" />
 
          <div
@@ -257,6 +259,8 @@ const width = ref(38.625);
          <AchievementsCard
             v-if="isOwnSpace || spaceConfig?.showAchievements"
             status="personal-space"
+            :is-visitor="!isOwnSpace"
+            :username="targetUser?.name"
             class="!min-h-[16rem]" />
       </StSpace>
 
