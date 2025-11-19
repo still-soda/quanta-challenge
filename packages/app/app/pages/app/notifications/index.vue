@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NotificationItem from './_components/NotificationItem.vue';
+import NotificationDetailModal from './_components/NotificationDetailModal.vue';
 import { DoneAll } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '通知中心 - Quanta Challenge' });
@@ -89,6 +90,51 @@ const filteredNotifications = computed(() => {
 const markAllAsRead = () => {
    notifications.value.forEach((n) => (n.read = true));
 };
+
+const selectedNotification = ref<(typeof notifications.value)[0] | null>(null);
+const isModalOpened = ref(false);
+
+const openNotification = (notification: (typeof notifications.value)[0]) => {
+   selectedNotification.value = notification;
+   isModalOpened.value = true;
+
+   // Mark as read when opened
+   if (!notification.read) {
+      notification.read = true;
+   }
+};
+
+const currentIndex = computed(() => {
+   if (!selectedNotification.value) return -1;
+   return filteredNotifications.value.findIndex(
+      (n) => n.id === selectedNotification.value?.id
+   );
+});
+
+const hasPrevious = computed(() => currentIndex.value > 0);
+const hasNext = computed(
+   () =>
+      currentIndex.value !== -1 &&
+      currentIndex.value < filteredNotifications.value.length - 1
+);
+
+const handlePrev = () => {
+   if (hasPrevious.value) {
+      const prev = filteredNotifications.value[currentIndex.value - 1];
+      if (prev) {
+         openNotification(prev);
+      }
+   }
+};
+
+const handleNext = () => {
+   if (hasNext.value) {
+      const next = filteredNotifications.value[currentIndex.value + 1];
+      if (next) {
+         openNotification(next);
+      }
+   }
+};
 </script>
 
 <template>
@@ -98,7 +144,7 @@ const markAllAsRead = () => {
          gap="1.5rem"
          fill
          class="px-4 py-6 max-w-[50rem] w-full shrink-0">
-         <div class="flex justify-between items-center w-full">
+         <div class="flex justify-between items-end w-full">
             <h1 class="st-font-hero-bold">通知中心</h1>
             <div
                @click="markAllAsRead"
@@ -118,7 +164,8 @@ const markAllAsRead = () => {
             <NotificationItem
                v-for="item in filteredNotifications"
                :key="item.id"
-               v-bind="item" />
+               v-bind="item"
+               @click="openNotification(item)" />
 
             <div
                v-if="filteredNotifications.length === 0"
@@ -127,5 +174,13 @@ const markAllAsRead = () => {
             </div>
          </StSpace>
       </StSpace>
+
+      <NotificationDetailModal
+         v-model:opened="isModalOpened"
+         :notification="selectedNotification"
+         :has-previous="hasPrevious"
+         :has-next="hasNext"
+         @prev="handlePrev"
+         @next="handleNext" />
    </StSpace>
 </template>
