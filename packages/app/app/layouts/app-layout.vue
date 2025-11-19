@@ -28,6 +28,10 @@ const handleSearchClick = () => {
    openSearch();
 };
 
+const handleNotificationClick = () => {
+   navigateTo('/app/notifications');
+};
+
 // 全局快捷键 Cmd/Ctrl + K
 const handleKeydown = (e: KeyboardEvent) => {
    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -58,7 +62,7 @@ onUnmounted(() => {
                   <StHeaderButton text="搜索" @click="handleSearchClick">
                      <Search class="text-[1.25rem]" />
                   </StHeaderButton>
-                  <StHeaderButton text="通知">
+                  <StHeaderButton text="通知" @click="handleNotificationClick">
                      <Remind class="text-[1.25rem]" />
                   </StHeaderButton>
                   <StHeaderButton
