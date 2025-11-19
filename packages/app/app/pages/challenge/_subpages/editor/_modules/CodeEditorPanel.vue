@@ -104,7 +104,7 @@ const { popperKey, containerKey: popperContainerKey } = usePopper({
          {
             name: 'offset',
             options: {
-               offset: [0, 8],
+               offset: [0, 0],
             },
          },
       ],

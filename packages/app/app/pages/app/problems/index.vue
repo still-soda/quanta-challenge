@@ -1,9 +1,9 @@
 <script setup lang="tsx">
 import type { $Enums } from '@prisma/client';
-import SlideMask from './_components/SlideMask.vue';
 import Divider from './_components/Divider.vue';
 import { useViewTransition } from '~/composables/use-view-transition';
-import { ThreeHexagons } from '@icon-park/vue-next';
+import { ThreeHexagons, Left, Right } from '@icon-park/vue-next';
+import { useScroll, useResizeObserver } from '@vueuse/core';
 
 useSeoMeta({ title: '题目 - Quanta Challenge' });
 
@@ -13,6 +13,28 @@ const { data: tags, status: tagsStatus } = useAsyncData(
    'tags',
    async () => await $trpc.public.tag.list.query()
 );
+
+const scrollContainer = ref<ComponentPublicInstance | null>(null);
+const scrollEl = computed(
+   () => (scrollContainer.value?.$el as HTMLElement) ?? null
+);
+const { arrivedState } = useScroll(scrollEl, { behavior: 'smooth' });
+
+const isOverflow = ref(false);
+const checkOverflow = () => {
+   if (!scrollEl.value) return;
+   const { scrollWidth, clientWidth } = scrollEl.value;
+   isOverflow.value = scrollWidth > clientWidth + 1;
+};
+useResizeObserver(scrollEl, checkOverflow);
+watch(tags, () => nextTick(checkOverflow));
+
+const scrollLeft = () => {
+   scrollEl.value?.scrollBy({ left: -200, behavior: 'smooth' });
+};
+const scrollRight = () => {
+   scrollEl.value?.scrollBy({ left: 200, behavior: 'smooth' });
+};
 
 const { startViewTransition } = useViewTransition();
 const selectedTags = ref<number[]>([]);
@@ -89,7 +111,24 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                </StSpace>
             </template>
             <StSpace fill-x class="h-[3.5rem] relative" gap="0">
-               <StScrollable scroll-x fill class="relative hide-scrollbar">
+               <div
+                  :class="[
+                     'absolute left-0 top-0 bottom-0 z-10 flex items-center justify-center bg-gradient-to-r from-background to-transparent pr-4 pl-1 transition-opacity duration-300',
+                     arrivedState.left || !isOverflow
+                        ? 'opacity-0 pointer-events-none'
+                        : 'opacity-100',
+                  ]">
+                  <button
+                     @click="scrollLeft"
+                     class="w-8 h-8 rounded-full bg-[#2C2C2C] flex items-center justify-center hover:bg-[#3C3C3C] transition-colors cursor-pointer">
+                     <Left theme="outline" size="16" fill="#fff" />
+                  </button>
+               </div>
+               <StScrollable
+                  ref="scrollContainer"
+                  scroll-x
+                  fill
+                  class="relative hide-scrollbar">
                   <StSpace gap="0.75rem" class="absolute left-0 top-0">
                      <StTagButton
                         @click="selectAll"
@@ -105,8 +144,20 @@ const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
                      <div class="w-[2.5rem] h-[3.5rem] shrink-0"></div>
                   </StSpace>
                </StScrollable>
+               <div
+                  :class="[
+                     'absolute right-0 top-0 bottom-0 z-10 flex items-center justify-center bg-gradient-to-l from-background to-transparent pl-4 pr-1 transition-opacity duration-300',
+                     arrivedState.right || !isOverflow
+                        ? 'opacity-0 pointer-events-none'
+                        : 'opacity-100',
+                  ]">
+                  <button
+                     @click="scrollRight"
+                     class="w-8 h-8 rounded-full bg-[#2C2C2C] flex items-center justify-center hover:bg-[#3C3C3C] transition-colors cursor-pointer">
+                     <Right theme="outline" size="16" fill="#fff" />
+                  </button>
+               </div>
                <div class="h-[3.5rem]"></div>
-               <SlideMask />
             </StSpace>
          </StSkeleton>
          <Divider />

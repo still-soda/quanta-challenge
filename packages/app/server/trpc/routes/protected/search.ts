@@ -301,7 +301,7 @@ const searchProcedure = protectedProcedure
                type: 'user' as const,
                title: user.displayName || user.name,
                description: `@${user.name}`,
-               url: `/app/user/${user.id}`,
+               url: `/app/space/${user.name}`,
                metadata: {
                   avatar: user.avatar?.name, // 使用 name 字段作为头像标识
                   role: user.role,
