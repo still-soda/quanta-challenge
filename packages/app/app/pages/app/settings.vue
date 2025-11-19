@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Shield, User, Config, ApplicationMenu } from '@icon-park/vue-next';
+import { Shield, Config, ApplicationMenu } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '设置 - Quanta Challenge' });
 
@@ -8,25 +8,19 @@ const route = useRoute();
 const settingsMenu = [
    {
       key: 'general',
-      label: '常规设置',
+      label: '常规',
       icon: Config,
       path: '/app/settings',
    },
    {
-      key: 'profile',
-      label: '个人资料',
-      icon: User,
-      path: '/app/space',
-   },
-   {
       key: 'security',
-      label: '安全设置',
+      label: '安全',
       icon: Shield,
       path: '/app/settings/security',
    },
    {
       key: 'advanced',
-      label: '高级设置',
+      label: '高级',
       icon: ApplicationMenu,
       path: '/app/settings/advanced',
    },
@@ -45,43 +39,47 @@ const handleMenuClick = (path: string) => {
 </script>
 
 <template>
-   <StSpace fill justify="center" class="overflow-auto">
-      <StSpace gap="1rem" class="w-[48rem] pb-[2rem] my-8" align="start">
-         <!-- 侧边栏导航 -->
-         <StSpace
-            direction="vertical"
-            gap="0.375rem"
-            class="w-[10rem] shrink-0 sticky top-0">
-            <h1 class="st-font-hero-bold mb-3">设置</h1>
+   <StSpace
+      fill
+      justify="center"
+      class="overflow-y-auto overflow-x-hidden pt-6">
+      <StSpace
+         direction="vertical"
+         gap="2rem"
+         class="w-full max-w-[56rem] pb-48 min-h-[calc(100vh-4rem)]">
+         <!-- 顶部标题与标签页整合 -->
+         <div class="flex items-center justify-between w-full">
+            <h1 class="text-[2.5rem] font-bold text-white leading-none">
+               设置
+            </h1>
 
-            <StSpace direction="vertical" gap="0.25rem" fill-x>
+            <div
+               class="flex items-center gap-1 bg-accent-600/20 p-1 rounded-lg border border-accent-600/30 backdrop-blur-sm">
                <div
                   v-for="item in settingsMenu"
                   :key="item.key"
                   @click="handleMenuClick(item.path)"
-                  class="px-4 py-2.5 rounded-lg cursor-pointer transition-all border"
-                  :class="
+                  class="px-4 py-2 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-2 select-none"
+                  :class="[
                      activeKey === item.key
-                        ? 'bg-accent-500 border-accent-400 text-white'
-                        : 'border-accent-600 text-accent-200 hover:border-accent-500 hover:bg-accent-600 hover:text-white'
-                  ">
-                  <StSpace gap="0.625rem" align="center">
-                     <component
-                        :is="item.icon"
-                        class="text-lg shrink-0"
-                        :class="
-                           activeKey === item.key
-                              ? 'text-primary'
-                              : 'text-accent-300'
-                        " />
-                     <span class="text-sm font-medium">{{ item.label }}</span>
-                  </StSpace>
+                        ? 'bg-accent-500 text-white shadow-sm'
+                        : 'text-accent-300 hover:text-white hover:bg-accent-600/30',
+                  ]">
+                  <component
+                     :is="item.icon"
+                     class="text-lg"
+                     :class="
+                        activeKey === item.key
+                           ? 'text-primary'
+                           : 'text-accent-400'
+                     " />
+                  <span class="text-sm font-medium">{{ item.label }}</span>
                </div>
-            </StSpace>
-         </StSpace>
+            </div>
+         </div>
 
          <!-- 内容区域 -->
-         <div class="flex-1 min-w-0 px-[0.625rem] min-h-[50vh]">
+         <div class="w-full min-h-[400px]">
             <NuxtPage />
          </div>
       </StSpace>

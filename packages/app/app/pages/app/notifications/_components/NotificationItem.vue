@@ -9,9 +9,11 @@ import {
    CloseOne,
 } from '@icon-park/vue-next';
 
+import type { NotificationType } from '@prisma/client';
+
 interface NotificationProps {
    id: string;
-   type: 'system' | 'comment' | 'like' | 'judge' | 'achievement';
+   type: NotificationType;
    title: string;
    content: string;
    time: string;
@@ -19,6 +21,16 @@ interface NotificationProps {
 }
 
 const props = defineProps<NotificationProps>();
+
+const lowerCaseType = computed(
+   () =>
+      (props.type as string).toLowerCase() as
+         | 'system'
+         | 'comment'
+         | 'like'
+         | 'judge'
+         | 'achievement'
+);
 
 const iconMap = {
    system: System,
@@ -36,8 +48,10 @@ const iconColorMap = {
    achievement: 'text-yellow-500',
 };
 
-const IconComponent = computed(() => iconMap[props.type] || Remind);
-const iconClass = computed(() => iconColorMap[props.type] || 'text-accent-100');
+const IconComponent = computed(() => iconMap[lowerCaseType.value] || Remind);
+const iconClass = computed(
+   () => iconColorMap[lowerCaseType.value] || 'text-accent-100'
+);
 </script>
 
 <template>
@@ -63,6 +77,6 @@ const iconClass = computed(() => iconColorMap[props.type] || 'text-accent-100');
       </div>
       <div
          v-if="!read"
-         class="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary"></div>
+         class="absolute top-3 right-3 w-2 h-2 rounded-full bg-primary"></div>
    </div>
 </template>

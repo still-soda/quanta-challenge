@@ -32,6 +32,22 @@ const handleNotificationClick = () => {
    navigateTo('/app/notifications');
 };
 
+const { $trpc } = useNuxtApp();
+const unreadCount = ref(0);
+
+const fetchUnreadCount = async () => {
+   if (authStore.user) {
+      try {
+         unreadCount.value =
+            await $trpc.protected.notification.unreadCount.query();
+      } catch {}
+   } else {
+      unreadCount.value = 0;
+   }
+};
+
+watch(() => authStore.user, fetchUnreadCount);
+
 // 全局快捷键 Cmd/Ctrl + K
 const handleKeydown = (e: KeyboardEvent) => {
    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -41,6 +57,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 };
 
 onMounted(() => {
+   fetchUnreadCount();
    window.addEventListener('keydown', handleKeydown);
 });
 
@@ -63,7 +80,14 @@ onUnmounted(() => {
                      <Search class="text-[1.25rem]" />
                   </StHeaderButton>
                   <StHeaderButton text="通知" @click="handleNotificationClick">
-                     <Remind class="text-[1.25rem]" />
+                     <div class="relative">
+                        <Remind class="text-[1.25rem]" />
+                        <div
+                           v-if="unreadCount > 0"
+                           class="absolute -top-1.5 -right-1.5 min-w-[1rem] h-4 px-[0.25rem] flex items-center justify-center bg-rose-500 text-white text-[0.625rem] font-bold rounded-full shadow-sm border-2 border-accent-600 z-10 pointer-events-none select-none leading-none font-family-manrope">
+                           {{ unreadCount > 99 ? '99+' : unreadCount }}
+                        </div>
+                     </div>
                   </StHeaderButton>
                   <StHeaderButton
                      v-if="isAdmin"

@@ -7,6 +7,7 @@ import { rankRouter } from './rank';
 import { userRouter } from './user';
 import { searchRouter } from './search';
 import { fileSyncRouter } from './file-sync';
+import { notificationRouter } from './notification';
 
 export const protectedRouter = router({
    problem: problemRouter,
@@ -17,4 +18,5 @@ export const protectedRouter = router({
    user: userRouter,
    search: searchRouter,
    fileSync: fileSyncRouter,
+   notification: notificationRouter,
 });

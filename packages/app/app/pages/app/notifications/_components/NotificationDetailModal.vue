@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { Close, Left, Right, Calendar } from '@icon-park/vue-next';
 
-interface Notification {
-   id: string;
-   type: string;
-   title: string;
-   content: string;
-   time: string;
-   read: boolean;
-}
+import type { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '~~/server/trpc/routes';
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type Notification =
+   RouterOutput['protected']['notification']['list']['items'][number];
 
 const props = defineProps<{
    notification: Notification | null;
@@ -22,6 +19,11 @@ const opened = defineModel<boolean>('opened');
 const close = () => {
    opened.value = false;
 };
+
+const formattedTime = computed(() => {
+   if (!props.notification) return '';
+   return new Date(props.notification.createdAt).toLocaleString();
+});
 
 const handleKeydown = (e: KeyboardEvent) => {
    if (!opened.value) return;
@@ -62,7 +64,7 @@ onUnmounted(() => {
                   <div
                      class="flex items-center gap-1.5 text-accent-400 text-sm">
                      <Calendar size="14" />
-                     <span>{{ notification.time }}</span>
+                     <span>{{ formattedTime }}</span>
                   </div>
                </div>
                <div

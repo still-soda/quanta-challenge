@@ -1,113 +1,103 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue';
 import NotificationItem from './_components/NotificationItem.vue';
 import NotificationDetailModal from './_components/NotificationDetailModal.vue';
-import { DoneAll } from '@icon-park/vue-next';
+import NotificationItemSkeleton from './_components/NotificationItemSkeleton.vue';
+import { DoneAll, Inbox } from '@icon-park/vue-next';
+import { useNuxtApp } from '#app';
+import type { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '~~/server/trpc/routes';
 
 useSeoMeta({ title: '通知中心 - Quanta Challenge' });
 
-type NotificationType = 'system' | 'comment' | 'like' | 'judge' | 'achievement';
+type RouterOutput = inferRouterOutputs<AppRouter>;
+type Notification =
+   RouterOutput['protected']['notification']['list']['items'][number];
 
-// Mock Data
-const notifications = ref<
-   {
-      id: string;
-      type: NotificationType;
-      title: string;
-      content: string;
-      time: string;
-      read: boolean;
-   }[]
->([
-   {
-      id: '1',
-      type: 'system',
-      title: '系统维护通知',
-      content:
-         '我们将于本周六凌晨 2:00 进行系统维护，预计耗时 2 小时。期间服务将不可用，请提前保存您的工作。',
-      time: '2小时前',
-      read: false,
-   },
-   {
-      id: '2',
-      type: 'judge',
-      title: '判题结果通知',
-      content:
-         '您提交的题目 "两数之和" 判题完成。结果：通过 (Accepted)。得分：100/100。',
-      time: '5小时前',
-      read: false,
-   },
-   {
-      id: '3',
-      type: 'achievement',
-      title: '获得新成就',
-      content: '恭喜！您已连续打卡 7 天，获得成就 "坚持不懈"。',
-      time: '1天前',
-      read: true,
-   },
-   {
-      id: '4',
-      type: 'comment',
-      title: '新评论',
-      content: 'User123 回复了您的评论："这个解法真的很巧妙，学习了！"',
-      time: '2天前',
-      read: true,
-   },
-   {
-      id: '5',
-      type: 'like',
-      title: '收到点赞',
-      content: '您的题解 "动态规划详解" 收到了 10 个新的点赞。',
-      time: '3天前',
-      read: true,
-   },
-   {
-      id: '6',
-      type: 'system',
-      title: '欢迎加入 Quanta Challenge',
-      content:
-         '欢迎来到 Quanta Challenge！这里有丰富的编程挑战等待着您。开始您的编程之旅吧！',
-      time: '1周前',
-      read: true,
-   },
-]);
+const { $trpc } = useNuxtApp();
 
-const filterType = ref('all');
+const filterType = ref<
+   'ALL' | 'UNREAD' | 'SYSTEM' | 'JUDGE' | 'COMMENT' | 'LIKE' | 'ACHIEVEMENT'
+>('ALL');
+
+// 使用 useAsyncData 确保 SSR 支持
+const {
+   data: notificationsData,
+   pending: loading,
+   refresh: refreshNotifications,
+} = await useAsyncData(
+   'notifications',
+   async () => {
+      const promise = $trpc.protected.notification.list.query({
+         type: filterType.value,
+         cursor: null,
+         limit: 20,
+      });
+      const result = await (typeof window === 'undefined'
+         ? promise
+         : atLeastTime(500, promise));
+      return result;
+   },
+   {
+      watch: [filterType],
+      server: true,
+   }
+);
+
+const notifications = ref<Notification[]>(notificationsData.value?.items || []);
+const allLoaded = ref(false);
+
+// 监听 notificationsData 变化,更新 notifications
+watch(
+   notificationsData,
+   (newData) => {
+      if (newData) {
+         notifications.value = newData.items;
+         allLoaded.value = !newData.nextCursor;
+      }
+   },
+   { immediate: true }
+);
 
 const filterOptions = [
-   { label: '全部', value: 'all', color: '#FA7C0E' },
-   { label: '未读', value: 'unread', color: '#F59E0B' },
-   { label: '系统', value: 'system', color: '#3B82F6' },
-   { label: '判题', value: 'judge', color: '#10B981' },
+   { label: '全部', value: 'ALL', color: '#FA7C0E' },
+   { label: '未读', value: 'UNREAD', color: '#F59E0B' },
+   { label: '系统', value: 'SYSTEM', color: '#3B82F6' },
+   { label: '判题', value: 'JUDGE', color: '#10B981' },
 ];
 
-const filteredNotifications = computed(() => {
-   if (filterType.value === 'all') return notifications.value;
-   if (filterType.value === 'unread')
-      return notifications.value.filter((n) => !n.read);
-   return notifications.value.filter((n) => n.type === filterType.value);
-});
-
-const markAllAsRead = () => {
-   notifications.value.forEach((n) => (n.read = true));
+const markAllAsRead = async () => {
+   try {
+      await $trpc.protected.notification.markAllAsRead.mutate();
+      notifications.value.forEach((n: Notification) => (n.read = true));
+   } catch (error) {
+      console.error('Failed to mark all as read:', error);
+   }
 };
 
-const selectedNotification = ref<(typeof notifications.value)[0] | null>(null);
+const selectedNotification = ref<Notification | null>(null);
 const isModalOpened = ref(false);
 
-const openNotification = (notification: (typeof notifications.value)[0]) => {
+const openNotification = async (notification: Notification) => {
    selectedNotification.value = notification;
    isModalOpened.value = true;
 
-   // Mark as read when opened
    if (!notification.read) {
-      notification.read = true;
+      try {
+         await $trpc.protected.notification.markAsRead.mutate({
+            id: notification.id,
+         });
+         notification.read = true;
+      } catch (error) {
+         console.error('Failed to mark as read:', error);
+      }
    }
 };
 
 const currentIndex = computed(() => {
    if (!selectedNotification.value) return -1;
-   return filteredNotifications.value.findIndex(
-      (n) => n.id === selectedNotification.value?.id
+   return notifications.value.findIndex(
+      (n: Notification) => n.id === selectedNotification.value?.id
    );
 });
 
@@ -115,12 +105,12 @@ const hasPrevious = computed(() => currentIndex.value > 0);
 const hasNext = computed(
    () =>
       currentIndex.value !== -1 &&
-      currentIndex.value < filteredNotifications.value.length - 1
+      currentIndex.value < notifications.value.length - 1
 );
 
 const handlePrev = () => {
    if (hasPrevious.value) {
-      const prev = filteredNotifications.value[currentIndex.value - 1];
+      const prev = notifications.value[currentIndex.value - 1];
       if (prev) {
          openNotification(prev);
       }
@@ -129,7 +119,7 @@ const handlePrev = () => {
 
 const handleNext = () => {
    if (hasNext.value) {
-      const next = filteredNotifications.value[currentIndex.value + 1];
+      const next = notifications.value[currentIndex.value + 1];
       if (next) {
          openNotification(next);
       }
@@ -162,16 +152,24 @@ const handleNext = () => {
 
          <StSpace direction="vertical" gap="1rem" fill class="w-full">
             <NotificationItem
-               v-for="item in filteredNotifications"
+               v-for="item in notifications"
                :key="item.id"
-               v-bind="item"
+               :id="item.id"
+               :type="item.type"
+               :title="item.title"
+               :content="item.content"
+               :time="item.createdAt.toLocaleString()"
+               :read="item.read"
                @click="openNotification(item)" />
 
-            <div
-               v-if="filteredNotifications.length === 0"
-               class="py-12 text-center text-accent-400">
-               <div class="st-font-body-normal">暂无通知</div>
-            </div>
+            <StEmptyStatus
+               v-if="notifications.length === 0 && !loading"
+               content="暂无通知"
+               :icon="Inbox"
+               class="opacity-60 py-20" />
+            <template v-if="loading">
+               <NotificationItemSkeleton v-for="i in 5" :key="i" />
+            </template>
          </StSpace>
       </StSpace>
 
