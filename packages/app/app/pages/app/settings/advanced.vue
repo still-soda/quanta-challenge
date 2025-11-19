@@ -15,25 +15,23 @@ const devMode = ref(false);
    <div class="space-y-6 animate-fade-in-up">
       <!-- Developer Options -->
       <div
-         class="bg-accent-600/10 border border-accent-600/30 rounded-xl overflow-hidden transition-all hover:border-accent-500/50">
-         <div class="p-6 border-b border-accent-600/30 flex items-start gap-5">
+         class="bg-accent-600 rounded-[1.25rem] overflow-hidden border border-white/5 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group">
+         <div class="p-6 flex items-start gap-6">
             <div
-               class="p-3 bg-purple-500/10 rounded-xl text-purple-500 shrink-0 border border-purple-500/20">
-               <Terminal class="text-2xl" />
+               class="p-4 rounded-2xl shrink-0 border border-white/10 bg-gradient-to-br from-pink-500/20 to-rose-500/5 group-hover:from-pink-500/30 group-hover:to-rose-500/10 transition-colors">
+               <Terminal class="text-3xl text-pink-400" />
             </div>
-            <div class="flex-1">
-               <h2 class="text-lg font-bold text-white mb-1">开发者选项</h2>
-               <p class="text-sm text-accent-300 leading-relaxed max-w-2xl">
-                  开启实验性功能和调试工具。这些功能可能不稳定。
+            <div class="flex-1 py-1">
+               <h2 class="text-xl font-bold text-white mb-2">开发者选项</h2>
+               <p class="text-sm text-accent-200 leading-relaxed max-w-2xl">
+                  开启实验性功能和调试工具。这些功能可能不稳定，仅供开发人员使用。
                </p>
             </div>
          </div>
-         <div class="p-6 bg-accent-700/20 flex items-center justify-between">
+         <div class="p-6 flex items-center justify-between">
             <div>
-               <div class="text-sm font-medium text-accent-200">
-                  启用开发者模式
-               </div>
-               <div class="text-xs text-accent-400">
+               <div class="text-base font-bold text-white">启用开发者模式</div>
+               <div class="text-xs text-accent-300 mt-0.5">
                   访问更多调试信息和未发布功能
                </div>
             </div>
@@ -43,43 +41,43 @@ const devMode = ref(false);
 
       <!-- Data Management -->
       <div
-         class="bg-accent-600/10 border border-accent-600/30 rounded-xl overflow-hidden transition-all hover:border-accent-500/50">
-         <div class="p-6 border-b border-accent-600/30 flex items-start gap-5">
+         class="bg-accent-600 rounded-[1.25rem] overflow-hidden border border-white/5 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group">
+         <div class="p-6 flex items-start gap-6">
             <div
-               class="p-3 bg-green-500/10 rounded-xl text-green-500 shrink-0 border border-green-500/20">
-               <Download class="text-2xl" />
+               class="p-4 rounded-2xl shrink-0 border border-white/10 bg-gradient-to-br from-cyan-500/20 to-blue-500/5 group-hover:from-cyan-500/30 group-hover:to-blue-500/10 transition-colors">
+               <Download class="text-3xl text-cyan-400" />
             </div>
-            <div class="flex-1">
-               <h2 class="text-lg font-bold text-white mb-1">数据管理</h2>
-               <p class="text-sm text-accent-300 leading-relaxed max-w-2xl">
-                  导出您的个人数据或提交记录。
+            <div class="flex-1 py-1">
+               <h2 class="text-xl font-bold text-white mb-2">数据管理</h2>
+               <p class="text-sm text-accent-200 leading-relaxed max-w-2xl">
+                  导出您的个人数据或提交记录，掌握您的数据主权。
                </p>
             </div>
          </div>
-         <div class="p-6 bg-accent-700/20">
+         <div class="p-6">
             <StButton :bordered="true" theme="secondary">导出所有数据</StButton>
          </div>
       </div>
 
       <!-- Danger Zone -->
       <div
-         class="border border-red-500/30 rounded-xl overflow-hidden transition-all hover:border-red-500/50 bg-red-500/5">
-         <div class="p-6 border-b border-red-500/20 flex items-start gap-5">
+         class="rounded-[1.25rem] overflow-hidden transition-all duration-300 bg-red-500/5 border border-red-500/20 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-500/10 group">
+         <div class="p-6 border-b border-red-500/10 flex items-start gap-6">
             <div
-               class="p-3 bg-red-500/10 rounded-xl text-red-500 shrink-0 border border-red-500/20">
-               <Delete class="text-2xl" />
+               class="p-4 rounded-2xl shrink-0 border border-red-500/20 bg-gradient-to-br from-red-500/20 to-orange-500/5 group-hover:from-red-500/30 group-hover:to-orange-500/10 transition-colors">
+               <Delete class="text-3xl text-red-400" />
             </div>
-            <div class="flex-1">
-               <h2 class="text-lg font-bold text-red-400 mb-1">危险区域</h2>
+            <div class="flex-1 py-1">
+               <h2 class="text-xl font-bold text-red-400 mb-2">危险区域</h2>
                <p class="text-sm text-red-400/70 leading-relaxed max-w-2xl">
-                  不可逆的操作。请谨慎进行。
+                  执行不可逆的操作，如删除账户。请务必谨慎进行。
                </p>
             </div>
          </div>
-         <div class="p-6 bg-red-500/10 flex items-center justify-between">
+         <div class="p-6 bg-red-500/5 flex items-center justify-between">
             <div>
-               <div class="text-sm font-medium text-red-300">删除账户</div>
-               <div class="text-xs text-red-400/60">
+               <div class="text-base font-bold text-red-300">删除账户</div>
+               <div class="text-xs text-red-400/60 mt-0.5">
                   永久删除您的账户及所有相关数据
                </div>
             </div>
