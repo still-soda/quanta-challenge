@@ -18,6 +18,9 @@
       },
       "./config": {
          "import": "./configs/search-config.ts"
+      },
+      "./openapi": {
+         "import": "./service/openapi/sign.ts"
       }
    },
    "main": "index.js",

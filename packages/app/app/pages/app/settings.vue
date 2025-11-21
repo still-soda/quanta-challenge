@@ -18,12 +18,6 @@ const settingsMenu = [
       icon: Shield,
       path: '/app/settings/security',
    },
-   {
-      key: 'advanced',
-      label: '高级',
-      icon: ApplicationMenu,
-      path: '/app/settings/advanced',
-   },
 ];
 
 const activeKey = computed(() => {
@@ -46,7 +40,7 @@ const handleMenuClick = (path: string) => {
       <StSpace
          direction="vertical"
          gap="2rem"
-         class="w-full max-w-[56rem] pb-48 min-h-[calc(100vh-4rem)]">
+         class="w-full max-w-[45rem] pb-48 min-h-[calc(100vh-4rem)]">
          <!-- 顶部标题与标签页整合 -->
          <div class="flex items-center justify-between w-full">
             <h1 class="text-[2.5rem] font-bold text-white leading-none">

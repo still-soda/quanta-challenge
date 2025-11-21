@@ -78,6 +78,7 @@ const markAllAsRead = async () => {
 const selectedNotification = ref<Notification | null>(null);
 const isModalOpened = ref(false);
 
+const refreshUnreadCountEmitter = useEventBus('refresh-unread-count');
 const openNotification = async (notification: Notification) => {
    selectedNotification.value = notification;
    isModalOpened.value = true;
@@ -88,6 +89,7 @@ const openNotification = async (notification: Notification) => {
             id: notification.id,
          });
          notification.read = true;
+         refreshUnreadCountEmitter.emit();
       } catch (error) {
          console.error('Failed to mark as read:', error);
       }
@@ -151,25 +153,26 @@ const handleNext = () => {
          </div>
 
          <StSpace direction="vertical" gap="1rem" fill class="w-full">
-            <NotificationItem
-               v-for="item in notifications"
-               :key="item.id"
-               :id="item.id"
-               :type="item.type"
-               :title="item.title"
-               :content="item.content"
-               :time="item.createdAt.toLocaleString()"
-               :read="item.read"
-               @click="openNotification(item)" />
+            <template v-if="!loading">
+               <NotificationItem
+                  v-for="item in notifications"
+                  :key="item.id"
+                  :id="item.id"
+                  :type="item.type"
+                  :title="item.title"
+                  :content="item.content"
+                  :time="item.createdAt.toLocaleString()"
+                  :read="item.read"
+                  @click="openNotification(item)" />
+            </template>
 
             <StEmptyStatus
                v-if="notifications.length === 0 && !loading"
                content="暂无通知"
                :icon="Inbox"
                class="opacity-60 py-20" />
-            <template v-if="loading">
-               <NotificationItemSkeleton v-for="i in 5" :key="i" />
-            </template>
+
+            <NotificationItemSkeleton v-if="loading" v-for="i in 5" :key="i" />
          </StSpace>
       </StSpace>
 

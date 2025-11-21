@@ -4,9 +4,9 @@ import { rankService } from '~~/server/trpc/services/rank';
 import { observer } from '~~/server/trpc/services/achievement';
 import { ValidPath } from '~~/lib/track-wrapper';
 import { logger } from '~~/lib/logger';
+import { notificationSerivce } from '~~/server/trpc/services/notificatoin';
 
 const JudgeCompleteSchema = z.object({
-   token: z.uuid('Invalid token format'),
    recordId: z
       .string()
       .transform((val) => parseInt(val, 10))
@@ -108,18 +108,7 @@ export default defineEventHandler(async (event) => {
       });
    }
 
-   const { token, recordId } = parseResult.data;
-   const redis = useRedis();
-
-   const storedToken = await redis.get(`judge_token:${recordId}`);
-   if (storedToken !== token) {
-      logger.error('Judge complete failed: Invalid token', { recordId, token });
-      throw createError({
-         statusCode: 403,
-         message: 'Invalid token',
-      });
-   }
-   await redis.del(`judge_token:${recordId}`);
+   const { recordId } = parseResult.data;
 
    const { problem, score, result, userId } =
       await prisma.judgeRecords.findUniqueOrThrow({
@@ -145,7 +134,15 @@ export default defineEventHandler(async (event) => {
          await rankService.udpateGlobalRanking(userId, scoreDiff);
       }
    }
-   await updateUserStatistic(userId, Math.max(scoreDiff, 0));
+   await Promise.all([
+      updateUserStatistic(userId, Math.max(scoreDiff, 0)),
+      notificationSerivce.sendNotification({
+         type: 'JUDGE',
+         title: '判题完成通知',
+         content: `您的提交（记录 ID: ${recordId}）已判题完成，结果：${result}，得分：${score} 分。`,
+         userId: userId,
+      }),
+   ]);
 
    logger.info('Judge complete success', {
       recordId,

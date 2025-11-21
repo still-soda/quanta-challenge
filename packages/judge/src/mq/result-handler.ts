@@ -2,20 +2,27 @@ import { EventType, type ITaskCompletedPayload } from '../events/index.js';
 import { EventEmitterService } from '../utils/event-emitter.js';
 import { url } from '@challenge/shared/utils';
 import prisma from '../utils/prisma.js';
+import { generateOpenApiSign } from '@challenge/shared/openapi';
 
-const requestWebhook = async (data: {
-   judgeRecordId: number;
-   token: string;
-}) => {
-   const { judgeRecordId, token } = data;
+const requestWebhook = async (data: { judgeRecordId: number }) => {
+   const { judgeRecordId } = data;
    const appServerUrl = process.env.APP_SERVER_URL || 'http://localhost:3000';
 
-   const callbackUrl = url(appServerUrl, '/api/webhooks/judge-complete', {
-      token,
-      recordId: judgeRecordId,
-   });
+   const params = { recordId: judgeRecordId.toString() };
+   const path = '/api/webhooks/judge-complete';
+   const timestamp = Date.now();
 
-   return fetch(callbackUrl).catch((e) =>
+   const sign = generateOpenApiSign({
+      secret: process.env.OPENAPI_WEBHOOK_SECRET || 'default_secret',
+      timestamp,
+      params,
+      path,
+   });
+   const cookie = `webhook_timestamp=${timestamp}; sign=${sign};`;
+
+   const callbackUrl = url(appServerUrl, path, params);
+
+   return fetch(callbackUrl, { headers: { Cookie: cookie } }).catch((e) =>
       console.error('💀 Error sending callback:', e)
    );
 };

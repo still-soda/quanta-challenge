@@ -15,6 +15,7 @@ const notifications = ref({
    <div class="space-y-6 animate-fade-in-up">
       <!-- Appearance Card -->
       <div
+         v-if="false"
          class="bg-accent-600 rounded-[1.25rem] overflow-hidden border border-white/5 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group">
          <div class="p-6 flex items-start gap-6">
             <div
@@ -31,7 +32,7 @@ const notifications = ref({
 
          <div class="p-6 space-y-6">
             <!-- Language -->
-            <div class="flex items-center justify-between gap-4">
+            <div 0 class="flex items-center justify-between gap-4">
                <div class="flex items-center gap-4">
                   <div
                      class="w-10 h-10 rounded-full bg-accent-500/50 flex items-center justify-center">

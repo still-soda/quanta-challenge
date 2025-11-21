@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { Remind, Search, TableReport } from '@icon-park/vue-next';
+import {
+   useMessage,
+   useMessageOutsideVue,
+} from '~/components/st/Message/use-message';
 import useAuthStore from '~/stores/auth-store';
 
 const authStore = useAuthStore();
@@ -48,6 +52,9 @@ const fetchUnreadCount = async () => {
 
 watch(() => authStore.user, fetchUnreadCount);
 
+const refreshUnreadCountEmitter = useEventBus('refresh-unread-count');
+refreshUnreadCountEmitter.on(fetchUnreadCount);
+
 // 全局快捷键 Cmd/Ctrl + K
 const handleKeydown = (e: KeyboardEvent) => {
    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -63,6 +70,21 @@ onMounted(() => {
 
 onUnmounted(() => {
    window.removeEventListener('keydown', handleKeydown);
+});
+
+onMounted(() => {
+   const message = useMessageOutsideVue();
+   const { event } = useSSE<{ message: string }>({
+      url: '/api/sse/notifications',
+   });
+   watch(event, (e) => {
+      if (e && e.message === 'new_notification') {
+         message.info('您有一条新的通知', void 0, {
+            duration: 0,
+         });
+         fetchUnreadCount();
+      }
+   });
 });
 </script>
 

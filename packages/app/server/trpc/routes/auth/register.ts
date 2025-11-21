@@ -43,6 +43,7 @@ const emailRegisterProcedure = publicProcedure
                   name: username,
                   displayName: username,
                   email: email,
+                  UserStatistic: {},
                },
             },
          },

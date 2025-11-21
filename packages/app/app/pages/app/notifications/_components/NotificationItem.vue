@@ -6,8 +6,8 @@ import {
    Like,
    Info,
    CheckOne,
-   CloseOne,
 } from '@icon-park/vue-next';
+import dayjs from 'dayjs';
 
 import type { NotificationType } from '@prisma/client';
 
@@ -68,7 +68,7 @@ const iconClass = computed(
             </h3>
             <span
                class="st-font-caption text-accent-400 whitespace-nowrap ml-2">
-               {{ time }}
+               {{ dayjs(time).format('YYYY-MM-DD HH:mm') }}
             </span>
          </div>
          <p class="st-font-body-normal text-accent-300 line-clamp-2">

@@ -35,10 +35,10 @@ const rules: IRule[] = [
    <div class="space-y-6 animate-fade-in-up">
       <!-- WebAuthn Card -->
       <div
-         class="bg-accent-600 rounded-[1.25rem] overflow-hidden border border-white/5 transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group">
+         class="bg-accent-600 rounded-[1.25rem] overflow-hidden border border-white/5 transition-all duration-300 group">
          <div class="p-6 flex items-start gap-6">
             <div
-               class="p-4 rounded-2xl shrink-0 border border-white/10 bg-gradient-to-br from-emerald-500/20 to-teal-500/5 group-hover:from-emerald-500/30 group-hover:to-teal-500/10 transition-colors">
+               class="p-4 rounded-2xl shrink-0 border border-white/10 bg-gradient-to-br from-emerald-500/20 to-teal-500/5 group-hover:from-emerald/30 group-hover:to-teal-500/10 transition-colors">
                <Fingerprint class="text-3xl text-emerald-400" />
             </div>
             <div class="flex-1 py-1">
@@ -52,31 +52,31 @@ const rules: IRule[] = [
             </div>
          </div>
 
-         <div class="p-6">
+         <div class="p-6 pt-0 w-full">
             <StForm
                :rules="rules"
                :model-value="formdata"
                :ref="formKey"
-               class="w-full max-w-lg"
+               class="w-full"
                @keydown.enter.prevent="handleRegister">
                <StFormItem name="email" label="绑定邮箱" required>
                   <StInput
                      autocomplete="webauthn"
                      v-model:value="formdata.email"
                      placeholder="请输入您的邮箱地址"
-                     outer-class="!bg-accent-700/50 !border-accent-600/50 focus-within:!border-emerald-500/50 !py-2.5 !rounded-lg">
+                     outer-class="!bg-accent-700/50 !border-accent-600/50 w-full focus-within:!border-emerald-500/50 !rounded-lg">
                      <template #prefix>
                         <Mail class="text-lg text-accent-400" />
                      </template>
                   </StInput>
                </StFormItem>
 
-               <div class="mt-8 flex items-center gap-4">
+               <div class="mt-4 flex items-center gap-4">
                   <StButton
                      @click.prevent="handleRegister"
                      :loading="loading"
                      theme="primary"
-                     class="!px-6 !py-2 !h-10 !rounded-lg font-medium shadow-lg shadow-emerald-500/20 !bg-emerald-600 hover:!bg-emerald-500 !border-emerald-500">
+                     class="!px-6 !py-2 !h-12 !rounded-lg font-bold !bg-emerald-600 hover:!bg-emerald-500 !border-emerald-500">
                      注册新设备
                   </StButton>
                   <p class="text-xs text-accent-400">

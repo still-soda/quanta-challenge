@@ -104,11 +104,6 @@ const handleCreateVersion = async (options: {
       },
    });
 
-   // 生成回调 token
-   const callbackToken = crypto.randomUUID();
-   const redis = useRedis();
-   redis.set(`judge_token:${templateJudgeRecord.judgeRecordId}`, callbackToken);
-
    // 发送任务到任务处理服务
    await fetch(`${judgeServerUrl}/task/create`, {
       method: 'POST',
@@ -121,7 +116,6 @@ const handleCreateVersion = async (options: {
          judgeRecordId: templateJudgeRecord.judgeRecordId,
          judgeScript: judgeScript,
          fsSnapshot: input.referenceAnswerSnapshot,
-         token: callbackToken,
          mode: 'audit',
       }),
    }).then((res: any) => {

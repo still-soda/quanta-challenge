@@ -152,5 +152,8 @@ export default defineNuxtConfig({
             ? parseInt(import.meta.env.FILE_SYNC_MAX_CHANGES)
             : 50,
       },
+      openapi: {
+         webhookSecret: import.meta.env.OPENAPI_WEBHOOK_SECRET || '',
+      },
    },
 });
