@@ -40,6 +40,7 @@ const handleCreate = async () => {
          preAchievements: formdata.preAchievements,
          script: formdata.script,
          isCheckinAchievement: formdata.isCheckinAchievement,
+         score: formdata.score,
       });
       message.success('成就创建成功');
       navigateTo('/app/publish');
@@ -79,6 +80,14 @@ const handleCreate = async () => {
                      v-model:value="formdata.description"
                      placeholder="请输入1～20字的成就描述"
                      name="description"
+                     :outer-class />
+               </StFormItem>
+               <StFormItem name=" score" label="成就分" required>
+                  <StInput
+                     type="number"
+                     v-model:value="formdata.score"
+                     placeholder="请输入成就分"
+                     name="score"
                      :outer-class />
                </StFormItem>
                <StFormItem name="requiredData" label="成就依赖数据" required>

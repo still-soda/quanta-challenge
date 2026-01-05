@@ -28,20 +28,31 @@ observer.addListener('check', async (achId, result, userId) => {
       return;
    }
    const progress = result.achieved ? 1 : Math.min(result.progress, 1);
-   await prisma.userAchievement
-      .upsert({
-         where: {
-            userId_achievementId: { achievementId: achId, userId },
-         },
-         create: {
-            progress: progress,
-            achievement: { connect: { id: achId } },
-            user: { connect: { id: userId } },
-         },
-         update: {
-            progress: progress,
-            achievedAt: new Date(),
-         },
+   await prisma
+      .$transaction(async (tx) => {
+         await tx.userAchievement.upsert({
+            where: {
+               userId_achievementId: { achievementId: achId, userId },
+            },
+            create: {
+               progress: progress,
+               achievement: { connect: { id: achId } },
+               user: { connect: { id: userId } },
+            },
+            update: {
+               progress: progress,
+               achievedAt: new Date(),
+            },
+         });
+
+         if (result.achieved) {
+            await tx.user.update({
+               where: { id: userId },
+               data: {
+                  score: { increment: result.score },
+               },
+            });
+         }
       })
       .catch((err) => {
          logger.error('[Observer:check] Error awarding achievement:', err);

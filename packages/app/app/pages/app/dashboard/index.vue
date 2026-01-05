@@ -16,13 +16,20 @@ const authStore = useAuthStore();
 const username = computed(
    () => authStore.user?.displayName || authStore.user?.name || '用户'
 );
+
+const greeting = computed(() => {
+   const hour = new Date().getHours();
+   if (hour >= 5 && hour < 12) return '☀️ 早上好';
+   if (hour >= 12 && hour < 18) return '🌤 下午好';
+   return '🌙 晚上好';
+});
 </script>
 
 <template>
    <StSpace direction="vertical" align="center" gap="0">
       <StSpace gap="1.5rem" fill class="px-4 py-6 max-w-[80.68rem] shrink-0">
          <StSpace direction="vertical" align="start" gap="1.5rem" fill>
-            <h1 class="st-font-hero-bold">早上好，{{ username }}</h1>
+            <h1 class="st-font-hero-bold">{{ greeting }}，{{ username }}</h1>
             <StSpace gap="1.5rem" fill-x class="mt-4">
                <RecentSubmissionCard />
                <RecentLearningCard />

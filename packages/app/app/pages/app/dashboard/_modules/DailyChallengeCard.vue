@@ -225,7 +225,7 @@ const handleCheckin = async () => {
          align="center"
          justify="center"
          class="text-accent-400 min-h-[20rem]">
-         <CalendarThree size="2.625rem" />
+         <CalendarThree size="3.625rem" :strokeWidth="2" />
          <div class="st-font-body-normal">每日一题未解锁</div>
       </StSpace>
    </StCard>

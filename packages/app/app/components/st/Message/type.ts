@@ -1,4 +1,5 @@
 import type { DefineComponent } from 'vue';
+import type { JSX } from 'vue/jsx-runtime';
 
 export type PlacementHorizontal = 'left' | 'center' | 'right';
 export type PlacementVertical = 'top' | 'center' | 'bottom';
@@ -21,11 +22,22 @@ export type Message = {
    loading?: boolean;
 };
 
-export type AddMessageOptions = Omit<Message, 'id'>;
+export type CustomMessage = {
+   id: string;
+   render: (params: {
+      onClose: () => void;
+      msg: CustomMessage;
+   }) => JSX.Element | DefineComponent;
+   placement?: Placement;
+   duration?: number;
+   loading?: boolean;
+};
+
+export type AddMessageOptions = Omit<Message, 'id'> | Omit<CustomMessage, 'id'>;
 
 export type MessageOperation = {
    id: string;
-   message: Message;
+   message: Message | CustomMessage;
    close: () => void;
    unloading: () => void;
    closed: boolean;

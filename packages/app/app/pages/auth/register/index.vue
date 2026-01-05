@@ -1,9 +1,11 @@
-<script setup lang="ts">
+<script setup lang="tsx">
 import { Lock, Mail, User } from '@icon-park/vue-next';
 import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegister } from './_composables/use-register';
 import { useMessage } from '~/components/st/Message/use-message';
+import OneTimePassword from './_components/OneTimePassword.vue';
+import SendCodeButton from './_components/SendCodeButton.vue';
 
 useSeoMeta({ title: '注册 - Quanta Challenge' });
 
@@ -68,6 +70,45 @@ const rules = [
 ] as const satisfies IRule[];
 
 const status = useAsyncStatus(rules, formdata);
+
+const onVerifyCode = ref(false);
+const codeVerified = ref(false);
+const handleSendCode = async () => {
+   const otpRef = ref<InstanceType<typeof OneTimePassword> | null>(null);
+   const error = ref(false);
+
+   const verifyCode = async (code: string) => {
+      const { promise, resolve } = Promise.withResolvers<boolean>();
+      onVerifyCode.value = true;
+      setTimeout(() => {
+         if (code === '1234') {
+            codeVerified.value = true;
+            resolve(true);
+         } else {
+            codeVerified.value = false;
+            error.value = true;
+            otpRef.value?.clear();
+            resolve(false);
+         }
+         onVerifyCode.value = false;
+      }, 1000);
+      return promise;
+   };
+
+   message.custom({
+      render: ({ onClose }) => (
+         <OneTimePassword
+            ref={otpRef}
+            length={4}
+            error={error.value}
+            onComplete={(code) =>
+               verifyCode(code).then((ok) => ok && onClose())
+            }
+         />
+      ),
+      duration: 0,
+   });
+};
 </script>
 
 <template>
@@ -79,7 +120,11 @@ const status = useAsyncStatus(rules, formdata);
             <h1 class="text-2xl font-bold">开启你的旅程</h1>
             <p>
                <span class="text-accent-300">已经有账号？ </span>
-               <NuxtLink href="/auth/login" class="text-white"> 登录 </NuxtLink>
+               <NuxtLink
+                  href="/auth/login"
+                  class="text-white underline underline-offset-3 hover:text-primary transition-all">
+                  登录
+               </NuxtLink>
             </p>
          </div>
          <StForm
@@ -94,7 +139,7 @@ const status = useAsyncStatus(rules, formdata);
                <StInput
                   :status="status['username']"
                   v-model:value="formdata.username"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入用户名">
                   <template #prefix>
                      <User class="text-2xl" />
@@ -105,10 +150,18 @@ const status = useAsyncStatus(rules, formdata);
                <StInput
                   :status="status['email']"
                   v-model:value="formdata.email"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入邮箱">
                   <template #prefix>
                      <Mail class="text-2xl" />
+                  </template>
+                  <template #suffix>
+                     <SendCodeButton
+                        @send="handleSendCode"
+                        :verified="codeVerified"
+                        :loading="onVerifyCode"
+                        :disabled="status['email'] !== 'success'"
+                        :interval="60" />
                   </template>
                </StInput>
             </StFormItem>
@@ -116,7 +169,7 @@ const status = useAsyncStatus(rules, formdata);
                <StInput
                   :status="status['password']"
                   v-model:value="formdata.password"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入密码"
                   type="password"
                   name="password"
@@ -132,7 +185,7 @@ const status = useAsyncStatus(rules, formdata);
                <StInput
                   :status="status['confirmPassword']"
                   v-model:value="formdata.confirmPassword"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请确认密码"
                   type="password"
                   name="confirm-password"

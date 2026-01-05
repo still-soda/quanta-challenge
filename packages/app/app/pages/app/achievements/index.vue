@@ -3,6 +3,7 @@ import AchievementContainer from './_components/AchievementContainer.vue';
 import AchievementHeader from './_components/AchievementHeader.vue';
 import AchievementProgress from './_components/AchievementProgress.vue';
 import AchievementListSkeleton from './_skeletons/AchievementListSkeleton.vue';
+import AchievementInfoCard from './_components/AchievementInfoCard.vue';
 
 useSeoMeta({ title: '成就 - Quanta Challenge' });
 
@@ -33,12 +34,14 @@ const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
          class="w-[44rem] pb-[2rem] my-6">
          <h1 class="st-font-hero-bold">成就</h1>
 
+         <AchievementInfoCard />
+
          <AchievementListSkeleton v-if="pending" />
          <StEmptyStatus
             v-else-if="isEmpty"
             content="暂无成就"
             class="!w-[44rem] mt-[10rem]" />
-         <StSpace v-else fill-x direction="vertical" class="p-[0.875rem]">
+         <StSpace v-else fill-x direction="vertical" class="py-[0.875rem]">
             <StSpace
                v-for="(item, name) in data"
                :key="name"
@@ -57,7 +60,8 @@ const statusToText: Record<'achieved' | 'inProgress' | 'locked', string> = {
                   :grayscale="name === 'inProgress'">
                   <AchievementHeader
                      :title="achievement.name"
-                     :achivedAt="achievement.achievedAt" />
+                     :achivedAt="achievement.achievedAt"
+                     :score="achievement.score" />
                   <div class="st-font-body-normal text-accent-100">
                      {{
                         name === 'locked' ? '？？？' : achievement.description

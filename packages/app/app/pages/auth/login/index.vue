@@ -63,7 +63,9 @@ const gotoWebAuthnLogin = () => {
             <h1 class="text-2xl font-bold">欢迎回来</h1>
             <p>
                <span class="text-accent-300">还没有账号？ </span>
-               <NuxtLink href="/auth/register" class="text-white">
+               <NuxtLink
+                  href="/auth/register"
+                  class="text-white underline underline-offset-3 hover:text-primary transition-all">
                   注册
                </NuxtLink>
             </p>
@@ -79,7 +81,7 @@ const gotoWebAuthnLogin = () => {
                <StInput
                   autocomplete="webauthn"
                   v-model:value="formdata.email"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入邮箱">
                   <template #prefix>
                      <Mail class="text-2xl" />
@@ -89,7 +91,7 @@ const gotoWebAuthnLogin = () => {
             <StFormItem name="password" error-message="密码至少需要6个字符">
                <StInput
                   v-model:value="formdata.password"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入密码"
                   type="password"
                   name="password"

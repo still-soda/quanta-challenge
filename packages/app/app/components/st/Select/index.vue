@@ -41,7 +41,7 @@ const opened = defineModel<boolean>('opened', {
    type: Boolean,
    default: false,
 });
-const toggleSelect = () => {
+const toggleSelect = (e: MouseEvent) => {
    setTimeout(() => {
       opened.value = !opened.value;
    });

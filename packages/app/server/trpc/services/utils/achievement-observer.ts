@@ -24,6 +24,7 @@ export type AchivementObserverEvent = {
       result: {
          achieved: boolean;
          progress: number;
+         score: number;
       },
       userId?: string,
       injectVars?: Record<string, any>
@@ -414,6 +415,7 @@ export class AchievementObserver {
                   },
                },
             },
+            score: true,
          },
       });
 
@@ -487,14 +489,17 @@ export class AchievementObserver {
          const result: {
             achieved: boolean;
             progress: number;
+            score: number;
          } = returned
             ? {
                  achieved: Boolean(returned.achieved),
                  progress: Number(returned.progress) || 0,
+                 score: Number(achievement.score || 0),
               }
             : {
                  achieved: false,
                  progress: 0,
+                 score: Number(achievement.score || 0),
               };
 
          console.log(

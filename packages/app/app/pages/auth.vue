@@ -1,4 +1,8 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+definePageMeta({
+   redirect: '/auth/login',
+});
+</script>
 
 <template>
    <StMessageProvider>

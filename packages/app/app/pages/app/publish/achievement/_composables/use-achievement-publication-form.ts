@@ -11,6 +11,7 @@ export const useAchievementPublicationForm = () => {
       rule: '',
       script: '',
       isCheckinAchievement: false,
+      score: 50,
    });
 
    const formKey = 'publishForm';
@@ -56,6 +57,18 @@ export const useAchievementPublicationForm = () => {
          required: true,
          validator(value) {
             return value && value.length > 0;
+         },
+      },
+      {
+         field: 'score',
+         required: true,
+         validator(value) {
+            return (
+               typeof value === 'number' &&
+               value >= 0 &&
+               value <= 1000 &&
+               Number.isInteger(value)
+            );
          },
       },
    ]);

@@ -166,7 +166,7 @@ rule({
          align="center"
          justify="center"
          class="text-accent-400">
-         <TerminationFile size="2.625rem" />
+         <TerminationFile size="3.625rem" :strokeWidth="2" />
          <div class="st-font-body-normal">
             暂无提交记录
             <!-- <NuxtLink

@@ -151,6 +151,7 @@ const CreateAchievementSchema = z.object({
    dependencyData: z.array(z.number()),
    preAchievements: z.array(z.number()),
    isCheckinAchievement: z.boolean(),
+   score: z.number().min(0).max(1000).int(),
 });
 
 const createAchievementProcedure = protectedAdminProcedure
@@ -244,6 +245,7 @@ const createAchievementProcedure = protectedAdminProcedure
                badgeImageId: input.imageId,
                description: input.description,
                authorId: ctx.user.userId,
+               score: input.score,
                AchievementValidateScript: {
                   create: {
                      script: input.script,

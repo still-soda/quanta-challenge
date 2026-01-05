@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import type { AddMessageOptions, Message, MessageOperation } from './type';
+import { StMessageItem } from '#components';
+import type {
+   AddMessageOptions,
+   CustomMessage,
+   Message,
+   MessageOperation,
+} from './type';
 import { ADD_MESSAGE_OUTSIDE_VUE_KEY, ADD_MESSAGE_KEY } from './use-message';
 
-const messages = ref<Message[]>([]);
+const messages = ref<(Message | CustomMessage)[]>([]);
 
 const addMessage = (options: AddMessageOptions): MessageOperation => {
    const id = crypto.randomUUID();
@@ -40,6 +46,12 @@ const addMessage = (options: AddMessageOptions): MessageOperation => {
    return operation;
 };
 
+const isCustomMessage = (
+   msg: Message | CustomMessage
+): msg is CustomMessage => {
+   return 'render' in msg;
+};
+
 provide(ADD_MESSAGE_KEY, addMessage);
 
 onMounted(() => {
@@ -72,21 +84,32 @@ onUnmounted(() => {
          <div
             class="absolute bottom-4 right-4 pointer-events-auto flex flex-col justify-end items-end gap-2 h-screen overflow-auto">
             <TransitionGroup name="message" appear>
-               <StMessageItem
-                  v-for="msg in messages"
-                  :key="msg.id"
-                  :type="msg.type ?? 'info'"
-                  :title="msg.title"
-                  :closable="msg.closable ?? true"
-                  :loading="msg.loading ?? false"
-                  :close-text="msg.closeText"
-                  :content="msg.content"
-                  @close="
-                     () => {
-                        messages = messages.filter((m) => m.id !== msg.id);
-                     }
-                  ">
-               </StMessageItem>
+               <div v-for="msg in messages" :key="msg.id">
+                  <Component
+                     v-if="isCustomMessage(msg)"
+                     :is="msg.render"
+                     :message="msg"
+                     @close="
+                        () => {
+                           messages = messages.filter((m) => m.id !== msg.id);
+                        }
+                     ">
+                  </Component>
+                  <StMessageItem
+                     v-else
+                     :type="msg.type ?? 'info'"
+                     :title="msg.title"
+                     :closable="msg.closable ?? true"
+                     :loading="msg.loading ?? false"
+                     :close-text="msg.closeText"
+                     :content="msg.content"
+                     @close="
+                        () => {
+                           messages = messages.filter((m) => m.id !== msg.id);
+                        }
+                     ">
+                  </StMessageItem>
+               </div>
             </TransitionGroup>
          </div>
       </div>

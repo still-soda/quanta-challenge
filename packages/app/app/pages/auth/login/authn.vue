@@ -48,7 +48,9 @@ const gotoPasswordLogin = () => {
             <h1 class="text-2xl font-bold">生物认证登录</h1>
             <p>
                <span class="text-accent-300">还没有账号？ </span>
-               <NuxtLink href="/auth/register" class="text-white">
+               <NuxtLink
+                  href="/auth/register"
+                  class="text-white underline underline-offset-3 hover:text-primary transition-all">
                   注册
                </NuxtLink>
             </p>
@@ -63,7 +65,7 @@ const gotoPasswordLogin = () => {
                <StInput
                   autocomplete="webauthn"
                   v-model:value="formdata.email"
-                  outer-class="bg-accent-700"
+                  outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入邮箱">
                   <template #prefix>
                      <Mail class="text-2xl" />

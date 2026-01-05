@@ -66,7 +66,7 @@ const increaseRatioText = computed(() => {
          align="center"
          justify="center"
          class="text-accent-400">
-         <Lock size="2.625rem" />
+         <Lock size="3.625rem" :strokeWidth="2" />
          <div class="st-font-body-normal">排名未解锁</div>
       </StSpace>
 

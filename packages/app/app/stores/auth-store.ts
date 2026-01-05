@@ -5,9 +5,16 @@ import type { AppRouter } from '~~/server/trpc/routes';
 
 const useAuthStore = defineStore('auth', () => {
    const user = ref<User | null>(null);
-   const csrfToken = ref<string | null>(null);
+
+   // 在客户端立即从 localStorage 加载 CSRF token
+   const csrfToken = ref<string | null>(
+      import.meta.client && typeof localStorage !== 'undefined'
+         ? localStorage.getItem('csrfToken')
+         : null
+   );
 
    const initToken = () => {
+      if (import.meta.server) return;
       const token = localStorage.getItem('csrfToken');
       if (token) {
          csrfToken.value = token;

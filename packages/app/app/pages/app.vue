@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import useAuthStore from '~/stores/auth-store';
+import authGuard from '~/middlewares/auth-guard';
 
-const authStore = useAuthStore();
-const { $trpc } = useNuxtApp();
-
-const checkUserHasLogin = async () => {
-   if (authStore.user) return;
-   if (!(await authStore.fetchUserInfo($trpc))) {
-      navigateTo('/auth/login');
-   }
-};
-
-await checkUserHasLogin();
+definePageMeta({
+   redirect: '/app/dashboard',
+   middleware: [authGuard],
+});
 </script>
 
 <template>

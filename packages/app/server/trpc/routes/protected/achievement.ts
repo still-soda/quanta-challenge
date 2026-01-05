@@ -1,6 +1,7 @@
 import prisma from '~~/lib/prisma';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
+import { getLevel, getLevelScore } from '../../../../app/utils/level';
 
 const getCurrentCheckinAchievementProcedure = protectedProcedure.query(
    async ({ ctx }) => {
@@ -114,6 +115,7 @@ const getUserAchievementsWallProcedure = protectedProcedure.query(
             id: true,
             name: true,
             description: true,
+            score: true,
             badgeImage: {
                select: {
                   name: true,
@@ -153,6 +155,7 @@ const getUserAchievementsWallProcedure = protectedProcedure.query(
          preAchievementIds: ach.AchievementPreAchievement.map(
             (pre) => pre.preAchievementId
          ),
+         score: ach.score,
       }));
 
       const dto = (ach: (typeof achievementList)[number]) => ({
@@ -162,6 +165,7 @@ const getUserAchievementsWallProcedure = protectedProcedure.query(
          badgeUrl: ach.badgeUrl,
          progress: ach.progress,
          achievedAt: ach.progress >= 1 ? ach.achievedAt : null,
+         score: ach.score,
       });
 
       const achieved = achievementList
@@ -193,9 +197,41 @@ const getUserAchievementsWallProcedure = protectedProcedure.query(
    }
 );
 
+const getAchievementStatsProcedure = protectedProcedure.query(
+   async ({ ctx }) => {
+      const { userId } = ctx.user;
+
+      const [totalCount, achievedCount, userScore] = await Promise.all([
+         prisma.achievement.count(),
+         prisma.userAchievement.count({
+            where: { userId, progress: 1 },
+         }),
+         prisma.user.findUnique({
+            where: { id: userId },
+            select: { score: true },
+         }),
+      ]);
+
+      const level = getLevel(userScore?.score ?? 0);
+      const expInCurrentLevel = getLevelScore(level);
+      const expToNextLevel = getLevelScore(level + 1);
+      const expProgress = expInCurrentLevel / getLevelScore(level + 1);
+
+      return {
+         totalCount,
+         achievedCount,
+         level,
+         expProgress,
+         expInCurrentLevel,
+         expToNextLevel,
+      };
+   }
+);
+
 export const achievementRouter = router({
    getCurrentCheckinAchievement: getCurrentCheckinAchievementProcedure,
    getAchievedAchievements: getAchievedAchievementsProcedure,
    getAllAchievements: getAllAchievementsProcedure,
    getUserAchievementsWall: getUserAchievementsWallProcedure,
+   getAchievementStats: getAchievementStatsProcedure,
 });

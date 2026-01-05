@@ -4,20 +4,30 @@ import z from 'zod';
 
 const GetAllPublicProblemsSchema = z.object({
    tids: z.array(z.number('Tag ID must be a number')).optional(),
+   difficulty: z.enum(['easy', 'medium', 'hard', 'very_hard']).optional(),
+   keyword: z.string().optional(),
 });
 
 const getAllPublicProblems = publicProcedure
    .input(GetAllPublicProblemsSchema)
    .query(async ({ input }) => {
-      const filter =
+      const tagFilter =
          input.tids && input.tids.length > 0
             ? { tags: { some: { tid: { in: input.tids } } } }
             : {};
+      const difficultyFilter = input.difficulty
+         ? { difficulty: input.difficulty }
+         : {};
+      const keywordFilter = input.keyword
+         ? { title: { contains: input.keyword, mode: 'insensitive' as const } }
+         : {};
       const problems = await prisma.baseProblems.findMany({
          where: {
             CurrentProblem: {
                status: 'published',
-               ...filter,
+               ...tagFilter,
+               ...difficultyFilter,
+               ...keywordFilter,
             },
          },
          select: {

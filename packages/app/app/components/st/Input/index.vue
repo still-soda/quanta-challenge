@@ -29,7 +29,7 @@ const decreaseValue = () => {
 
 <template>
    <div
-      class="relative text-accent-300 flex items-center gap-3 py-4 px-6 rounded-lg caret-primary selection:bg-secondary/60 transition-colors"
+      class="relative text-accent-300 flex items-center gap-3 py-4 px-4 rounded-lg caret-primary selection:bg-secondary/60 transition-colors"
       :class="[outerClass, borderClass]">
       <slot name="prefix"></slot>
       <input

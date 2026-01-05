@@ -18,6 +18,7 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   lastLogin   DateTime @default(now())
+  score       Int      @default(0)
 
   avatar                    Image?                      @relation(fields: [imageId], references: [id])
   auths                     Auth[]
@@ -490,6 +491,7 @@ model Achievement {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   authorId     String?
+  score        Int      @default(50)
 
   author                         User?                       @relation(fields: [authorId], references: [id])
   badgeImage                     Image                       @relation(fields: [badgeImageId], references: [id])

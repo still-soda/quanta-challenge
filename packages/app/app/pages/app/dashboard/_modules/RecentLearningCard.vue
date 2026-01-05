@@ -27,7 +27,7 @@ import MoreOptions from './MoreOptions.vue';
          align="center"
          justify="center"
          class="text-accent-400 pb-4">
-         <Box size="2.625rem" />
+         <Box size="3.625rem" :strokeWidth="2" />
          <div class="st-font-body-normal">暂无学习课程</div>
       </StSpace>
 
