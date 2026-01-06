@@ -3,7 +3,7 @@
    "private": true,
    "type": "module",
    "scripts": {
-      "build": "bun scripts/pre-build.ts && NODE_OPTIONS='--max-old-space-size=6144' nuxt build && bun scripts/post-build.ts",
+      "build": "node scripts/pre-build.ts && NODE_OPTIONS='--max-old-space-size=6144' nuxt build && node scripts/post-build.ts",
       "dev": "nuxt dev --host",
       "generate": "nuxt generate",
       "preview": "nuxt preview",
@@ -12,7 +12,8 @@
       "postinstall": "nuxt prepare",
       "prisma:migrate:dev": "prisma migrate dev --schema=./prisma/schema.prisma",
       "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
-      "prisma:update": "prisma migrate dev --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma"
+      "prisma:update": "prisma migrate dev --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma",
+      "docker:build": "docker build -t challenge-web-app -f ./Dockerfile ../.."
    },
    "dependencies": {
       "@challenge/database": "workspace:^",

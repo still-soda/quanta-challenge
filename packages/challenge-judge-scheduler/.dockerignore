@@ -1,0 +1,12 @@
+# node_modules
+**/node_modules
+
+# 临时文件夹
+tmp
+
+# 日志文件
+*.log
+
+# 版本控制文件
+.git
+.gitignore
