@@ -1,4 +1,4 @@
-import { JudgeSuccessResultSchema } from '@challenge/judge-machine/schemas';
+import { JudgeSuccessResultSchema } from '@challenge/judge-machine-agent/schemas';
 import type z from 'zod';
 
 type ResultItem = z.infer<typeof JudgeSuccessResultSchema>['results'][number];

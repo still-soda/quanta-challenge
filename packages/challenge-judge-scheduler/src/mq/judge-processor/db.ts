@@ -2,7 +2,7 @@ import { IStoreService } from '../../utils/store.js';
 import prisma from '../../utils/prisma.js';
 import { JudgeJob } from './types.js';
 import z from 'zod';
-import { JudgeSuccessResultSchema } from '@challenge/judge-machine/schemas';
+import { JudgeSuccessResultSchema } from '@challenge/judge-machine-agent/schemas';
 import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash/server';
 
 export const getProblemInfoByRecordId = async (judgeRecordId: number) => {

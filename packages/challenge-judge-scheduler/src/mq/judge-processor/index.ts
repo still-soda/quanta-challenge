@@ -2,7 +2,7 @@ import type { Job, Processor } from 'bullmq';
 import type { JobType, JudgeResultType } from '../../events/index.js';
 import type z from 'zod';
 import { DockerService } from '../../services/docker.js';
-import type { TaskSchema } from '@challenge/judge-machine/schemas';
+import type { TaskSchema } from '@challenge/judge-machine-agent/schemas';
 import { EventEmitterService } from '../../utils/event-emitter.js';
 import { EventType } from '../../events/index.js';
 import type { IStoreService } from '../../utils/store.js';

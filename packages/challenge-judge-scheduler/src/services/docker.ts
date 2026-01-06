@@ -1,9 +1,9 @@
 import Docker from 'dockerode';
 import { Singleton } from '../utils/singleton.js';
 import { TempFileService } from './temp-file.js';
-import JRTP from '@challenge/judge-machine';
+import JRTP from '@challenge/judge-machine-agent';
 import type z from 'zod';
-import type { JudgeResultSchema } from '@challenge/judge-machine/schemas';
+import type { JudgeResultSchema } from '@challenge/judge-machine-agent/schemas';
 import { EventEmitterService } from '../utils/event-emitter.js';
 import { EventType } from '../events/index.js';
 import { ignoreError } from '../utils/ignore-error.js';
