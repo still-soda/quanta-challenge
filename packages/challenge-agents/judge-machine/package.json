@@ -1,5 +1,5 @@
 {
-   "name": "@challenge/judge-machine",
+   "name": "@challenge/judge-machine-agent",
    "type": "module",
    "exports": {
       ".": {

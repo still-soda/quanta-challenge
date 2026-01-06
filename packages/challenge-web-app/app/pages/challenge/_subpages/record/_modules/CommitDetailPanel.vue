@@ -42,6 +42,7 @@ const commitRecordSelectEmitter = useEventBus<CommitRecordType, boolean>(
    'commit-record-select'
 );
 commitRecordSelectEmitter.on((record, init) => {
+   if (!record) return;
    recordId.value = record.id;
    if (!init) {
       getDetail();

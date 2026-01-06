@@ -1,5 +1,5 @@
 {
-   "name": "@challenge/judge-live-server",
+   "name": "@challenge/live-server-agent",
    "scripts": {
       "docker:build": "docker build -t node-pnpm-liveserver ."
    },

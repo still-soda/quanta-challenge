@@ -1,5 +1,5 @@
 {
-   "name": "@challenge/docker",
+   "name": "@challenge/agents",
    "module": "index.ts",
    "type": "module",
    "peerDependencies": {
