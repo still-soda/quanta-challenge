@@ -1,7 +1,7 @@
 {
    "name": "@challenge/live-server-agent",
    "scripts": {
-      "docker:build": "docker build -t node-pnpm-liveserver ."
+      "docker:build": "docker build -t challenge-live-server-agent ."
    },
    "dependencies": {},
    "devDependencies": {}

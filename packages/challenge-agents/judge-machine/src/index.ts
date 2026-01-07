@@ -13,7 +13,9 @@ const server = serve(
       hostname: '0.0.0.0',
    },
    (info) => {
-      console.log(`[INFO] Server is running on http://localhost:${info.port}`);
+      console.log(
+         `[INFO] Server is running on http://challenge-judge-machine:${info.port}`
+      );
    }
 );
 injectWebSocket(server);
@@ -25,3 +27,5 @@ process.on('unhandledRejection', (error) => {
 process.on('uncaughtException', (error) => {
    console.error('Uncaught Exception:', error);
 });
+
+export default app;

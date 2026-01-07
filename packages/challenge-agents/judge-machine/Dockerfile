@@ -5,9 +5,9 @@ COPY . /app
 
 WORKDIR /app
 
-RUN npm install -g pnpm && \
-    pnpm install && \
-    pnpm run build
+RUN npm install -g pnpm
+RUN pnpm install 
+RUN pnpm run build
 
 CMD [ "pnpm", "start" ]
 
