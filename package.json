@@ -3,10 +3,12 @@
    "module": "index.ts",
    "type": "module",
    "scripts": {
-      "migrate": "sh ./scripts/migrate.sh"
-   },
-   "devDependencies": {
-      "@types/bun": "latest"
+      "migrate": "sh ./scripts/migrate.sh",
+      "docker:build": "docker-compose -f docker/docker-compose.yaml build",
+      "docker:build:proxy": "docker-compose -f docker/docker-compose.development.yaml build --build-arg http_proxy=http://host.docker.internal:7890 --build-arg https_proxy=http://host.docker.internal:7890",
+      "docker:up": "docker-compose -f docker/docker-compose.yaml up -d",
+      "docker:down": "docker-compose -f docker/docker-compose.yaml down",
+      "docker:restart": "docker-compose -f docker/docker-compose.yaml down && docker-compose -f docker/docker-compose.yaml up -d"
    },
    "peerDependencies": {
       "typescript": "^5.0.0"

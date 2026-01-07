@@ -3,8 +3,8 @@ name: quanta-challenge
 services:
   challenge-web-app:
     build:
-      context: ./packages/challenge-web-app
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: packages/challenge-web-app/Dockerfile
     networks:
       - quanta-challenge-network
     ports:
@@ -23,14 +23,14 @@ services:
 
   challenge-judge-scheduler:
     build:
-      context: ./packages/challenge-judge-scheduler
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: packages/challenge-judge-scheduler/Dockerfile
     environment:
       - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
+      - REDIS_HOST=redis
     depends_on:
       - redis
       - postgres
-      - challenge-judge-machine-agent
     networks:
       - quanta-challenge-network
     volumes:
@@ -38,15 +38,17 @@ services:
 
   challenge-judge-machine-agent:
     build:
-      context: ./packages/challenge-agents/judge-machine
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: packages/challenge-agents/judge-machine/Dockerfile
     profiles:
       - ignore
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   challenge-live-server-agent:
     build:
-      context: ./packages/challenge-agents/live-server
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: packages/challenge-agents/live-server/Dockerfile
     profiles:
       - ignore
 

@@ -1,0 +1,80 @@
+name: quanta-challenge
+
+services:
+  challenge-web-app:
+    build:
+      context: ../
+      dockerfile: packages/challenge-web-app/Dockerfile
+    networks:
+      - quanta-challenge-network
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
+      - REDIS_HOST=redis
+      - APP_SERVER=https://challenge.quantacenter.com
+      - JUDGE_SERVER=http://challenge-judge-scheduler:1888
+    depends_on:
+      - challenge-judge-scheduler
+      - redis
+      - postgres
+    volumes:
+      - qtc_app_storage:/app/packages/web/local_store # Persist local storage
+
+  challenge-judge-scheduler:
+    build:
+      context: ../
+      dockerfile: packages/challenge-judge-scheduler/Dockerfile
+    environment:
+      - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - quanta-challenge-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # Docker outside of Docker
+
+  challenge-judge-machine-agent:
+    build:
+      context: ../
+      dockerfile: packages/challenge-agents/judge-machine/Dockerfile
+    profiles:
+      - ignore
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  challenge-live-server-agent:
+    build:
+      context: ../
+      dockerfile: packages/challenge-agents/live-server/Dockerfile
+    profiles:
+      - ignore
+
+  redis:
+    image: "redis:7-alpine"
+    ports:
+      - "26379:6379"
+    networks:
+      - quanta-challenge-network
+
+  postgres:
+    image: "postgres:16-alpine"
+    environment:
+      - POSTGRES_USER=quanta
+      - POSTGRES_PASSWORD=quanta
+      - POSTGRES_DB=quanta_db
+    ports:
+      - "25432:5432"
+    networks:
+      - quanta-challenge-network
+    volumes:
+      - qtc_postgres_data:/var/lib/postgresql/data
+
+networks:
+  quanta-challenge-network:
+    driver: bridge
+
+volumes:
+  qtc_postgres_data:
+  qtc_app_storage:
