@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { zValidator } from '../utils/validator.js';
-import { CompileSchema } from '../schemas/compile.js';
-import { CompileService } from '../services/compile.js';
+import { zValidator } from '../utils/validator';
+import { CompileSchema } from '../schemas/compile';
+import { CompileService } from '../services/compile';
 
 const codeRoute = new Hono();
 

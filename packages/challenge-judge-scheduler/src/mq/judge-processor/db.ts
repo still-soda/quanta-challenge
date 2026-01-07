@@ -1,6 +1,6 @@
-import { IStoreService } from '../../utils/store.js';
-import prisma from '../../utils/prisma.js';
-import { JudgeJob } from './types.js';
+import { IStoreService } from '../../utils/store';
+import prisma from '../../utils/prisma';
+import { JudgeJob } from './types';
 import z from 'zod';
 import { JudgeSuccessResultSchema } from '@challenge/judge-machine-agent/schemas';
 import { generateThumbhashFromBuffer } from '@challenge/shared/thumbhash/server';

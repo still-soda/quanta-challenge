@@ -1,16 +1,16 @@
 import type { Job, Processor } from 'bullmq';
-import type { JobType, JudgeResultType } from '../../events/index.js';
+import type { JobType, JudgeResultType } from '../../events/index';
 import type z from 'zod';
-import { DockerService } from '../../services/docker.js';
+import { DockerService } from '../../services/docker';
 import type { TaskSchema } from '@challenge/judge-machine-agent/schemas';
-import { EventEmitterService } from '../../utils/event-emitter.js';
-import { EventType } from '../../events/index.js';
-import type { IStoreService } from '../../utils/store.js';
+import { EventEmitterService } from '../../utils/event-emitter';
+import { EventType } from '../../events/index';
+import type { IStoreService } from '../../utils/store';
 import path from 'path';
-import { LocalStoreService } from '../../utils/local-store.js';
-import { delay } from '../../utils/wait.js';
-import * as db from './db.js';
-import { JudgeJob } from './types.js';
+import { LocalStoreService } from '../../utils/local-store';
+import { delay } from '../../utils/wait';
+import * as db from './db';
+import { JudgeJob } from './types';
 
 const sendTaskToJudgeMachine = async (options: {
    job: JudgeJob;

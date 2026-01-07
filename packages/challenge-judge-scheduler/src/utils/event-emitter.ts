@@ -1,4 +1,4 @@
-import { Singleton } from './singleton.js';
+import { Singleton } from './singleton';
 
 export class EventEmitterService extends Singleton {
    static get instance() {

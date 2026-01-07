@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
-import { loadEnv } from '../middlewares/env.js';
-import taskRoute from './task.js';
-import codeRoute from './code.js';
-import { globalExpectionFilter } from '../filters/gloabl-expection-filter.js';
+import { loadEnv } from '../middlewares/env';
+import taskRoute from './task';
+import codeRoute from './code';
+import { globalExpectionFilter } from '../filters/gloabl-expection-filter';
 
 const app = new Hono();
 

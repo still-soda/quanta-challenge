@@ -1,4 +1,4 @@
-import { Singleton } from '../utils/singleton.js';
+import { Singleton } from '../utils/singleton';
 import ts from 'typescript';
 
 export class CompileService extends Singleton {

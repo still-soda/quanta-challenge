@@ -1,12 +1,12 @@
 import Docker from 'dockerode';
-import { Singleton } from '../utils/singleton.js';
-import { TempFileService } from './temp-file.js';
+import { Singleton } from '../utils/singleton';
+import { TempFileService } from './temp-file';
 import JRTP from '@challenge/judge-machine-agent';
 import type z from 'zod';
 import type { JudgeResultSchema } from '@challenge/judge-machine-agent/schemas';
-import { EventEmitterService } from '../utils/event-emitter.js';
-import { EventType } from '../events/index.js';
-import { ignoreError } from '../utils/ignore-error.js';
+import { EventEmitterService } from '../utils/event-emitter';
+import { EventType } from '../events/index';
+import { ignoreError } from '../utils/ignore-error';
 
 export class DockerService extends Singleton {
    static get instance() {
@@ -67,7 +67,7 @@ export class DockerService extends Singleton {
 
       const createContainer = async () => {
          const container = await this.docker.createContainer({
-            Image: 'node-pnpm-liveserver',
+            Image: 'challenge-live-server-agent',
             HostConfig: {
                Mounts: [
                   {
@@ -143,7 +143,7 @@ export class DockerService extends Singleton {
 
    async startPlaywrightContainer() {
       const containerList = await this.docker.listContainers();
-      const imageName = 'node-playwright-judge-machine';
+      const imageName = 'challenge-judge-machine-agent';
       let container: Docker.Container;
 
       const existContainer = (() => {
@@ -160,7 +160,7 @@ export class DockerService extends Singleton {
          container = await this.docker.createContainer({
             Image: imageName,
             HostConfig: {
-               AutoRemove: true,
+               // AutoRemove: true,
                PortBindings: {
                   '3000/tcp': [{ HostPort: '1889' }],
                },
@@ -217,7 +217,7 @@ export class DockerService extends Singleton {
    }
 
    async connectWebSocket() {
-      const ws = new WebSocket(`ws://localhost:1889/link`);
+      const ws = new WebSocket(`ws://host.docker.internal:1889/link`);
       await new Promise<void>((resolve) => {
          ws.addEventListener('open', () => {
             resolve();

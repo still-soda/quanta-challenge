@@ -1,9 +1,9 @@
 import { Hono } from 'hono';
-import { CreateTaskSchema } from '../schemas/create-task.js';
-import { QueueService } from '../services/queue.js';
+import { CreateTaskSchema } from '../schemas/create-task';
+import { QueueService } from '../services/queue';
 import type z from 'zod';
-import { JobSchema } from '../schemas/job.js';
-import { zValidator } from '../utils/validator.js';
+import { JobSchema } from '../schemas/job';
+import { zValidator } from '../utils/validator';
 
 const taskRoute = new Hono();
 

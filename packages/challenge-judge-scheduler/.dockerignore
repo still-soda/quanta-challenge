@@ -1,6 +1,9 @@
 # node_modules
 **/node_modules
 
+# 构建输出目录
+**/dist
+
 # 临时文件夹
 tmp
 

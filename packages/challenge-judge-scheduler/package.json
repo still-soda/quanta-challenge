@@ -2,11 +2,11 @@
    "name": "@challenge/judge",
    "type": "module",
    "scripts": {
-      "dev": "tsx watch src/index.ts",
-      "prod": "tsx src/index.ts",
-      "build": "tsc",
+      "dev": "vite",
+      "build": "vite build",
       "start": "node dist/index.js",
-      "docker:build": "docker build -t challenge-judge-scheduler -f ./Dockerfile ../.."
+      "docker:build": "docker build -t challenge-judge-scheduler -f ./Dockerfile ../..",
+      "docker:build:proxy": "docker build -t challenge-judge-scheduler -f ./Dockerfile ../.. --build-arg http_proxy=http://host.docker.internal:7890 --build-arg https_proxy=http://host.docker.internal:7890"
    },
    "dependencies": {
       "@challenge/database": "workspace:^",
@@ -23,11 +23,14 @@
       "hono": "^4.8.12",
       "ioredis": "^5.6.1",
       "lodash-es": "^4.17.21",
+      "ssh2": "^1.17.0",
       "zod": "^4.0.5"
    },
    "devDependencies": {
+      "@hono/vite-dev-server": "^0.24.0",
       "@types/node": "^20.11.17",
       "tsx": "^4.7.1",
-      "typescript": "^5.8.3"
+      "typescript": "^5.8.3",
+      "vite": "^7.3.0"
    }
 }

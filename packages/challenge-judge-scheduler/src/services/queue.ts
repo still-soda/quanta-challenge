@@ -1,8 +1,8 @@
 import { Queue, Worker, type Processor } from 'bullmq';
-import { Singleton } from '../utils/singleton.js';
-import { RedisService } from './redis.js';
-import { EventEmitterService } from '../utils/event-emitter.js';
-import { EventType } from '../events/index.js';
+import { Singleton } from '../utils/singleton';
+import { RedisService } from './redis';
+import { EventEmitterService } from '../utils/event-emitter';
+import { EventType } from '../events/index';
 
 export class QueueService extends Singleton {
    static get instance() {

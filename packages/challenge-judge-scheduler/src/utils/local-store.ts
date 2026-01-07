@@ -1,7 +1,7 @@
-import type { IStoreService } from './store.js';
+import type { IStoreService } from './store';
 import path from 'path';
 import fs from 'fs/promises';
-import { Singleton } from './singleton.js';
+import { Singleton } from './singleton';
 
 export class LocalStoreService extends Singleton implements IStoreService {
    static get instance() {

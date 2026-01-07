@@ -1,5 +1,5 @@
 import path from 'path';
-import { Singleton } from '../utils/singleton.js';
+import { Singleton } from '../utils/singleton';
 import fs from 'fs/promises';
 
 export class TempFileService extends Singleton {

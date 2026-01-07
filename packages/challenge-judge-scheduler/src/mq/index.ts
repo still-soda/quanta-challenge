@@ -1,6 +1,6 @@
-import { QueueService } from '../services/queue.js';
-import { judgeProcessor } from './judge-processor/index.js';
-import { initTaskResultHandlers } from './result-handler.js';
+import { QueueService } from '../services/queue';
+import { judgeProcessor } from './judge-processor/index';
+import { initTaskResultHandlers } from './result-handler';
 
 export const initMq = async () => {
    QueueService.instance.initWorkers('judge-task', judgeProcessor, {

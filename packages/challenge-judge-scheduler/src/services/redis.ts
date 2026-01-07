@@ -1,4 +1,4 @@
-import { Singleton } from '../utils/singleton.js';
+import { Singleton } from '../utils/singleton';
 import IORedis from 'ioredis';
 
 const env = (key: string, defaultValue: string): string => {

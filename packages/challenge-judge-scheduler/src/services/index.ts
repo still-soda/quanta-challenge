@@ -1,6 +1,6 @@
-import { DockerService } from './docker.js';
-import { QueueService } from './queue.js';
-import { RedisService } from './redis.js';
+import { DockerService } from './docker';
+import { QueueService } from './queue';
+import { RedisService } from './redis';
 
 export const initServices = async () => {
    await DockerService.instance.init();

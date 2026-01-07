@@ -1,7 +1,7 @@
-import { EventType, type ITaskCompletedPayload } from '../events/index.js';
-import { EventEmitterService } from '../utils/event-emitter.js';
+import { EventType, type ITaskCompletedPayload } from '../events/index';
+import { EventEmitterService } from '../utils/event-emitter';
 import { url } from '@challenge/shared/utils';
-import prisma from '../utils/prisma.js';
+import prisma from '../utils/prisma';
 import { generateOpenApiSign } from '@challenge/shared/openapi';
 
 const requestWebhook = async (data: { judgeRecordId: number }) => {

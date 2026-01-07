@@ -1,5 +1,5 @@
 import type { JudgeResultSchema } from '@challenge/judge-machine-agent/schemas';
-import type { JobSchema } from '../schemas/job.js';
+import type { JobSchema } from '../schemas/job';
 import type z from 'zod';
 import type { Job } from 'bullmq';
 
