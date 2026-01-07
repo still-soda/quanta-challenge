@@ -6,6 +6,12 @@ const initRedis = () => {
    const {
       redis: { host: redisHost, port: redisPort, password: redisPassword },
    } = useRuntimeConfig();
+
+   console.info('[INFO] Successfully get redis config', {
+      host: redisHost,
+      port: redisPort,
+   });
+
    if (!redisHost || !redisPort) {
       throw new Error('Redis host or port is not defined in runtime config');
    }

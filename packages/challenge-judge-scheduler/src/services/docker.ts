@@ -160,7 +160,7 @@ export class DockerService extends Singleton {
          container = await this.docker.createContainer({
             Image: imageName,
             HostConfig: {
-               // AutoRemove: true,
+               AutoRemove: true,
                PortBindings: {
                   '3000/tcp': [{ HostPort: '1889' }],
                },

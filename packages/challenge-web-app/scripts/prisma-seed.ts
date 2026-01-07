@@ -1,12 +1,12 @@
 import prisma from '@challenge/database';
-import { hashPassword } from '../server/utils/password';
+import { hashPassword } from '../server/utils/password.ts';
 
 async function main() {
    await prisma.$connect();
 
-   const account = 'stillsoda';
-   const password = 'stillsoda123';
-   const email = 'stillsoda123@admin.com';
+   const account = process.env.SUPER_ACCOUNT || 'admin';
+   const password = process.env.SUPER_PASSWORD || 'admin';
+   const email = process.env.SUPER_EMAIL || 'admin@admin.com';
    const passwordHash = await hashPassword(password);
 
    const existingUser = await prisma.user.findUnique({
@@ -26,6 +26,7 @@ async function main() {
       create: {
          name: account,
          displayName: '超级管理员',
+         role: 'SUPER_ADMIN',
          auths: {
             create: {
                provider: 'EMAIL',

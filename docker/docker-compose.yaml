@@ -11,9 +11,12 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
-      - REDIS_HOST=redis
-      - APP_SERVER=https://challenge.quantacenter.com
-      - JUDGE_SERVER=http://challenge-judge-scheduler:1888
+      - NUXT_REDIS_HOST=redis
+      - NUXT_APP_BASE_SERVER=https://localhost:3000
+      - NUXT_JUDGE_SERVER_URL=http://challenge-judge-scheduler:1888
+      - SUPER_ACCOUNT=${SUPER_ADMIN_ACCOUNT}
+      - SUPER_PASSWORD=${SUPER_ADMIN_PASSWORD}
+      - SUPER_EMAIL=${SUPER_ADMIN_ACCOUNT}@super.admin
     depends_on:
       - challenge-judge-scheduler
       - redis
