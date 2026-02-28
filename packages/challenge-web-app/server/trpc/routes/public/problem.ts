@@ -2,6 +2,7 @@ import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
 import z from 'zod';
 
+// 获取所有公开题目
 const GetAllPublicProblemsSchema = z.object({
    tids: z.array(z.number('Tag ID must be a number')).optional(),
    difficulty: z.enum(['easy', 'medium', 'hard', 'very_hard']).optional(),

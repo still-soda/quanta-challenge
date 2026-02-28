@@ -2,6 +2,7 @@ import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
 import { z } from 'zod';
 
+// 获取用户提交状态
 const GetSubmissionStatusSchema = z.object({
    username: z.string(),
 });
@@ -59,6 +60,7 @@ const getSubmissionStatus = publicProcedure
       return statusCount;
    });
 
+// 获取成就
 const getAchievements = publicProcedure
    .input(z.object({ username: z.string() }))
    .query(async ({ input }) => {

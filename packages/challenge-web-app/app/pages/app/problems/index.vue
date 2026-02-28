@@ -6,6 +6,7 @@ import ProblemSearchInput from './_components/ProblemSearchInput.vue';
 import { useViewTransition } from '~/composables/use-view-transition';
 import { ThreeHexagons, Left, Right } from '@icon-park/vue-next';
 import { useScroll, useResizeObserver, watchDebounced } from '@vueuse/core';
+import { PassRate, Score, Difficulty } from './_components/CardInfo';
 
 useSeoMeta({ title: '题目 - Quanta Challenge' });
 
@@ -13,12 +14,12 @@ const { $trpc } = useNuxtApp();
 
 const { data: tags, status: tagsStatus } = useAsyncData(
    'tags',
-   async () => await $trpc.public.tag.list.query()
+   async () => await $trpc.public.tag.list.query(),
 );
 
 const scrollContainer = ref<ComponentPublicInstance | null>(null);
 const scrollEl = computed(
-   () => (scrollContainer.value?.$el as HTMLElement) ?? null
+   () => (scrollContainer.value?.$el as HTMLElement) ?? null,
 );
 const { arrivedState } = useScroll(scrollEl, { behavior: 'smooth' });
 
@@ -62,7 +63,7 @@ watchDebounced(
    () => {
       startViewTransition(refresh);
    },
-   { debounce: 300 }
+   { debounce: 300 },
 );
 
 const { data: problems, refresh } = useAsyncData('getPublicProblems', () =>
@@ -70,45 +71,8 @@ const { data: problems, refresh } = useAsyncData('getPublicProblems', () =>
       tids: selectedTags.value,
       difficulty: selectedDifficulty.value || undefined,
       keyword: searchKeyword.value || undefined,
-   })
+   }),
 );
-
-const PassRate = ({ rate }: { rate: number }) => {
-   const passRate = rate.toFixed(2);
-   return (
-      <div class='font-bold font-family-manrope leading-[90%]'>{passRate}%</div>
-   );
-};
-const Score = ({ score }: { score: number }) => {
-   return (
-      <div class='font-bold font-family-manrope leading-[90%]'>
-         {score.toFixed(0)}
-      </div>
-   );
-};
-const Difficulty = ({ difficulty }: { difficulty: $Enums.Difficulty }) => {
-   const difficultyMap: Record<$Enums.Difficulty, string> = {
-      easy: '简单',
-      medium: '中等',
-      hard: '困难',
-      very_hard: '非常困难',
-   };
-   const colorClass: Record<$Enums.Difficulty, string> = {
-      easy: 'text-secondary',
-      medium: 'text-warning',
-      hard: 'text-primary',
-      very_hard: 'text-error',
-   };
-   return (
-      <div
-         class={[
-            'font-bold font-family-manrope leading-[90%] ',
-            colorClass[difficulty],
-         ]}>
-         {difficultyMap[difficulty]}
-      </div>
-   );
-};
 </script>
 
 <template>

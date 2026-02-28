@@ -2,9 +2,10 @@ import prisma from '~~/lib/prisma';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import { useStore } from '../../store';
-import z from 'zod';
+import z, { string } from 'zod';
 import path from 'path';
 
+// 获取用户信息
 const getUserInfoProcedure = protectedProcedure.query(async ({ ctx }) => {
    const { userId } = ctx.user;
 
@@ -43,6 +44,7 @@ const getUserInfoProcedure = protectedProcedure.query(async ({ ctx }) => {
    };
 });
 
+// 更新用户信息
 const UpdateUserInfoSchema = z.object({
    bio: z.string().max(500).optional(),
    email: z.string().email().optional().or(z.literal('')),
@@ -109,6 +111,7 @@ const updateUserInfoProcedure = protectedProcedure
       }
    });
 
+// 上传图片
 const UploadImageSchema = z.object({
    fileBase64: z
       .string()
@@ -118,7 +121,7 @@ const UploadImageSchema = z.object({
             const size = Buffer.byteLength(fileb64, 'base64');
             return size <= 5 * 1024 * 1024; // 5MB limit
          },
-         { message: '文件大小不能超过 5MB' }
+         { message: '文件大小不能超过 5MB' },
       ),
    fileName: z.string(),
 });
@@ -157,6 +160,7 @@ const uploadImageProcedure = protectedProcedure
       });
    });
 
+// 获取指定用户的公开信息（用于个人空间展示）
 const getUserByNameProcedure = protectedProcedure
    .input(z.object({ name: z.string() }))
    .query(async ({ input }) => {
@@ -202,6 +206,7 @@ const getUserByNameProcedure = protectedProcedure
       };
    });
 
+// 获取用户空间配置
 const getUserSpaceConfigProcedure = protectedProcedure
    .input(z.object({ name: z.string() }))
    .query(async ({ input }) => {
@@ -240,6 +245,7 @@ const getUserSpaceConfigProcedure = protectedProcedure
       return config;
    });
 
+// 更新用户空间配置
 const UpdateUserSpaceConfigSchema = z.object({
    showSubmissionStatus: z.boolean().optional(),
    showAchievements: z.boolean().optional(),
@@ -293,6 +299,120 @@ const updateUserSpaceConfigProcedure = protectedProcedure
       }
    });
 
+// 获取提交统计
+const GetCommitStatisticSchema = z.object({
+   name: z.string(),
+});
+
+const getCommitStatisticProcedure = protectedProcedure
+   .input(GetCommitStatisticSchema)
+   .query(async ({ input }) => {
+      const { name } = input;
+
+      const user = await prisma.user.findUnique({
+         where: { name },
+         select: { id: true },
+      });
+
+      if (!user) {
+         throw new Error('用户不存在');
+      }
+
+      return await prisma.userStatistic.findUnique({
+         where: { userId: user.id },
+         select: {
+            correctRate: true,
+            passCount: true,
+            score: true,
+         },
+      });
+   });
+
+// 获取最近提交题目
+const GetRecentPromblemsSchema = z.object({
+   name: z.string(),
+});
+
+// 获取最近提交的题目列表（去重后按提交时间排序，限制返回数量）
+const getRecentProblemsProcedure = protectedProcedure
+   .input(GetRecentPromblemsSchema)
+   .query(async ({ input }) => {
+      const { name } = input;
+
+      const user = await prisma.user.findUnique({
+         where: { name },
+         select: { id: true },
+      });
+
+      if (!user) {
+         throw new Error('用户不存在');
+      }
+
+      const recentSubmissions = await prisma.judgeRecords.findMany({
+         where: { userId: user.id },
+         distinct: ['problemId'],
+         orderBy: { createdAt: 'desc' },
+         take: 5,
+         select: {
+            problem: {
+               select: {
+                  pid: true,
+                  title: true,
+                  difficulty: true,
+                  totalScore: true,
+                  tags: {
+                     select: {
+                        name: true,
+                        color: true,
+                     },
+                  },
+                  JudgeStatus: {
+                     select: {
+                        totalCount: true,
+                        passedCount: true,
+                     },
+                  },
+                  CoverImage: {
+                     select: {
+                        name: true,
+                        thumbhash: true,
+                     },
+                  },
+                  ProblemDefaultCover: {
+                     select: {
+                        image: {
+                           select: { name: true, thumbhash: true },
+                        },
+                     },
+                  },
+               },
+            },
+         },
+      });
+
+      return recentSubmissions.map((submission) => {
+         const p = submission.problem;
+         const passCount = p.JudgeStatus?.passedCount ?? 0;
+         const totalCount = p.JudgeStatus?.totalCount ?? 0;
+         const passRate = totalCount === 0 ? 0 : (passCount / totalCount) * 100;
+         return {
+            ...p,
+            imageName:
+               p.CoverImage?.name ||
+               p.ProblemDefaultCover[0].image?.name ||
+               'unknown',
+            imageHash:
+               p.CoverImage?.thumbhash ||
+               p.ProblemDefaultCover[0].image?.thumbhash ||
+               null,
+            passRate,
+            CoverImage: undefined,
+            ProblemDefaultCover: undefined,
+            JudgeStatus: undefined,
+         };
+      });
+   });
+
 export const userRouter = router({
    getUserInfo: getUserInfoProcedure,
    updateUserInfo: updateUserInfoProcedure,
@@ -300,4 +420,6 @@ export const userRouter = router({
    getUserByName: getUserByNameProcedure,
    getUserSpaceConfig: getUserSpaceConfigProcedure,
    updateUserSpaceConfig: updateUserSpaceConfigProcedure,
+   getCommitStatistic: getCommitStatisticProcedure,
+   getRecentProblems: getRecentProblemsProcedure,
 });

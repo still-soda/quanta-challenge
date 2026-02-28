@@ -3,6 +3,7 @@ import { publicProcedure, router } from '../../trpc';
 import dayjs from 'dayjs';
 import { dailyService } from '../../services/daily';
 
+// 获取每日一题
 const getDailyProblemProcedure = publicProcedure.query(async () => {
    const today = dayjs().startOf('day').toDate();
    const problemQuery = {

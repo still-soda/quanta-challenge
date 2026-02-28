@@ -2,6 +2,7 @@ import prisma from '~~/lib/prisma';
 import { rankService } from '../../services/rank';
 import { publicProcedure, router } from '../../trpc';
 
+// 获取全局排行榜
 interface GlobalRankingWithUserInfo {
    rank: number;
    score: number;

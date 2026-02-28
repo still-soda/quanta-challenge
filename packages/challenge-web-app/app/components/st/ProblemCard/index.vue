@@ -3,10 +3,11 @@ import { ErrorPicture } from '@icon-park/vue-next';
 
 const props = defineProps<{
    coverImageName?: string;
+   imgHeight?: string;
 }>();
 
 const imageSrc = computed(() =>
-   props.coverImageName ? `/api/static/${props.coverImageName}` : ''
+   props.coverImageName ? `/api/static/${props.coverImageName}` : '',
 );
 </script>
 
@@ -16,7 +17,10 @@ const imageSrc = computed(() =>
       direction="vertical"
       gap="0.75rem"
       class="p-2 rounded-xl bg-accent-600 border hover:border-secondary/50 cursor-pointer border-transparent transition-all">
-      <StImage :src="imageSrc" height="9.76rem" alt="Cover Image">
+      <StImage
+         :src="imageSrc"
+         :height="props.imgHeight || '9.76rem'"
+         alt="Cover Image">
          <template #fallback="{ style }">
             <StSpace
                fill

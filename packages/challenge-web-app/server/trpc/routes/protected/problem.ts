@@ -240,6 +240,7 @@ const getCommitRecordDetailProcedure = protectedProcedure
       return record;
    });
 
+// 获取提交统计
 const getCommitStatisticProcedure = protectedProcedure.query(
    async ({ ctx }) => {
       const { userId } = ctx.user;
@@ -252,7 +253,7 @@ const getCommitStatisticProcedure = protectedProcedure.query(
             score: true,
          },
       });
-   }
+   },
 );
 
 export const problemRouter = router({

@@ -1,6 +1,7 @@
 import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
 
+// 获取所有标签
 const listAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
    const tags = await prisma.tags.findMany({
       include: {
