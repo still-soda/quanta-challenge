@@ -4,8 +4,8 @@ import { hashPassword } from '../server/utils/password.ts';
 async function main() {
    await prisma.$connect();
 
-   const account = process.env.SUPER_ACCOUNT || 'admin';
-   const password = process.env.SUPER_PASSWORD || 'admin';
+   const account = process.env.SUPER_ACCOUNT || '超级管理员';
+   const password = process.env.SUPER_PASSWORD || 'adminpassword';
    const email = process.env.SUPER_EMAIL || 'admin@admin.com';
    const passwordHash = await hashPassword(password);
 

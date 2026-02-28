@@ -134,6 +134,7 @@ export default defineNuxtConfig({
          port: import.meta.env.REDIS_PORT
             ? parseInt(import.meta.env.REDIS_PORT)
             : 6379,
+         username: import.meta.env.REDIS_USERNAME || '',
          password: import.meta.env.REDIS_PASSWORD || '',
       },
       judge: {

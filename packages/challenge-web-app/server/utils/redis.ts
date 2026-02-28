@@ -4,7 +4,12 @@ let redis: Redis | null = null;
 
 const initRedis = () => {
    const {
-      redis: { host: redisHost, port: redisPort, password: redisPassword },
+      redis: { 
+         host: redisHost, 
+         port: redisPort, 
+         password: redisPassword,
+         username: redisUsername,
+      },
    } = useRuntimeConfig();
 
    console.info('[INFO] Successfully get redis config', {
@@ -19,6 +24,7 @@ const initRedis = () => {
    redis = new Redis({
       host: redisHost,
       port: redisPort,
+      username: redisUsername || undefined,
       password: redisPassword || undefined,
    });
 };
