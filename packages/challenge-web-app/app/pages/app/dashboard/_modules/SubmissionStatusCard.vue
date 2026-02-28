@@ -32,11 +32,11 @@ const { data: submissionStatusData, pending: loading } = useAsyncData(
       } else {
          return $trpc.protected.dashboard.getSubmissionStatus.query();
       }
-   }
+   },
 );
 
 const scrollContainer = useTemplateRef('scrollContainer');
-const showEndMask = ref(false);
+const showEndMask = ref(true);
 onMounted(() => {
    if (!scrollContainer.value) return;
    const el = scrollContainer.value;
