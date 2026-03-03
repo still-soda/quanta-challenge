@@ -53,7 +53,7 @@ const textColorClass = computed(() => {
          :style="{
             filter: props.selected
                ? 'drop-shadow(1px 0 0 #111) drop-shadow(-1px 0 0 #111)\
-                  drop-shadow(0 1px 0 #111) drop-shadow(0 -1px 0 #111)'
+                     drop-shadow(0 1px 0 #111) drop-shadow(0 -1px 0 #111)'
                : undefined,
          }"
          class="size-7 m-0.5"

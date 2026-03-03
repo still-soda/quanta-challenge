@@ -11,7 +11,8 @@ import PreAchievementsPicker, {
 
 useSeoMeta({ title: '创建成就 - Quanta Challenge' });
 
-const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
+const outerClass =
+   'border !py-4 !px-4 !rounded-[0.5rem] w-full focus-within:!border-primary';
 
 const { form, formKey, formdata, rules } = useAchievementPublicationForm();
 

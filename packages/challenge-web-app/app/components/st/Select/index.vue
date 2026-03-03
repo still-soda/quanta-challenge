@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePopper } from '~/composables/use-popper';
 import type { FormItemStatus } from '../Form/type';
-import { Teleport } from 'vue';
+import { Teleport, type StyleValue } from 'vue';
 import {
    TOGGLE_OPTION_INJECT_KEY,
    type ISelectOption,
@@ -10,7 +10,7 @@ import {
 import { Down, LoadingFour, RobotOne } from '@icon-park/vue-next';
 
 const props = defineProps<{
-   outerClass?: string;
+   outerClass?: any;
    optionsContainerClass?: string;
    maxContainerHeight?: number;
    status?: FormItemStatus;
@@ -33,8 +33,8 @@ const borderClass = computed(() => {
    return props.status === 'error'
       ? '!border !border-error'
       : props.status === 'success'
-      ? '!border !border-success'
-      : '';
+        ? '!border !border-success'
+        : '';
 });
 
 const opened = defineModel<boolean>('opened', {
@@ -106,8 +106,8 @@ const selectedSet = computed(() => {
          return Array.isArray(selected.value)
             ? selected.value
             : selected.value
-            ? [selected.value]
-            : [];
+              ? [selected.value]
+              : [];
       }
       return selected.value ? [selected.value] : [];
    })();

@@ -11,7 +11,8 @@ import { normalizePath, joinPath } from '~/utils/path-utils';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });
 
-const outerClass = 'border !py-4 !px-4 !rounded-[0.5rem] w-full';
+const outerClass =
+   'border !py-4 !px-4 !rounded-[0.5rem] w-full focus-within:!border-primary';
 let storageName = 'publishFormdata';
 let fromId: number | undefined = undefined;
 let baseId: number | undefined = undefined;
@@ -70,7 +71,7 @@ watch(
    () => draft.value.score,
    (newScore) => {
       newScore !== undefined && newScore < 0 && (draft.value.score = 0);
-   }
+   },
 );
 // 编辑器
 const markdownEditing = ref(false);

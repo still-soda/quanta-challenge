@@ -5,6 +5,7 @@ import type { FormItemStatus } from '../Form/type';
 const props = defineProps<{
    password?: boolean;
    outerClass?: string;
+   suffixClass?: string;
    status?: FormItemStatus;
 }>();
 
@@ -15,8 +16,8 @@ const borderClass = computed(() => {
    return props.status === 'error'
       ? '!border !border-error'
       : props.status === 'success'
-      ? '!border !border-success'
-      : '';
+        ? '!border !border-success'
+        : '';
 });
 
 const increaseValue = () => {
@@ -40,7 +41,7 @@ const decreaseValue = () => {
       <slot name="suffix"></slot>
       <div
          v-if="password"
-         class="text-2xl hover:cursor-pointer"
+         :class="['text-2xl hover:cursor-pointer', suffixClass]"
          @click="visible = !visible">
          <PreviewOpen v-if="visible" />
          <PreviewClose v-else />

@@ -16,7 +16,7 @@ const props = defineProps<{
 const dependencyOptions = ref<ISelectOption[]>([]);
 const depValueToLabel = (value: string) => {
    const option = dependencyOptions.value.find(
-      (option) => option.value === value
+      (option) => option.value === value,
    );
    return option ? option.label : value;
 };
@@ -39,7 +39,7 @@ const fetchDeps = async (): Promise<ISelectOption[]> => {
          type: dep.type,
       }))
       .toSorted((a, b) =>
-         a.label.localeCompare(b.label)
+         a.label.localeCompare(b.label),
       ) satisfies ISelectOption[];
 };
 onMounted(async () => {
@@ -82,7 +82,7 @@ const pickedDataLoaders = defineModel<IDataLoader[]>('pickedDataLoaders', {
 });
 watchEffect(() => {
    pickedDataLoaders.value = allDeps.value.filter((dep) =>
-      dependencyData.value.includes(dep.id)
+      dependencyData.value.includes(dep.id),
    );
 });
 </script>

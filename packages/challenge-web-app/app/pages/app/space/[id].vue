@@ -222,7 +222,11 @@ onMounted(() => {
             </StSpace>
 
             <StSpace class="px-3 py-2" fill-x justify="between" align="center">
-               <StSpace direction="horizontal" align="center" gap="0.5rem">
+               <StSpace
+                  direction="horizontal"
+                  align="center"
+                  gap="0.5rem"
+                  class="flex-wrap">
                   <div
                      class="st-font-third-bold font-family-manrope text-3xl text-shadow-sm tracking-wide">
                      {{ targetUser?.displayName ?? targetUser?.name }}

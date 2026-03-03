@@ -1,79 +1,77 @@
 <script setup lang="ts">
-import { Shield, Config, ApplicationMenu } from '@icon-park/vue-next';
+import { LayoutFour, Protect } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '设置 - Quanta Challenge' });
 
 const route = useRoute();
 
-const settingsMenu = [
+const settingsOptions = shallowRef([
    {
-      key: 'general',
       label: '常规',
-      icon: Config,
-      path: '/app/settings',
+      value: 'general',
+      color: '#4ADE80',
+      icon: LayoutFour,
    },
    {
-      key: 'security',
       label: '安全',
-      icon: Shield,
-      path: '/app/settings/security',
+      value: 'security',
+      color: '#60A5FA',
+      icon: Protect,
    },
-];
+]);
+const activeKey = ref();
 
-const activeKey = computed(() => {
-   const path = route.path;
-   if (path === '/app/settings') return 'general';
-   const menu = settingsMenu.find((item) => item.path === path);
-   return menu?.key || 'general';
-});
+watch(
+   () => route.path,
+   (newPath) => {
+      if (newPath.includes('security')) {
+         activeKey.value = 'security';
+      } else {
+         activeKey.value = 'general';
+      }
+      window !== void 0 && scrollTo({ top: 0, behavior: 'smooth' });
+   },
+   { immediate: true },
+);
 
-const handleMenuClick = (path: string) => {
-   navigateTo(path);
-};
+watch(
+   () => activeKey.value,
+   (newKey) => {
+      if (newKey === 'general') {
+         navigateTo('/app/settings');
+      } else if (newKey === 'security') {
+         navigateTo('/app/settings/security');
+      }
+   },
+);
 </script>
 
 <template>
-   <StSpace
-      fill
-      justify="center"
-      class="overflow-y-auto overflow-x-hidden pt-6">
+   <StSpace fill justify="center">
       <StSpace
+         fill-x
          direction="vertical"
-         gap="2rem"
-         class="w-full max-w-[45rem] pb-48 min-h-[calc(100vh-4rem)]">
-         <!-- 顶部标题与标签页整合 -->
-         <div class="flex items-center justify-between w-full">
-            <h1 class="text-[2.5rem] font-bold text-white leading-none">
-               设置
-            </h1>
+         class="max-w-[45rem] pb-48 h-screen relative">
+         <StSpace
+            fill-x
+            direction="vertical"
+            class="sticky !w-[45rem] top-4 mt-6 bg-background z-[100]">
+            <h1 class="text-[2.5rem] font-bold text-white">设置</h1>
 
-            <div
-               class="flex items-center gap-1 bg-accent-600/20 p-1 rounded-lg border border-accent-600/30 backdrop-blur-sm">
-               <div
-                  v-for="item in settingsMenu"
-                  :key="item.key"
-                  @click="handleMenuClick(item.path)"
-                  class="px-4 py-2 rounded-md cursor-pointer transition-all duration-200 flex items-center gap-2 select-none"
-                  :class="[
-                     activeKey === item.key
-                        ? 'bg-accent-500 text-white shadow-sm'
-                        : 'text-accent-300 hover:text-white hover:bg-accent-600/30',
-                  ]">
-                  <component
-                     :is="item.icon"
-                     class="text-lg"
-                     :class="
-                        activeKey === item.key
-                           ? 'text-primary'
-                           : 'text-accent-400'
-                     " />
-                  <span class="text-sm font-medium">{{ item.label }}</span>
-               </div>
-            </div>
-         </div>
+            <StSpace align="center" gap="0.75rem">
+               <StTagButton
+                  v-for="opt in settingsOptions"
+                  @click="activeKey = opt.value"
+                  :selected="opt.value === activeKey"
+                  :key="opt.value"
+                  :icon="opt.icon"
+                  :tag="{ name: opt.label }" />
+            </StSpace>
 
-         <!-- 内容区域 -->
-         <div class="w-full min-h-[400px]">
+            <div class="w-full h-[1px] shrink-0 bg-accent-600"></div>
+         </StSpace>
+
+         <div class="w-full px-4">
             <NuxtPage />
          </div>
       </StSpace>

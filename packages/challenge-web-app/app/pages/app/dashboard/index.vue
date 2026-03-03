@@ -14,7 +14,7 @@ useSeoMeta({ title: '仪表盘 - Quanta Challenge' });
 const authStore = useAuthStore();
 
 const username = computed(
-   () => authStore.user?.displayName || authStore.user?.name || '用户'
+   () => authStore.user?.displayName || authStore.user?.name || '用户',
 );
 
 const greeting = computed(() => {

@@ -7,12 +7,21 @@ const handleToggle = () => {
 </script>
 
 <template>
-   <div
+   <button
+      type="button"
+      role="switch"
+      :aria-checked="modelValue"
       @click="handleToggle"
-      class="relative inline-flex h-6 w-11 items-center rounded-full transition-all cursor-pointer hover:opacity-90 shrink-0"
+      class="group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-lg border-2 border-transparent transition-colors duration-200 ease-in-out hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
       :class="modelValue ? 'bg-primary' : 'bg-accent-500'">
+      <span class="sr-only">Toggle switch</span>
       <span
-         class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm active:w-5"
-         :class="modelValue ? 'translate-x-6' : 'translate-x-1'" />
-   </div>
+         aria-hidden="true"
+         class="pointer-events-none inline-block h-5 w-5 transform rounded-md bg-white shadow-sm ring-0 transition-all duration-200 ease-in-out group-active:w-6"
+         :class="
+            modelValue
+               ? 'translate-x-5 group-active:translate-x-4'
+               : 'translate-x-0'
+         " />
+   </button>
 </template>
