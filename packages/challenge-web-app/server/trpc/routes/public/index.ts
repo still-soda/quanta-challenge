@@ -4,6 +4,7 @@ import { problemRouter } from './problem';
 import { rankRouter } from './rank';
 import { tagRouter } from './tag';
 import { dashboardRouter } from './dashboard';
+import { verifyRoute } from './verify';
 
 export const publicRouter = router({
    tag: tagRouter,
@@ -11,4 +12,5 @@ export const publicRouter = router({
    daily: dailyRouter,
    rank: rankRouter,
    dashboard: dashboardRouter,
+   verify: verifyRoute,
 });

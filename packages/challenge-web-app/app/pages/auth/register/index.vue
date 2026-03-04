@@ -4,8 +4,8 @@ import z from 'zod';
 import type { IRule } from '~/components/st/Form/type';
 import { useRegister } from './_composables/use-register';
 import { useMessage } from '~/components/st/Message/use-message';
-import OneTimePassword from './_components/OneTimePassword.vue';
-import SendCodeButton from './_components/SendCodeButton.vue';
+import SendCodeButton from '../../../components/SendCodeButton.vue';
+import OneTimePassword from '~/components/OneTimePassword.vue';
 
 useSeoMeta({ title: '注册 - Quanta Challenge' });
 
@@ -77,37 +77,46 @@ const handleSendCode = async () => {
    const otpRef = ref<InstanceType<typeof OneTimePassword> | null>(null);
    const error = ref(false);
 
+   const showOTP = () => {
+      message.custom({
+         render: ({ onClose }) => (
+            <OneTimePassword
+               ref={otpRef}
+               length={4}
+               error={error.value}
+               onComplete={(code) => {
+                  verifyCode(code);
+                  onClose();
+               }}
+            />
+         ),
+         duration: 0,
+      });
+   };
+
    const verifyCode = async (code: string) => {
-      const { promise, resolve } = Promise.withResolvers<boolean>();
       onVerifyCode.value = true;
-      setTimeout(() => {
-         if (code === '1234') {
+      try {
+         const verifyResult = await $trpc.auth.register.verifyCode.mutate({
+            email: formdata.email,
+            code,
+         });
+         if (verifyResult.success) {
             codeVerified.value = true;
-            resolve(true);
          } else {
             codeVerified.value = false;
             error.value = true;
             otpRef.value?.clear();
-            resolve(false);
+            showOTP();
          }
+      } catch (err: any) {
+         message.error('验证失败', err.message);
+      } finally {
          onVerifyCode.value = false;
-      }, 1000);
-      return promise;
+      }
    };
 
-   message.custom({
-      render: ({ onClose }) => (
-         <OneTimePassword
-            ref={otpRef}
-            length={4}
-            error={error.value}
-            onComplete={(code) =>
-               verifyCode(code).then((ok) => ok && onClose())
-            }
-         />
-      ),
-      duration: 0,
-   });
+   showOTP();
 };
 </script>
 

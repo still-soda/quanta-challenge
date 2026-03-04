@@ -3,6 +3,9 @@ import { logger } from '~~/lib/logger';
 import prisma from '~~/lib/prisma';
 import { rankService } from '../../trpc/services/rank';
 
+/**
+ * 定时任务：更新排行榜历史数据
+ */
 export default defineTask({
    meta: {
       name: 'db:update-rank-history',
@@ -16,7 +19,7 @@ export default defineTask({
       const success = await redis.setnx(jobKey, 'running');
       if (!success) {
          logger.warn(
-            '[Job:UpdateRankHistory] Another instance is running, skip this execution.'
+            '[Job:UpdateRankHistory] Another instance is running, skip this execution.',
          );
          return { result: [] };
       }
@@ -29,7 +32,7 @@ export default defineTask({
          const existRanking = await redis.exists(rankingKey);
          if (!existRanking) {
             logger.info(
-               '[Job:UpdateRankHistory] Global rankings not exist, loading...'
+               '[Job:UpdateRankHistory] Global rankings not exist, loading...',
             );
             await rankService.loadGlobalRankings();
          }
@@ -61,7 +64,7 @@ export default defineTask({
       } catch (error) {
          logger.error(
             '[Job:UpdateRankHistory] Failed to update rank history.',
-            error
+            error,
          );
          logger.log('Data: ', JSON.stringify(data));
          return { result: [] };

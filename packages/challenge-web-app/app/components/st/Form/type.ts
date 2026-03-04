@@ -10,5 +10,5 @@ export const assignFormItemKey = Symbol('assignFormItem');
 export interface IRule {
    field: string;
    required?: boolean;
-   validator?: (value: any) => boolean | Promise<boolean>;
+   validator?: (value: any, formdata: any) => boolean | Promise<boolean>;
 }

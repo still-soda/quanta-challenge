@@ -149,10 +149,15 @@ defineExpose({
       <div class="flex flex-col gap-2">
          <div class="flex items-center gap-2">
             <Protect size="1rem" :strokeWidth="3" />
-            <div class="st-font-body-bold !text-sm">输入验证码</div>
+            <div class="st-font-body-bold !text-sm">验证您的邮箱</div>
          </div>
       </div>
-      <StSpace gap="0.75rem">
+
+      <div class="text-sm w-[16rem] text-accent-200 mb-1">
+         我们已向您的邮箱发送了一封包含验证码的邮件。请输入验证码以继续。
+      </div>
+
+      <StSpace gap="0.75rem" justify="center">
          <input
             v-for="(digit, index) in codeArray"
             :key="index"

@@ -1,10 +1,8 @@
 import type StForm from '~/components/st/Form/index.vue';
 import * as clientAuthn from '@simplewebauthn/browser';
+import useAuthStore from '~/stores/auth-store';
 
 export const useRegisterAuthn = () => {
-   const formdata = reactive({
-      email: '',
-   });
    const formKey = 'webauthnForm';
    const form = useTemplateRef<InstanceType<typeof StForm>>(formKey);
    const loading = ref(false);
@@ -25,25 +23,22 @@ export const useRegisterAuthn = () => {
 
       try {
          loading.value = true;
-         const option = await $trpc.auth.authn.register.mutate({
-            email: formdata.email,
-         });
+         const option = await $trpc.auth.authn.register.mutate();
          const accessResponse = await clientAuthn.startRegistration({
             optionsJSON: option,
          });
          await $trpc.auth.authn.verifyRegistration.mutate(
-            accessResponse as any
+            accessResponse as any,
          );
          getCallback('success').forEach((cb) => cb());
       } catch (error) {
-         getCallback('error').forEach((cb) => cb());
+         getCallback('error').forEach((cb) => cb(error));
       } finally {
          loading.value = false;
       }
    };
 
    return {
-      formdata,
       formKey,
       loading,
       handleRegister,

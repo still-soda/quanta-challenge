@@ -4,7 +4,8 @@ import type { FormItemStatus } from '../Form/type';
 
 const props = defineProps<{
    password?: boolean;
-   outerClass?: string;
+   disabled?: boolean;
+   outerClass?: string | any;
    suffixClass?: string;
    status?: FormItemStatus;
 }>();
@@ -37,7 +38,11 @@ const decreaseValue = () => {
          v-model="value"
          v-bind="$attrs"
          :type="password ? (visible ? 'text' : 'password') : ''"
-         class="bg-transparent border-none outline-none placeholder:text-accent-300 text-white flex-1" />
+         :disabled="disabled"
+         :class="[
+            'bg-transparent border-none outline-none placeholder:text-accent-300 text-white flex-1',
+            { '!cursor-not-allowed': disabled },
+         ]" />
       <slot name="suffix"></slot>
       <div
          v-if="password"

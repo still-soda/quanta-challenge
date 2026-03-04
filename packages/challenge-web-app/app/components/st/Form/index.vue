@@ -37,7 +37,10 @@ const validate = () => {
             success = false;
             continue;
          }
-         if (rule.validator && !rule.validator(value)) {
+         if (
+            rule.validator &&
+            !rule.validator(value, readonly(formdata.value))
+         ) {
             options.setStatus('error');
             invalidField = rule.field;
             success = false;
@@ -68,7 +71,10 @@ const validateAsync = async () => {
             continue;
          }
          // Changed line
-         if (rule.validator && !(await rule.validator(value))) {
+         if (
+            rule.validator &&
+            !(await rule.validator(value, readonly(formdata.value)))
+         ) {
             options.setStatus('error');
             invalidField = rule.field;
             success = false;

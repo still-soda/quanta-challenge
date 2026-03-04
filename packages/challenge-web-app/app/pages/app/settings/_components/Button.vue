@@ -1,4 +1,6 @@
 <script setup lang="ts">
+defineOptions({ inheritAttrs: false });
+
 defineProps<{
    level?: 'primary' | 'secondary';
    disabled?: boolean;

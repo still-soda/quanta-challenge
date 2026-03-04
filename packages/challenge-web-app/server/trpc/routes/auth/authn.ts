@@ -5,54 +5,40 @@ import z from 'zod';
 import * as serverAuthn from '@simplewebauthn/server';
 import { TRPCError } from '@trpc/server';
 
-const RegisterAuthnSchema = z.object({
-   email: z.email(),
-});
+// 注册 WebAuthn 验证器
+const registerAuthnProcedure = protectedProcedure.mutation(async ({ ctx }) => {
+   const { userId } = ctx.user;
 
-const registerAuthnProcedure = protectedProcedure
-   .input(RegisterAuthnSchema)
-   .mutation(async ({ ctx, input }) => {
-      const { userId } = ctx.user;
-      const { email } = input;
-
-      const user = await prisma.user.findUniqueOrThrow({
-         where: {
-            id: userId,
-         },
-         include: {
-            WebAuthnCredential: true,
-         },
-      });
-      if (user.email) {
-         if (user.email !== email) {
-            throw new TRPCError({
-               code: 'BAD_REQUEST',
-               message: 'Email already registered',
-            });
-         }
-      } else {
-         await prisma.user.update({
-            where: { id: userId },
-            data: { email },
-         });
-      }
-
-      const options = await serverAuthn.generateRegistrationOptions({
-         rpID: 'localhost',
-         rpName: 'Quanta Challenge',
-         userName: user.name!,
-         attestationType: 'none',
-         excludeCredentials: user.WebAuthnCredential.map((cred) => ({
-            id: cred.id,
-         })),
-      });
-
-      const redis = useRedis();
-      await redis.set('webauthn:register:' + userId, JSON.stringify(options));
-
-      return options;
+   const user = await prisma.user.findUniqueOrThrow({
+      where: {
+         id: userId,
+      },
+      include: {
+         WebAuthnCredential: true,
+      },
+   });
+   await prisma.user.update({
+      where: { id: userId },
+      data: { email: user.email },
    });
 
+   const options = await serverAuthn.generateRegistrationOptions({
+      rpID: 'localhost',
+      rpName: 'Quanta Challenge',
+      userName: user.name!,
+      attestationType: 'none',
+      excludeCredentials: user.WebAuthnCredential.map((cred) => ({
+         id: cred.id,
+      })),
+   });
+
+   const redis = useRedis();
+   await redis.set('webauthn:register:' + userId, JSON.stringify(options));
+
+   return options;
+});
+
+// 验证注册结果
 const VerifyRegistrationSchema = z.looseObject({
    id: z.string(),
    rawId: z.string(),
@@ -121,6 +107,7 @@ const verifyAuthnRegistrationProcedure = protectedProcedure
       return { csrfToken };
    });
 
+// 验证 WebAuthn 登录
 const AuthenticateAuthnSchema = z.object({
    email: z.email(),
 });
@@ -155,12 +142,13 @@ const authenticateAuthnProcedure = publicProcedure
       const redis = useRedis();
       await redis.set(
          'webauthn:authenticate:' + email,
-         JSON.stringify(options)
+         JSON.stringify(options),
       );
 
       return options;
    });
 
+// 验证 WebAuthn 登录结果
 const VerifyAuthenticationSchema = z.object({
    accessResponse: z.looseObject({
       id: z.string(),
@@ -234,6 +222,21 @@ const verifyAuthnAuthenticationProcedure = publicProcedure
 
       return { csrfToken };
    });
+
+// 查询是否已注册 WebAuthn 验证器
+const checkAuthnRegisteredProcedure = protectedProcedure.query(
+   async ({ ctx }) => {
+      const { userId } = ctx.user;
+
+      const credentials = await prisma.webAuthnCredential.findMany({
+         where: {
+            userId,
+         },
+      });
+
+      return credentials.length > 0;
+   },
+);
 
 export const authnRouter = router({
    register: registerAuthnProcedure,

@@ -2,8 +2,10 @@ import prisma from '~~/lib/prisma';
 import { protectedProcedure } from '../../protected-trpc';
 import { router } from '../../trpc';
 import { useStore } from '../../store';
-import z, { string } from 'zod';
+import z from 'zod';
 import path from 'path';
+import { TRPCError } from '@trpc/server';
+import { logger } from '~~/lib/logger';
 
 // 获取用户信息
 const getUserInfoProcedure = protectedProcedure.query(async ({ ctx }) => {
@@ -47,7 +49,7 @@ const getUserInfoProcedure = protectedProcedure.query(async ({ ctx }) => {
 // 更新用户信息
 const UpdateUserInfoSchema = z.object({
    bio: z.string().max(500).optional(),
-   email: z.string().email().optional().or(z.literal('')),
+   email: z.email().optional().or(z.literal('')),
    major: z.string().max(100).optional(),
    identifier: z.string().max(100).optional(),
    birthday: z.string().optional(),
@@ -113,16 +115,13 @@ const updateUserInfoProcedure = protectedProcedure
 
 // 上传图片
 const UploadImageSchema = z.object({
-   fileBase64: z
-      .string()
-      .base64()
-      .refine(
-         (fileb64) => {
-            const size = Buffer.byteLength(fileb64, 'base64');
-            return size <= 5 * 1024 * 1024; // 5MB limit
-         },
-         { message: '文件大小不能超过 5MB' },
-      ),
+   fileBase64: z.base64().refine(
+      (fileb64) => {
+         const size = Buffer.byteLength(fileb64, 'base64');
+         return size <= 5 * 1024 * 1024; // 5MB limit
+      },
+      { message: '文件大小不能超过 5MB' },
+   ),
    fileName: z.string(),
 });
 
@@ -136,7 +135,10 @@ const uploadImageProcedure = protectedProcedure
       const ext = path.extname(fileName).toLowerCase();
       const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
       if (!allowedExtensions.includes(ext)) {
-         throw new Error('不支持的文件类型，仅支持 JPG、PNG、GIF 和 WEBP 格式');
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '不支持的文件类型，仅支持 JPG、PNG、GIF 和 WEBP 格式',
+         });
       }
 
       const fileBuffer = Buffer.from(fileBase64, 'base64');
@@ -192,7 +194,10 @@ const getUserByNameProcedure = protectedProcedure
       });
 
       if (!user) {
-         throw new Error('用户不存在');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+         });
       }
 
       return {
@@ -218,7 +223,10 @@ const getUserSpaceConfigProcedure = protectedProcedure
       });
 
       if (!user) {
-         throw new Error('用户不存在');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+         });
       }
 
       let config = await prisma.userSpaceConfig.findUnique({
@@ -315,7 +323,10 @@ const getCommitStatisticProcedure = protectedProcedure
       });
 
       if (!user) {
-         throw new Error('用户不存在');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+         });
       }
 
       return await prisma.userStatistic.findUnique({
@@ -345,7 +356,10 @@ const getRecentProblemsProcedure = protectedProcedure
       });
 
       if (!user) {
-         throw new Error('用户不存在');
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+         });
       }
 
       const recentSubmissions = await prisma.judgeRecords.findMany({
@@ -413,6 +427,63 @@ const getRecentProblemsProcedure = protectedProcedure
       });
    });
 
+// 修改密码
+const ChangePasswordSchema = z.object({
+   verifyToken: z.string().length(4),
+   newPassword: z.string().min(6),
+   confirmPassword: z.string().min(6),
+});
+
+const changePasswordProcedure = protectedProcedure
+   .input(ChangePasswordSchema)
+   .mutation(async ({ input, ctx }) => {
+      const { userId } = ctx.user;
+      const { verifyToken, newPassword, confirmPassword } = input;
+
+      if (newPassword !== confirmPassword) {
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '新密码和确认密码不匹配',
+         });
+      }
+
+      const userInfo = await prisma.user.findUnique({
+         where: { id: ctx.user.userId },
+         select: { email: true },
+      });
+
+      if (!userInfo) {
+         throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: '用户不存在',
+         });
+      }
+
+      const redis = useRedis();
+      const verifiedEmail = await redis.get(`verify_token:${verifyToken}`);
+
+      if (verifiedEmail !== userInfo.email) {
+         logger.error(
+            `验证码验证失败，用户输入的验证码: ${verifyToken}, 存储的邮箱: ${verifiedEmail}, 用户邮箱: ${userInfo.email}`,
+         );
+         throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '验证码错误或已过期',
+         });
+      }
+
+      const hashedPassword = await hashPassword(newPassword);
+
+      await prisma.auth.update({
+         where: { id: userId, provider: 'EMAIL' },
+         data: { password: hashedPassword },
+      });
+
+      await redis.del(`verify_token:${verifyToken}`);
+
+      return true;
+   });
+
 export const userRouter = router({
    getUserInfo: getUserInfoProcedure,
    updateUserInfo: updateUserInfoProcedure,
@@ -422,4 +493,5 @@ export const userRouter = router({
    updateUserSpaceConfig: updateUserSpaceConfigProcedure,
    getCommitStatistic: getCommitStatisticProcedure,
    getRecentProblems: getRecentProblemsProcedure,
+   changePassword: changePasswordProcedure,
 });

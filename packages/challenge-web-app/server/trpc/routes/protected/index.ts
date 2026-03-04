@@ -8,6 +8,7 @@ import { userRouter } from './user';
 import { searchRouter } from './search';
 import { fileSyncRouter } from './file-sync';
 import { notificationRouter } from './notification';
+import { verifyRoute } from './verify';
 
 export const protectedRouter = router({
    problem: problemRouter,
@@ -19,4 +20,5 @@ export const protectedRouter = router({
    search: searchRouter,
    fileSync: fileSyncRouter,
    notification: notificationRouter,
+   verify: verifyRoute,
 });

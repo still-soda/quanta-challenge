@@ -156,5 +156,9 @@ export default defineNuxtConfig({
       openapi: {
          webhookSecret: import.meta.env.OPENAPI_WEBHOOK_SECRET || '',
       },
+      email: {
+         account: import.meta.env.EMAIL_ACCOUNT || '',
+         smtpPassword: import.meta.env.EMAIL_SMTP_PASSWORD || '',
+      },
    },
 });
