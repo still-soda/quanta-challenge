@@ -7,6 +7,7 @@ export const createContext = async (event: H3Event) => {
    const token = getCookie(event, 'quanta_access_token');
    const csrfToken = getCookie(event, 'quanta_csrf_token');
    const xCsrfToken = getHeader(event, 'x-csrf-token');
+   const xTraceId = getHeader(event, 'x-trace-id');
    const isServer = getHeader(event, 'x-ssr') === '1';
 
    if (!isServer) {
@@ -26,7 +27,7 @@ export const createContext = async (event: H3Event) => {
       user = null;
    }
 
-   return { event, user };
+   return { event, user, traceId: xTraceId };
 };
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

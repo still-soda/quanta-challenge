@@ -10,143 +10,14 @@ import type {
    PageSectionSearchResult,
    DailyProblemSearchResult,
 } from '~/types/search';
+import { logger } from '~~/lib/logger';
+import { TRPCError } from '@trpc/server';
+import { pageSecions } from '../../configs';
 
-/**
- * 页面板块配置
- * 这些是可以被搜索到的页面板块
- */
-const PAGE_SECTIONS = [
-   {
-      id: 'dashboard-recent-submission',
-      pageName: '仪表盘',
-      sectionName: '最近提交',
-      url: '/app/dashboard',
-      keywords: [
-         '首页',
-         '仪表盘',
-         'dashboard',
-         '最近',
-         '提交',
-         'submission',
-         'zuijingtijiao',
-      ],
-   },
-   {
-      id: 'dashboard-recent-learning',
-      pageName: '仪表盘',
-      sectionName: '最近学习',
-      url: '/app/dashboard',
-      keywords: [
-         '首页',
-         '仪表盘',
-         'dashboard',
-         '最近',
-         '学习',
-         'learning',
-         'yibiaopan',
-         'shouye',
-      ],
-   },
-   {
-      id: 'dashboard-daily-challenge',
-      pageName: '仪表盘',
-      sectionName: '每日一题',
-      url: '/app/dashboard',
-      keywords: [
-         '首页',
-         '仪表盘',
-         'dashboard',
-         '每日',
-         '一题',
-         'daily',
-         'challenge',
-         'meiriyiti',
-         'timu',
-         'shouye',
-      ],
-   },
-   {
-      id: 'dashboard-ranking',
-      pageName: '仪表盘',
-      sectionName: '排行榜',
-      url: '/app/dashboard',
-      keywords: [
-         '首页',
-         '仪表盘',
-         'dashboard',
-         '排行',
-         '排名',
-         'ranking',
-         'leaderboard',
-         'paihangbang',
-         'shouye',
-      ],
-   },
-   {
-      id: 'problems-list',
-      pageName: '题库',
-      sectionName: '题目列表',
-      url: '/app/problems',
-      keywords: ['题库', '题目', 'problems', '列表', 'list', 'timu', 'tiku'],
-   },
-   {
-      id: 'space',
-      pageName: '个人空间',
-      sectionName: '个人信息',
-      url: '/app/space',
-      keywords: [
-         '个人',
-         '中心',
-         '信息',
-         'profile',
-         'user',
-         'gerenkongjian',
-         'space',
-      ],
-   },
-   {
-      id: 'rankings',
-      pageName: '排行榜',
-      sectionName: '全部排行',
-      url: '/app/rankings',
-      keywords: [
-         '排行',
-         '排名',
-         '排行榜',
-         'ranking',
-         'leaderboard',
-         'paihangbang',
-      ],
-   },
-   {
-      id: 'settings-common',
-      pageName: '设置',
-      sectionName: '常规设置',
-      url: '/app/settings',
-      keywords: ['设置', '常规', 'settings', 'common', 'shezhi', 'changgui'],
-   },
-   {
-      id: 'settings-security',
-      pageName: '设置',
-      sectionName: '安全设置',
-      url: '/app/settings/security',
-      keywords: ['设置', '安全', 'settings', 'security', 'shezhi', 'anquan'],
-   },
-   {
-      id: 'settings-advanced',
-      pageName: '设置',
-      sectionName: '高级设置',
-      url: '/app/settings/advanced',
-      keywords: ['设置', '高级', 'settings', 'advanced', 'shezhi', 'gaoji'],
-   },
-];
-
-/**
- * 搜索 Procedure
- */
+// 综合搜索接口，支持题目、用户、标签和页面板块的搜索
 const searchProcedure = protectedProcedure
    .input(searchQuerySchema)
-   .query(async ({ input }) => {
+   .query(async ({ input, ctx }) => {
       const { q, type, limit } = input;
       const searchQuery = q.trim().toLowerCase();
       const results: SearchResult[] = [];
@@ -154,19 +25,17 @@ const searchProcedure = protectedProcedure
       const types: Set<SearchType> = new Set(type.split(',') as SearchType[]);
 
       try {
-         // 1. 搜索题目
+         // 搜索题目
          if (types.has('all') || types.has('problem')) {
             const problems = await prisma.baseProblems.findMany({
                where: {
                   CurrentProblem: {
                      OR: [
-                        // 按 ID 搜索（完全匹配）
                         {
                            pid: isNaN(Number(searchQuery))
                               ? undefined
                               : Number(searchQuery),
                         },
-                        // 按标题搜索
                         {
                            title: {
                               contains: searchQuery,
@@ -205,7 +74,7 @@ const searchProcedure = protectedProcedure
             results.push(...problemResults);
          }
 
-         // 2. 按标签搜索题目
+         // 按标签搜索题目
          if (types.has('all') || types.has('tag')) {
             const tags = await prisma.tags.findMany({
                where: {
@@ -225,7 +94,6 @@ const searchProcedure = protectedProcedure
                take: limit,
             });
 
-            // 添加标签结果
             const tagResults: TagSearchResult[] = tags.map((tag) => ({
                id: `tag-${tag.tid}`,
                type: 'tag' as const,
@@ -264,7 +132,7 @@ const searchProcedure = protectedProcedure
             }
          }
 
-         // 3. 搜索用户
+         // 搜索用户
          if (types.has('all') || types.has('user')) {
             const users = await prisma.user.findMany({
                where: {
@@ -312,12 +180,12 @@ const searchProcedure = protectedProcedure
             results.push(...userResults);
          }
 
-         // 4. 搜索页面板块
+         // 搜索页面板块
          if (types.has('all') || types.has('page-section')) {
-            const matchingSections = PAGE_SECTIONS.filter((section) =>
+            const matchingSections = pageSecions.filter((section) =>
                section.keywords.some((keyword) =>
-                  keyword.toLowerCase().includes(searchQuery)
-               )
+                  keyword.toLowerCase().includes(searchQuery),
+               ),
             );
 
             const sectionResults: PageSectionSearchResult[] =
@@ -336,7 +204,7 @@ const searchProcedure = protectedProcedure
             results.push(...sectionResults);
          }
 
-         // 5. 搜索每日一题
+         // 搜索每日一题
          if (types.has('all') || types.has('daily-problem')) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -410,17 +278,17 @@ const searchProcedure = protectedProcedure
                         dp.baseProblem.CurrentProblem!.title
                      }`,
                      description: `${dp.date.toLocaleDateString(
-                        'zh-CN'
+                        'zh-CN',
                      )} - ${dp.baseProblem.CurrentProblem!.detail.substring(
                         0,
-                        80
+                        80,
                      )}`,
                      url: `/challenge/${dp.baseProblem.id}`,
                      metadata: {
                         date: dp.date.toISOString(),
                         difficulty: dp.baseProblem.CurrentProblem!.difficulty,
                         tags: dp.baseProblem.CurrentProblem!.tags.map(
-                           (t) => t.name
+                           (t) => t.name,
                         ),
                         isToday,
                      },
@@ -462,8 +330,14 @@ const searchProcedure = protectedProcedure
             hasMore: sortedResults.length > limit,
          };
       } catch (error) {
-         console.error('搜索失败:', error);
-         throw new Error('搜索失败，请稍后重试');
+         logger.error(
+            { error, traceId: ctx.traceId ?? 'unknown' },
+            'Search query failed',
+         );
+         throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '搜索查询失败，请稍后再试',
+         });
       }
    });
 

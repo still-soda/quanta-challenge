@@ -45,7 +45,7 @@ const parseCookies = (cookieString: string): Record<string, string> => {
 const createSetCookieHeader = (
    name: string,
    value: string,
-   isProduction: boolean
+   isProduction: boolean,
 ): string => {
    const sameSite = isProduction ? 'lax' : 'strict';
    const secure = isProduction ? '; Secure' : '';
@@ -58,7 +58,7 @@ const createSetCookieHeader = (
 const setSSRCookies = (
    event: H3Event,
    accessToken: string,
-   refreshToken: string
+   refreshToken: string,
 ): void => {
    const isProduction = import.meta.env.NODE_ENV === 'production';
    const newCookies = [
@@ -84,7 +84,8 @@ const setSSRCookies = (
  */
 const refreshAccessToken = async (
    isServer: boolean,
-   cookies: Record<string, string>
+   cookies: Record<string, string>,
+   traceId: string,
 ): Promise<{ accessToken: string; refreshToken: string }> => {
    return await $fetch<{ accessToken: string; refreshToken: string }>(
       '/api/refresh',
@@ -93,8 +94,9 @@ const refreshAccessToken = async (
          headers: {
             ...(isServer ? { cookie: serializeCookies(cookies) } : {}),
             'x-ssr': isServer ? '1' : '0',
+            'x-trace-id': traceId,
          } as HeadersInit,
-      }
+      },
    );
 };
 
@@ -104,7 +106,7 @@ const refreshAccessToken = async (
 const updateTokensInCookies = (
    cookies: Record<string, string>,
    accessToken: string,
-   refreshToken: string
+   refreshToken: string,
 ): void => {
    cookies[TOKEN_KEYS.ACCESS] = accessToken;
    cookies[TOKEN_KEYS.REFRESH] = refreshToken;
@@ -118,7 +120,7 @@ const handleSSRTokenRefresh = (
    cookies: Record<string, string>,
    accessToken: string,
    refreshToken: string,
-   options: any
+   options: any,
 ): void => {
    // 设置 Set-Cookie headers 传递给客户端
    setSSRCookies(event, accessToken, refreshToken);
@@ -134,7 +136,7 @@ const handleSSRTokenRefresh = (
  * 显示服务器错误提示
  */
 const showServerError = (msg: string): void => {
-   logger.error('Internal server error happened:', msg);
+   logger.error({ msg }, 'Internal server error happened');
    const message = useMessageOutsideVue();
    message.error('服务器错误，请稍后重试');
 };
@@ -145,7 +147,7 @@ const showServerError = (msg: string): void => {
 const redirectToLogin = (
    isServer: boolean,
    event?: H3Event,
-   currentPath?: string
+   currentPath?: string,
 ): void => {
    if (isServer && event) {
       event.node.res.writeHead(302, {
@@ -158,7 +160,7 @@ const redirectToLogin = (
    }
    if (!isServer) {
       location.replace(
-         '/auth/login?redirect=' + encodeURIComponent(currentPath || '/')
+         '/auth/login?redirect=' + encodeURIComponent(currentPath || '/'),
       );
    }
 };
@@ -172,13 +174,14 @@ const handleUnauthorized = async (
    isServer: boolean,
    cookies: Record<string, string>,
    event?: H3Event,
-   currentPath?: string
+   currentPath?: string,
 ): Promise<Response> => {
    try {
       // 刷新 token
       const { accessToken, refreshToken } = await refreshAccessToken(
          isServer,
-         cookies
+         cookies,
+         options.headers['x-trace-id'] || 'unknown',
       );
 
       // SSR 环境需要手动更新 cookies 和 headers
@@ -188,7 +191,7 @@ const handleUnauthorized = async (
             cookies,
             accessToken,
             refreshToken,
-            options
+            options,
          );
       }
       // 客户端环境：cookie 已通过服务端 setCookie 自动设置到浏览器
@@ -200,6 +203,14 @@ const handleUnauthorized = async (
       redirectToLogin(isServer, event, currentPath);
       throw err;
    }
+};
+
+const genUUID = (): string => {
+   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+   });
 };
 
 export default defineNuxtPlugin(() => {
@@ -231,13 +242,12 @@ export default defineNuxtPlugin(() => {
                return {
                   ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
                   'x-ssr': isServer ? '1' : '0',
+                  'x-trace-id': genUUID(),
                };
             },
             async fetch(url, options: any) {
                // SSR 环境使用解析后的 cookies，客户端使用空对象
                const cookies = isServer ? ssrCookies : {};
-
-               logger.log(...pl(green.bold`Fetching TRPC URL:`, cyan`${url}`));
 
                // 构建请求 headers
                const headers: Record<string, string> = {
@@ -259,7 +269,7 @@ export default defineNuxtPlugin(() => {
                   if (err instanceof TRPCError && err.code === 'UNAUTHORIZED') {
                      return { status: 401 } as Response;
                   }
-                  logger.error('Fetch error');
+                  logger.error({ url, err, headers }, 'Fetch error');
                   throw err;
                });
 
@@ -271,7 +281,7 @@ export default defineNuxtPlugin(() => {
                      isServer,
                      cookies,
                      event,
-                     route?.fullPath
+                     route?.fullPath,
                   );
                }
 

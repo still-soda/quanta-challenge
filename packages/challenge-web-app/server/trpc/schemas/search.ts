@@ -40,5 +40,3 @@ export const searchQuerySchema = z.object({
       .optional()
       .default(SEARCH_LIMITS.DEFAULT_LIMIT),
 });
-
-export type SearchQueryInput = z.infer<typeof searchQuerySchema>;

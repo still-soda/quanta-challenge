@@ -16,7 +16,7 @@ export const defaultEditorOptions: editor.IStandaloneEditorConstructionOptions =
    {
       theme: 'ayu-dark',
       automaticLayout: true,
-      fontSize: 14,
+      fontSize: 16,
       fontFamily: 'FiraCode Nerd Font Mono, monospace',
       autoClosingBrackets: 'languageDefined',
       tabSize: 2,

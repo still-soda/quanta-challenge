@@ -5,14 +5,15 @@ import { ValidPath } from '~~/lib/track-wrapper';
 import { LRUMap } from '../../../utils/lru-map';
 import { EventEmitter } from '../../../../app/utils/event-emitter';
 import { VM } from 'vm2';
+import { logger } from '~~/lib/logger';
 
 const { Parser } = pkg;
 
 export interface IObservable<T> {
    subscribe: (
       callback: (
-         path: { path: string; method: string }[]
-      ) => Promise<void> | void
+         path: { path: string; method: string }[],
+      ) => Promise<void> | void,
    ) => T;
 }
 
@@ -27,13 +28,13 @@ export type AchivementObserverEvent = {
          score: number;
       },
       userId?: string,
-      injectVars?: Record<string, any>
+      injectVars?: Record<string, any>,
    ];
    query: [
       id: string,
       sql: string,
       hitCache: boolean,
-      injectVars?: Record<string, any>
+      injectVars?: Record<string, any>,
    ];
    error: [error: Error];
 };
@@ -49,7 +50,7 @@ export class AchievementObserver {
          ? parseInt(process.env.ACHIEVEMENT_OBSERVER_MAX_CACHE_SIZE)
          : 1000,
       private _pathToQueries = new LRUMap<string, Set<string>>(
-         this._maxCacheSize
+         this._maxCacheSize,
       ),
       private _dirtyQueries = new Set<string>(),
       private _queryCache = new LRUMap<string, any>(this._maxCacheSize),
@@ -57,7 +58,7 @@ export class AchievementObserver {
       // field path -> loader id -> achievement ids
       private _depTree = new Map<string, Map<number, Set<number>>>(),
       private _emitter = new EventEmitter<AchivementObserverEvent>(),
-      private _injectors = new Set<AchievementVarsInjector>()
+      private _injectors = new Set<AchievementVarsInjector>(),
    ) {
       this.rebuildDepTree();
    }
@@ -73,14 +74,14 @@ export class AchievementObserver {
 
    addListener<Event extends keyof AchivementObserverEvent>(
       event: Event,
-      listener: (...args: AchivementObserverEvent[Event]) => void
+      listener: (...args: AchivementObserverEvent[Event]) => void,
    ) {
       return this._emitter.on(event, listener);
    }
 
    removeListener<Event extends keyof AchivementObserverEvent>(
       event: Event,
-      listener: (...args: AchivementObserverEvent[Event]) => void
+      listener: (...args: AchivementObserverEvent[Event]) => void,
    ) {
       return this._emitter.off(event, listener);
    }
@@ -90,7 +91,7 @@ export class AchievementObserver {
 
    private async _checkAchievement(
       achievementId: number,
-      injectVars?: Record<string, any>
+      injectVars?: Record<string, any>,
    ) {
       const userId = await this._useUserId();
       if (this._affectedAchIds.size === 0) {
@@ -105,7 +106,7 @@ export class AchievementObserver {
                this.triggerCheckAchievement(
                   achId,
                   userId ?? undefined,
-                  injectVarsMap.get(achId)
+                  injectVarsMap.get(achId),
                ).catch((err) => {
                   this._emitter.emit('error', err);
                });
@@ -146,7 +147,7 @@ export class AchievementObserver {
 
    manualMarkDirty(
       path: ValidPath | ValidPath[],
-      injectVars?: Record<string, any>
+      injectVars?: Record<string, any>,
    ) {
       const paths = Array.isArray(path) ? path : [path];
       paths.forEach((path) => {
@@ -206,13 +207,13 @@ export class AchievementObserver {
             const vars = await injector();
             injectVars ??= {};
             vars && typeof vars === 'object' && Object.assign(injectVars, vars);
-         }
+         },
       );
       await Promise.all(injectPromises);
 
       if (injectVars) {
          const matchedVars = this._matchedUsedContextVars(sql).filter(
-            (v) => v in injectVars!
+            (v) => v in injectVars!,
          );
          if (matchedVars.length > 0) {
             queryId = null;
@@ -343,7 +344,7 @@ export class AchievementObserver {
          });
       });
 
-      console.log('[INFO] rebuild dep tree', this._depTree);
+      logger.info(Object.fromEntries(this._depTree), 'Rebuild dep tree');
 
       this._emitter.emit('rebuild');
    }
@@ -351,7 +352,7 @@ export class AchievementObserver {
    async triggerCheckAchievement(
       achievementId: number,
       userId?: string,
-      injectVars?: Record<string, any>
+      injectVars?: Record<string, any>,
    ) {
       if (userId) {
          const userAchievement = await prisma.userAchievement.findUnique({
@@ -422,7 +423,7 @@ export class AchievementObserver {
       const script = achievement?.AchievementValidateScript?.script;
       const loaders =
          achievement?.AchievementDependencyData.map(
-            (d) => d.achievementDepDataLoader
+            (d) => d.achievementDepDataLoader,
          ) ?? [];
 
       if (!script) {
@@ -438,7 +439,7 @@ export class AchievementObserver {
          const result = await this.runQuery(
             `loader_${loader.id}`,
             loader.sql,
-            injectVars
+            injectVars,
          );
 
          let parser: Function;
@@ -467,15 +468,18 @@ export class AchievementObserver {
          };
       });
       const depData = await Promise.all(depDataPromises);
-      const depDataMap = depData.reduce((acc, cur) => {
-         acc[cur.name] = cur.data;
-         return acc;
-      }, {} as Record<string, number | boolean | string>);
+      const depDataMap = depData.reduce(
+         (acc, cur) => {
+            acc[cur.name] = cur.data;
+            return acc;
+         },
+         {} as Record<string, number | boolean | string>,
+      );
 
       const defineCheckFunc = (fn: Function) => fn;
       const checkScript = `${script.replace(
          'export default ',
-         'const check = '
+         'const check = ',
       )}; check(depData);`;
       try {
          const vm = new VM({
@@ -502,12 +506,9 @@ export class AchievementObserver {
                  score: Number(achievement.score || 0),
               };
 
-         console.log(
-            '[INFO] achievement update',
-            achievementId,
-            result,
-            userId,
-            injectVars
+         logger.info(
+            { achievementId, result, userId, injectVars },
+            'Achievement update',
          );
          this._emitter.emit('check', achievementId, result, userId, injectVars);
          return result;

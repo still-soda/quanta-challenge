@@ -45,7 +45,7 @@ const loadProblemRankings = async (problemId: number) => {
 const pushToProblemRankings = async (
    problemId: number,
    recordId: number,
-   score: number
+   score: number,
 ) => {
    if (!(await getProblemRankingExistence(problemId))) {
       await loadProblemRankings(problemId);
@@ -102,7 +102,7 @@ const getProblemRankingIntervals = async (problemId: number, n: number) => {
    results.forEach((res, idx) => {
       const [err, count] = res;
       if (err) {
-         console.error('Error fetching rank interval count:', err);
+         logger.error(err, 'Error fetching rank interval count');
          intervals[idx].count = 0;
       } else {
          intervals[idx].count = count as number;
@@ -172,7 +172,7 @@ const getGlobalRankings = async (limit: number = 100) => {
       rankingKey,
       0,
       limit - 1,
-      'WITHSCORES'
+      'WITHSCORES',
    );
    const rankings: IGlobalRanking[] = [];
    for (let i = 0; i < userIdWithScore.length; i += 2) {
@@ -265,7 +265,7 @@ const udpateGlobalRanking = async (userId: string, scoreDiff: number) => {
  * - count: 该分数及以上的用户数
  */
 const getGlobalRankingIntervals = async (
-   n: number
+   n: number,
 ): Promise<{ from: number; to: number; count: number }[]> => {
    const redis = useRedis();
    const rankingKey = `global:rankings`;
@@ -301,7 +301,7 @@ const getGlobalRankingIntervals = async (
    results.forEach((res, idx) => {
       const [err, count] = res;
       if (err) {
-         logger.error('Error fetching rank interval count:', err);
+         logger.error(err, 'Error fetching rank interval count:');
          intervals[idx].count = 0;
       } else {
          intervals[idx].count = count as number;

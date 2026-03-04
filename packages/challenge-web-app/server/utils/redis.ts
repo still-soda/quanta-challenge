@@ -1,23 +1,25 @@
 import Redis from 'ioredis';
+import { logger } from '~~/lib/logger';
 
 let redis: Redis | null = null;
 
 const initRedis = () => {
    const {
-      redis: { 
-         host: redisHost, 
-         port: redisPort, 
+      redis: {
+         host: redisHost,
+         port: redisPort,
          password: redisPassword,
          username: redisUsername,
       },
    } = useRuntimeConfig();
 
-   console.info('[INFO] Successfully get redis config', {
-      host: redisHost,
-      port: redisPort,
-   });
+   logger.info(
+      { host: redisHost, port: redisPort },
+      'Successfully get redis config',
+   );
 
    if (!redisHost || !redisPort) {
+      logger.error('Redis host or port is not defined in runtime config');
       throw new Error('Redis host or port is not defined in runtime config');
    }
 

@@ -5,7 +5,7 @@ import useAuthStore from '~/stores/auth-store';
 
 const { $trpc } = useNuxtApp();
 const { data: commitStatistic, pending } = useAsyncData('profile', () =>
-   $trpc.protected.problem.getCommitStatistic.query()
+   $trpc.protected.problem.getCommitStatistic.query(),
 );
 
 const correctRate = computed(() => {
@@ -17,13 +17,13 @@ const authStore = useAuthStore();
 const isAdmin = computed(() => authStore.user?.role !== 'USER');
 
 const username = computed(
-   () => authStore.user?.displayName || authStore.user?.name || '用户'
+   () => authStore.user?.displayName || authStore.user?.name || '用户',
 );
 
 const avatarUrl = computed(() =>
    authStore.user?.imageId
       ? `/api/static/${authStore.user.imageId}.jpg`
-      : DEFAULT_AVATAR_URL
+      : DEFAULT_AVATAR_URL,
 );
 
 const description = computed(() => {
@@ -35,7 +35,7 @@ const description = computed(() => {
    <StSpace class="w-[18.875rem] p-2 pb-7 rounded-xl bg-accent-600 relative">
       <StSpace fill-x direction="vertical" align="center" class="mt-[5.62rem]">
          <StSpace
-            class="w-[17.875rem] h-32 rounded-lg bg-accent-500 absolute top-2 left-2 overflow-hidden">
+            class="w-[17.875rem] h-32 rounded-t-lg bg-accent-500 absolute top-2 left-2 overflow-hidden">
             <StSkeletonItem v-if="pending" class="size-full rounded-md" />
             <StImage v-else :src="DEFAULT_PROFILE_BANNER" class="size-full" />
          </StSpace>

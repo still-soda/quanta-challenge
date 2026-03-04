@@ -1,7 +1,7 @@
 import { $Enums } from '@prisma/client';
 import prisma from '~~/lib/prisma';
 
-type NotificationProps = {
+export type NotificationProps = {
    type: $Enums.NotificationType;
    title: string;
    content: string;
@@ -25,7 +25,7 @@ const sendNotification = async (props: NotificationProps) => {
 };
 
 const groupSendNotification = async (
-   props: Omit<NotificationProps, 'userId'> & { userIds: string[] }
+   props: Omit<NotificationProps, 'userId'> & { userIds: string[] },
 ) => {
    const { type, title, content, userIds } = props;
 
@@ -44,7 +44,7 @@ const groupSendNotification = async (
    return result;
 };
 
-export const notificationSerivce = {
+export const notificationService = {
    sendNotification,
    groupSendNotification,
 };

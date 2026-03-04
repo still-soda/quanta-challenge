@@ -4,7 +4,7 @@ import { rankService } from '~~/server/trpc/services/rank';
 import { observer } from '~~/server/trpc/services/achievement';
 import { ValidPath } from '~~/lib/track-wrapper';
 import { logger } from '~~/lib/logger';
-import { notificationSerivce } from '~~/server/trpc/services/notificatoin';
+import { notificationService } from '~~/server/trpc/services/notificatoin';
 
 const JudgeCompleteSchema = z.object({
    recordId: z
@@ -15,6 +15,7 @@ const JudgeCompleteSchema = z.object({
       }),
 });
 
+// 计算当前提交与该题历史最高分的差值，如果没有历史记录则返回 -1
 const calculateScoreDiff = async (baseId: number, score: number) => {
    const highestScore = await prisma.$queryRaw<{ max: number }[]>`
       SELECT MAX(score) AS max
@@ -30,9 +31,10 @@ const calculateScoreDiff = async (baseId: number, score: number) => {
    return highestScore[0].max - score;
 };
 
+// 更新用户统计信息，包括正确率、通过题数和总分
 const updateUserStatistic = async (
    userId: String,
-   scoreIncreatment: number
+   scoreIncreatment: number,
 ) => {
    await prisma.$executeRaw`
       WITH stats AS (
@@ -97,11 +99,13 @@ const updateUserStatistic = async (
 
 export default defineEventHandler(async (event) => {
    const query = getQuery(event);
+   const traceId = getHeader(event, 'x-trace-id') || 'unknown';
    const parseResult = JudgeCompleteSchema.safeParse(query);
    if (!parseResult.success) {
-      logger.error('Judge complete failed: ' + parseResult.error.message, {
-         query,
-      });
+      logger.error(
+         { query, traceId, error: parseResult.error },
+         'Judge complete failed',
+      );
       throw createError({
          statusCode: 400,
          message: 'Invalid request: ' + parseResult.error.message,
@@ -110,8 +114,8 @@ export default defineEventHandler(async (event) => {
 
    const { recordId } = parseResult.data;
 
-   const { problem, score, result, userId } =
-      await prisma.judgeRecords.findUniqueOrThrow({
+   const { problem, score, result, userId } = await prisma.judgeRecords
+      .findUniqueOrThrow({
          where: { id: recordId },
          select: {
             problem: {
@@ -124,6 +128,16 @@ export default defineEventHandler(async (event) => {
             score: true,
             result: true,
          },
+      })
+      .catch((error) => {
+         logger.error(
+            { recordId, traceId, error },
+            'Database query failed for judge complete',
+         );
+         throw createError({
+            statusCode: 500,
+            message: 'Internal server error',
+         });
       });
 
    let scoreDiff = 0;
@@ -136,7 +150,7 @@ export default defineEventHandler(async (event) => {
    }
    await Promise.all([
       updateUserStatistic(userId, Math.max(scoreDiff, 0)),
-      notificationSerivce.sendNotification({
+      notificationService.sendNotification({
          type: 'JUDGE',
          title: '判题完成通知',
          content: `您的提交（记录 ID: ${recordId}）已判题完成，结果：${result}，得分：${score} 分。`,
@@ -144,13 +158,10 @@ export default defineEventHandler(async (event) => {
       }),
    ]);
 
-   logger.info('Judge complete success', {
-      recordId,
-      userId,
-      problemId: problem.pid,
-      score,
-      result,
-   });
+   logger.info(
+      { recordId, userId, problemId: problem.pid, score, result, traceId },
+      'Judge complete success',
+   );
 
    return { message: 'ok' };
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, render } from 'vue';
 import NotificationItem from './_components/NotificationItem.vue';
 import NotificationDetailModal from './_components/NotificationDetailModal.vue';
 import NotificationItemSkeleton from './_components/NotificationItemSkeleton.vue';
@@ -15,6 +15,11 @@ type Notification =
    RouterOutput['protected']['notification']['list']['items'][number];
 
 const { $trpc } = useNuxtApp();
+const rendered = ref(false);
+
+onMounted(() => {
+   rendered.value = true;
+});
 
 const filterType = ref<
    'ALL' | 'UNREAD' | 'SYSTEM' | 'JUDGE' | 'COMMENT' | 'LIKE' | 'ACHIEVEMENT'
@@ -33,15 +38,15 @@ const {
          cursor: null,
          limit: 20,
       });
-      const result = await (typeof window === 'undefined'
-         ? promise
-         : atLeastTime(500, promise));
+      const result = await (rendered.value
+         ? atLeastTime(500, promise)
+         : promise);
       return result;
    },
    {
       watch: [filterType],
       server: true,
-   }
+   },
 );
 
 const notifications = ref<Notification[]>(notificationsData.value?.items || []);
@@ -56,7 +61,7 @@ watch(
          allLoaded.value = !newData.nextCursor;
       }
    },
-   { immediate: true }
+   { immediate: true },
 );
 
 const filterOptions = [
@@ -99,7 +104,7 @@ const openNotification = async (notification: Notification) => {
 const currentIndex = computed(() => {
    if (!selectedNotification.value) return -1;
    return notifications.value.findIndex(
-      (n: Notification) => n.id === selectedNotification.value?.id
+      (n: Notification) => n.id === selectedNotification.value?.id,
    );
 });
 
@@ -107,7 +112,7 @@ const hasPrevious = computed(() => currentIndex.value > 0);
 const hasNext = computed(
    () =>
       currentIndex.value !== -1 &&
-      currentIndex.value < notifications.value.length - 1
+      currentIndex.value < notifications.value.length - 1,
 );
 
 const handlePrev = () => {

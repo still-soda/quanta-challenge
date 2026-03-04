@@ -4,10 +4,10 @@ import { logger } from '~~/lib/logger';
 
 export const limitRequest = (timesPerMinute: number) => {
    return middleware(async ({ ctx, next }) => {
-      const ip = getRequestIP(ctx.event, { xForwardedFor: true });
+      const fingerprint = getRequestFingerprint(ctx.event);
       const redis = useRedis();
 
-      const key = `req_limit:${ip}`;
+      const key = `req_limit:${fingerprint}`;
       const count = await redis.incr(key);
       if (count === 1) {
          await redis.expire(key, 60);
@@ -15,7 +15,8 @@ export const limitRequest = (timesPerMinute: number) => {
 
       if (count > timesPerMinute) {
          logger.warn(
-            `IP ${ip} has made ${count} requests in the last minute, exceeding the limit of ${timesPerMinute}.`,
+            { fingerprint, count },
+            'Too many requests, blocking request',
          );
          throw new TRPCError({
             code: 'TOO_MANY_REQUESTS',

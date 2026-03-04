@@ -22,9 +22,17 @@ const handleCreateVersion = async (options: {
    baseProblemId: number;
    judgeScript: string;
    judgeServerUrl: string;
+   traceId: string;
 }) => {
-   const { tx, input, userId, baseProblemId, judgeScript, judgeServerUrl } =
-      options;
+   const {
+      tx,
+      input,
+      userId,
+      baseProblemId,
+      judgeScript,
+      judgeServerUrl,
+      traceId,
+   } = options;
    // 创建问题版本
    const problem = await tx.problems.create({
       data: {
@@ -72,7 +80,7 @@ const handleCreateVersion = async (options: {
             name: path.split('/').pop() || 'unknown',
             path,
             content,
-         } satisfies IFile)
+         }) satisfies IFile,
    );
    await projectService.create({
       fs: fs,
@@ -109,6 +117,7 @@ const handleCreateVersion = async (options: {
       method: 'POST',
       headers: {
          'Content-Type': 'application/json',
+         'x-trace-id': traceId,
       },
       body: JSON.stringify({
          userId: userId,
@@ -143,11 +152,12 @@ const uploadProcedure = protectedAdminProcedure
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
+               'x-trace-id': ctx.traceId ?? '',
             },
             body: JSON.stringify({
                code: input.judgeScript,
             }),
-         }
+         },
       ).then((res) => res.json());
       if (!judgeScript || typeof judgeScript !== 'string') {
          throw new TRPCError({
@@ -191,6 +201,7 @@ const uploadProcedure = protectedAdminProcedure
             baseProblemId: baseProblem.id,
             judgeScript,
             judgeServerUrl: judge.serverUrl,
+            traceId: ctx.traceId ?? '',
          });
       });
 
@@ -350,7 +361,11 @@ const setStatusProcedure = protectedAdminProcedure
 // 获取当前用户上传的所有问题。
 const ListUploadsSchema = z.object({
    tids: z.array(
-      z.number().int().nonnegative().min(1, 'Tag ID must be a positive integer')
+      z
+         .number()
+         .int()
+         .nonnegative()
+         .min(1, 'Tag ID must be a positive integer'),
    ),
 });
 
@@ -528,11 +543,12 @@ const reuploadProcedure = protectedAdminProcedure
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
+               'x-trace-id': ctx.traceId ?? '',
             },
             body: JSON.stringify({
                code: input.judgeScript,
             }),
-         }
+         },
       ).then((res) => res.json());
       if (!judgeScript || typeof judgeScript !== 'string') {
          throw new TRPCError({
@@ -551,6 +567,7 @@ const reuploadProcedure = protectedAdminProcedure
             baseProblemId: baseId,
             judgeScript,
             judgeServerUrl: judge.serverUrl,
+            traceId: ctx.traceId ?? '',
          });
          if (currentPid) {
             await tx.problemVersionTransitions.create({

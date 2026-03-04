@@ -4,6 +4,7 @@ import prisma from '~~/lib/prisma';
 import { router } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { observer } from '../../services/achievement';
+import { logger } from '~~/lib/logger';
 
 // 定义变更类型的 schema
 const ChangeSchema = z.discriminatedUnion('type', [
@@ -49,9 +50,13 @@ const syncFileChangesProcedure = protectedProcedure
 
       const { maxChangesPerSync } = useRuntimeConfig().fileSync;
       if (changes.length > maxChangesPerSync) {
-         console.info(
-            `[ERROR] Too many changes in one sync: ${changes.length}`,
-            changes
+         logger.error(
+            {
+               count: changes.length,
+               changes,
+               traceId: ctx.traceId ?? 'unknown',
+            },
+            `Too many changes in one sync`,
          );
          throw new TRPCError({
             code: 'BAD_REQUEST',
@@ -85,7 +90,10 @@ const syncFileChangesProcedure = protectedProcedure
 
             const fileSystemId = project.FileSystem[0].fsid;
             const existingFiles = new Map(
-               project.FileSystem[0].files.map((f) => [`/project/${f.path}`, f])
+               project.FileSystem[0].files.map((f) => [
+                  `/project/${f.path}`,
+                  f,
+               ]),
             );
 
             // 处理每个变更
@@ -100,7 +108,7 @@ const syncFileChangesProcedure = protectedProcedure
                            where: { vid: file.vid },
                         });
                         existingFiles.delete(change.path);
-                        console.log('[REMOVE] remove file', file);
+                        logger.debug({ file }, 'Remove file');
                         break;
                      }
 
@@ -128,7 +136,13 @@ const syncFileChangesProcedure = protectedProcedure
                               existingFiles.delete(filePath);
                            }
                         }
-                        console.log('[REMOVE] remove folder', change.path);
+                        logger.debug(
+                           {
+                              path: change.path,
+                              traceId: ctx.traceId ?? 'unknown',
+                           },
+                           'Remove folder',
+                        );
                      }
                      break;
                   }
@@ -142,7 +156,7 @@ const syncFileChangesProcedure = protectedProcedure
                         // 提取新路径（移除 /project/ 前缀）
                         const newPath = change.newPath.replace(
                            /^\/project\//,
-                           ''
+                           '',
                         );
                         await tx.virtualFiles.update({
                            where: { vid: file.vid },
@@ -153,10 +167,13 @@ const syncFileChangesProcedure = protectedProcedure
                            ...file,
                            path: newPath,
                         });
-                        console.log(
-                           '[MOVE] move file',
-                           change.oldPath,
-                           change.newPath
+                        logger.debug(
+                           {
+                              oldPath: change.oldPath,
+                              newPath: change.newPath,
+                              traceId: ctx.traceId ?? 'unknown',
+                           },
+                           'Move file',
                         );
                         break;
                      }
@@ -172,12 +189,12 @@ const syncFileChangesProcedure = protectedProcedure
                      for (const [filePath, fileData] of existingFiles) {
                         if (filePath.startsWith(oldFolderPrefix)) {
                            const relativePath = filePath.slice(
-                              oldFolderPrefix.length
+                              oldFolderPrefix.length,
                            );
                            const updatedPath = newFolderPrefix + relativePath;
                            const newDbPath = updatedPath.replace(
                               /^\/project\//,
-                              ''
+                              '',
                            );
 
                            await tx.virtualFiles.update({
@@ -191,10 +208,13 @@ const syncFileChangesProcedure = protectedProcedure
                            });
                         }
                      }
-                     console.log(
-                        '[MOVE] move folder',
-                        change.oldPath,
-                        change.newPath
+                     logger.debug(
+                        {
+                           oldPath: change.oldPath,
+                           newPath: change.newPath,
+                           traceId: ctx.traceId ?? 'unknown',
+                        },
+                        'Move folder',
                      );
                      break;
                   }
@@ -258,7 +278,10 @@ const syncFileChangesProcedure = protectedProcedure
             processedCount: changes.length,
          };
       } catch (error) {
-         console.error('[File Sync Error]', error);
+         logger.error(
+            { error, traceId: ctx.traceId ?? 'unknown' },
+            'Failed to sync file changes',
+         );
          throw new TRPCError({
             code: 'INTERNAL_SERVER_ERROR',
             message:

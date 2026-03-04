@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { logger } from '~~/lib/logger';
 
 const { account, smtpPassword } = useRuntimeConfig().email;
 const transporter = nodemailer.createTransport({
@@ -41,6 +42,8 @@ export const sendEmail = async (props: {
       subject,
       html,
    });
+
+   logger.info({ to, result }, 'Email sent');
 
    if (result.messageId) {
       return {

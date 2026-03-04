@@ -35,7 +35,7 @@ const { $trpc } = useNuxtApp();
 await authStore.fetchUserInfo($trpc);
 
 const avatarUrl = computed(() =>
-   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
+   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : '',
 );
 </script>
 
@@ -56,11 +56,6 @@ const avatarUrl = computed(() =>
                   </template>
 
                   <template v-if="mode === 'problem'">
-                     <!-- <a href="/app/problems">
-                        <StHeaderButton class="!px-4">
-                           <Return class="text-[1.25rem]" />
-                        </StHeaderButton>
-                     </a> -->
                      <NuxtLink :to="`/challenge/record/${id}`">
                         <StHeaderButton
                            text="提交记录"

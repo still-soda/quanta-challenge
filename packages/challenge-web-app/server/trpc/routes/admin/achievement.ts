@@ -23,7 +23,7 @@ const getAllDepDataLoadersProcedure = protectedAdminProcedure.query(
       });
 
       return loaders;
-   }
+   },
 );
 
 const RequestDepDataLoaderSchema = z.object({
@@ -44,7 +44,7 @@ const requestDepDataLoaderProcedure = protectedAdminProcedure
          const columnListSegments = columnList.map((col) => col.split('::'));
 
          const hasInvalidOperation = columnListSegments.some(
-            ([op]) => op !== 'select'
+            ([op]) => op !== 'select',
          );
          if (hasInvalidOperation) {
             throw new TRPCError({
@@ -88,7 +88,7 @@ const requestDepDataLoaderProcedure = protectedAdminProcedure
                const invalidPath = invalidFieldsPattern.some((pattern) =>
                   typeof pattern === 'string'
                      ? pattern === `${table}.${field}`
-                     : pattern.test(`${table}.${field}`)
+                     : pattern.test(`${table}.${field}`),
                );
                return notExist || invalidPath;
             })
@@ -195,11 +195,12 @@ const createAchievementProcedure = protectedAdminProcedure
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
+               'x-trace-id': ctx.traceId ?? '',
             },
             body: JSON.stringify({
                code: input.script,
             }),
-         }
+         },
       ).then((res) => res.json());
       if (!checkScript || typeof checkScript !== 'string') {
          throw new TRPCError({
@@ -208,11 +209,18 @@ const createAchievementProcedure = protectedAdminProcedure
          });
       }
 
-      const mockDepData = depDataLoaders.reduce((prev, curr) => {
-         prev[curr.name] =
-            curr.type === 'BOOLEAN' ? false : curr.type === 'NUMERIC' ? 0 : '';
-         return prev;
-      }, {} as Record<string, number | boolean | string>);
+      const mockDepData = depDataLoaders.reduce(
+         (prev, curr) => {
+            prev[curr.name] =
+               curr.type === 'BOOLEAN'
+                  ? false
+                  : curr.type === 'NUMERIC'
+                    ? 0
+                    : '';
+            return prev;
+         },
+         {} as Record<string, number | boolean | string>,
+      );
       const vm = new VM({
          allowAsync: false,
          eval: false,
@@ -226,7 +234,7 @@ const createAchievementProcedure = protectedAdminProcedure
       try {
          const scriptToRun = `${checkScript.replace(
             'export default ',
-            'const check = '
+            'const check = ',
          )}; check(depData);`;
          vm.run(scriptToRun);
       } catch (err) {

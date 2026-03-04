@@ -143,6 +143,7 @@ const commitAnswerProcedure = protectedProcedure
             method: 'POST',
             headers: {
                'Content-Type': 'application/json',
+               'x-trace-id': ctx.traceId ?? '',
             },
             body: JSON.stringify({
                userId: userId,
