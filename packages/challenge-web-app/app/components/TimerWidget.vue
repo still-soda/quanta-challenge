@@ -11,6 +11,8 @@ dayjs.extend(duration);
 // 使用消息系统
 const message = useMessage();
 
+const props = defineProps<{ toolbar?: boolean }>();
+
 type TimerMode = 'stopwatch' | 'countdown';
 type TimerStatus = 'idle' | 'running' | 'paused';
 
@@ -56,7 +58,7 @@ onClickOutside(
    () => {
       showMenu.value = false;
    },
-   { ignore: [buttonRef] }
+   { ignore: [buttonRef.value] },
 );
 
 // 切换菜单显示
@@ -127,7 +129,7 @@ const startTimer = async () => {
             message.success(
                '倒计时结束！',
                `${countdownMinutes.value} 分钟倒计时已完成`,
-               { duration: 5000 }
+               { duration: 5000 },
             );
 
             // 重置倒计时时间
@@ -238,30 +240,42 @@ const progressPercent = computed(() => {
 <template>
    <div class="relative">
       <!-- 触发按钮 -->
-      <StHeaderButton
-         ref="timer-button"
-         @click="toggleMenu"
-         class="!px-4 transition-colors"
-         :class="{
-            '!text-warning': timerStatus === 'idle',
-            '!text-success': timerStatus === 'running',
-            '!text-primary': timerStatus === 'paused',
-         }">
-         <Timer class="text-[1.25rem]" />
-      </StHeaderButton>
+      <div ref="timer-button">
+         <StMiniSidebarButton
+            name="计时器"
+            @click="toggleMenu"
+            :class="[
+               props.toolbar
+                  ? '!px-0 !py-0 !size-[2.75rem] flex items-center justify-center'
+                  : '!px-4',
+               'transition-colors',
+               {
+                  '!text-warning': timerStatus === 'idle',
+                  '!text-success': timerStatus === 'running',
+                  '!text-primary': timerStatus === 'paused',
+               },
+            ]">
+            <Timer class="text-[1.1rem]" />
+         </StMiniSidebarButton>
+      </div>
 
       <!-- 下拉菜单 -->
       <Transition
          enter-active-class="transition-all duration-100 ease-out"
-         enter-from-class="opacity-0 -translate-y-2"
-         enter-to-class="opacity-100 translate-y-0"
+         enter-from-class="opacity-0"
+         enter-to-class="opacity-100"
          leave-active-class="transition-all duration-100 ease-in"
-         leave-from-class="opacity-100 translate-y-0"
-         leave-to-class="opacity-0 -translate-y-2">
+         leave-from-class="opacity-100"
+         leave-to-class="opacity-0">
          <div
             v-show="showMenu"
             ref="timer-menu"
-            class="absolute top-full right-0 mt-2 w-80 translate-x-32 bg-accent-600 rounded-xl shadow-2xl border border-accent-500 z-50">
+            :class="[
+               'absolute w-80 bg-accent-600 rounded-xl shadow-2xl border border-accent-500 z-50',
+               props.toolbar
+                  ? 'top-1/2 -translate-y-1/2 left-[calc(100%+0.5rem)]'
+                  : 'top-full right-0 mt-2 translate-x-32',
+            ]">
             <!-- 外部容器 - relative，动态高度 -->
             <div
                ref="menu-container"
@@ -339,8 +353,8 @@ const progressPercent = computed(() => {
                                  timerStatus === 'running'
                                     ? '计时中...'
                                     : timerStatus === 'paused'
-                                    ? '已暂停'
-                                    : '准备开始'
+                                      ? '已暂停'
+                                      : '准备开始'
                               }}
                            </div>
                         </div>
@@ -403,8 +417,8 @@ const progressPercent = computed(() => {
                                  timerStatus === 'running'
                                     ? '倒计时中...'
                                     : timerStatus === 'paused'
-                                    ? '已暂停'
-                                    : '准备开始'
+                                      ? '已暂停'
+                                      : '准备开始'
                               }}
                            </div>
 

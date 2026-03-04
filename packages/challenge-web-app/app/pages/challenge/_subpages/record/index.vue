@@ -6,7 +6,7 @@ const props = defineProps<{ id: number }>();
 </script>
 
 <template>
-   <StSpace fill center class="p-4 pr-6 pt-0">
+   <StSpace fill center>
       <StSplitPanel direction="horizontal" :start-percent="25">
          <template #start>
             <CommitRecordsPanel :id="props.id" />

@@ -26,7 +26,7 @@ const fileChangeSync = useFileChangeSync({
 
 // 监听文件移动/重命名事件
 const fileMoveEmitter = useEventBus<{ oldPath: string; newPath: string }>(
-   'file-move-event'
+   'file-move-event',
 );
 onMounted(() => {
    fileMoveEmitter.on((data) => {
@@ -78,7 +78,7 @@ const getProject = async () => {
 
    const contentMap = objectMap(
       pathContentMap.value,
-      ({ value }) => value.content
+      ({ value }) => value.content,
    );
 
    const buildResult = buildFileSystemTree(contentMap);
@@ -115,7 +115,7 @@ watch(selectedPath, (newPath) => {
    let currentNode = fsTree.value?.[0]!;
    segments.forEach((segment) => {
       currentNode = currentNode.children!.find(
-         (child) => child.name === segment
+         (child) => child.name === segment,
       )!;
    });
    if (currentNode.type === 'file') {
@@ -199,7 +199,7 @@ const runProject = async () => {
       const shell = await runCommand('sh');
       const initCommands = handleCommands(problem.value.initCommand).slice(
          0,
-         1
+         1,
       );
       for (const { command, title } of initCommands) {
          const { writer } = await terminal.value!.attachProcess({
@@ -244,7 +244,7 @@ const fileLoader = async (filePath: string) => {
    if (pathTreeNodeMap.value && fsTree.value) {
       const findNode = (
          items: IFileSystemItem[],
-         targetPath: string
+         targetPath: string,
       ): IFileSystemItem | null => {
          for (const item of items) {
             if (item.path === targetPath) {
@@ -294,7 +294,7 @@ const getProblemDetail = async () => {
 };
 const { data: problem } = await useAsyncData(
    `problem-detail-${props.id}`,
-   getProblemDetail
+   getProblemDetail,
 );
 const loaded = Promise.withResolvers<void>();
 watch(problem, () => problem.value && loaded.resolve(), { immediate: true });
@@ -394,7 +394,7 @@ useSeoMeta({
          :build-command="problem?.buildCommand ?? void 0"
          :upload-dir="problem?.judgeUploadPath ?? void 0"
          :problem-id="id!" />
-      <StSpace fill class="p-4 pt-0">
+      <StSpace fill>
          <StSplitPanel
             direction="horizontal"
             class="size-full"
