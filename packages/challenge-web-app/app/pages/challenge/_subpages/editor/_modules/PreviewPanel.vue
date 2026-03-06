@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import {
+   Check,
+   CheckOne,
    FullScreenTwo,
-   OffScreenTwo,
+   LoadingFour,
    Refresh,
+   Round,
    WholeSiteAccelerator,
 } from '@icon-park/vue-next';
 import { useViewTransition } from '~/composables/use-view-transition';
@@ -10,6 +13,8 @@ import { useViewTransition } from '~/composables/use-view-transition';
 const props = defineProps<{
    hostName?: string;
    previewUrl?: string;
+   steps?: { idle: string; running: string }[];
+   currentStep?: number;
 }>();
 
 const displayUrl = computed(() => {
@@ -66,25 +71,63 @@ const refresh = () => {
                </div>
             </StSpace>
          </StSpace>
-         <StSpace
-            @click="enterFullScreenMode"
-            center
-            no-shrink
-            class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-200 bg-accent-500 cursor-pointer">
-            <FullScreenTwo />
-         </StSpace>
-         <StSpace
-            @click="refresh"
-            center
-            no-shrink
-            class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-500 bg-secondary cursor-pointer">
-            <Refresh />
-         </StSpace>
+         <StRippleEffect>
+            <StSpace
+               @click="enterFullScreenMode"
+               center
+               no-shrink
+               class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-200 bg-accent-500 cursor-pointer">
+               <FullScreenTwo />
+            </StSpace>
+         </StRippleEffect>
+         <StRippleEffect>
+            <StSpace
+               @click="refresh"
+               center
+               no-shrink
+               class="size-[2rem] rounded-[0.5rem] m-0.5 text-accent-500 bg-secondary cursor-pointer">
+               <Refresh />
+            </StSpace>
+         </StRippleEffect>
       </StSpace>
       <StSpace
          fill
          class="rounded-b-xl overflow-hidden border border-t-0 border-accent-600">
-         <Teleport :disabled="!fullScreenMode" to="body">
+         <StSpace
+            v-if="!props.previewUrl"
+            direction="vertical"
+            fill
+            center
+            class="grayscale-100">
+            <IconLogo class="w-[24rem] scale-[175%] opacity-50 mb-4 -mt-4" />
+            <StSpace direction="vertical" gap="0.5rem">
+               <StSpace
+                  v-if="!previewUrl"
+                  v-for="(step, idx) in steps ?? []"
+                  :key="idx"
+                  align="center"
+                  gap="0.5rem"
+                  class="text-sm"
+                  :class="
+                     idx <= currentStep! ? 'text-accent-100' : 'text-accent-400'
+                  ">
+                  <CheckOne v-if="currentStep && currentStep > idx" />
+                  <LoadingFour
+                     v-else-if="currentStep === idx"
+                     class="animate-spin" />
+                  <Round v-else />
+                  <div class="relative">
+                     <div class="opacity-0 left-0 top-0">
+                        {{ step.running }}
+                     </div>
+                     <div class="absolute left-0 top-0">
+                        {{ currentStep === idx ? step.running : step.idle }}
+                     </div>
+                  </div>
+               </StSpace>
+            </StSpace>
+         </StSpace>
+         <Teleport v-else :disabled="!fullScreenMode" to="body">
             <div
                ref="previewContainer"
                style="view-transition-name: previewContainer"

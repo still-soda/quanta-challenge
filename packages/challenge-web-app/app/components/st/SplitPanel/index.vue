@@ -12,8 +12,9 @@ const endPercentage = ref(100 - (props.startPercent ?? 50));
 const container = useTemplateRef('container');
 const isDragging = ref(false);
 
+// 处理拖拽事件
 const handleResize = (event: MouseEvent) => {
-   if (!container.value || isDragging.value) return;
+   if (!container.value || isDragging.value || locked.value) return;
    event.preventDefault();
    const startPanel = container.value.children[0] as HTMLElement;
    const endPanel = container.value.children[2] as HTMLElement;
@@ -53,6 +54,7 @@ const handleResize = (event: MouseEvent) => {
    document.addEventListener('mouseup', onMouseUp);
 };
 
+// 设置拖拽时的光标样式
 const { set, reset } = useDefaultCursor({ el: container });
 watch(isDragging, (val) => {
    if (val) {
@@ -61,6 +63,73 @@ watch(isDragging, (val) => {
       reset();
    }
 });
+
+// 自动调整面板大小以适应内容
+const startPanel = useTemplateRef('startPanel');
+const endPanel = useTemplateRef('endPanel');
+const resizeToFit = async (place: 'start' | 'end') => {
+   console.log('resize to fit');
+   await nextTick();
+   const panel = place === 'start' ? startPanel.value : endPanel.value;
+   const side = props.direction === 'horizontal' ? 'width' : 'height';
+
+   const size = panel?.firstElementChild?.getBoundingClientRect()[side] ?? 0;
+   const containerSize = container.value?.getBoundingClientRect()[side] ?? 0;
+
+   if (size && containerSize) {
+      const newStartP = (size / containerSize) * 100;
+      const resizerP = (12 / containerSize) * 100;
+
+      const selfP = newStartP - resizerP / 2;
+      const otherP = 100 - resizerP - newStartP;
+
+      [startPercentage.value, endPercentage.value] =
+         place === 'start' ? [selfP, otherP] : [otherP, selfP];
+   }
+};
+
+// 面板状态存储与恢复
+const storedState = {
+   startPercentage: startPercentage.value,
+   endPercentage: endPercentage.value,
+};
+const storePanelState = () => {
+   storedState.startPercentage = startPercentage.value;
+   storedState.endPercentage = endPercentage.value;
+};
+const restorePanelState = () => {
+   startPercentage.value = storedState.startPercentage;
+   endPercentage.value = storedState.endPercentage;
+};
+
+// 锁定面板比例
+const locked = ref(false);
+const setPanelLockState = (state: boolean) => {
+   locked.value = state;
+};
+
+export interface IPanelMethods {
+   resizeToFit: () => Promise<void>;
+   setPanelLockState: (state: boolean) => void;
+   storePanelState: () => void;
+   restorePanelState: () => void;
+}
+
+// 提供给子组件的方法
+const methodsToProvide = {
+   start: {
+      resizeToFit: () => resizeToFit('start'),
+      setPanelLockState,
+      storePanelState,
+      restorePanelState,
+   } satisfies IPanelMethods,
+   end: {
+      resizeToFit: () => resizeToFit('end'),
+      setPanelLockState,
+      storePanelState,
+      restorePanelState,
+   } satisfies IPanelMethods,
+};
 </script>
 
 <template>
@@ -73,12 +142,13 @@ watch(isDragging, (val) => {
       }">
       <!-- START -->
       <div
+         ref="startPanel"
          :style="{
             flexBasis: `${startPercentage}%`,
             pointerEvents: isDragging ? 'none' : 'auto',
          }"
          class="flex-shrink-0">
-         <slot name="start"></slot>
+         <slot name="start" v-bind="methodsToProvide.start"></slot>
       </div>
       <!-- RESIZER -->
       <div
@@ -89,6 +159,7 @@ watch(isDragging, (val) => {
                direction === 'horizontal',
             'w-full h-1 my-1 hover:cursor-row-resize': direction === 'vertical',
             '!bg-secondary': isDragging,
+            'opacity-0 hover:!cursor-default': locked,
          }">
          <div
             class="rounded-xl group-hover:bg-primary bg-accent-600 transition-colors"
@@ -100,12 +171,13 @@ watch(isDragging, (val) => {
       </div>
       <!-- END -->
       <div
+         ref="endPanel"
          :style="{
             flexBasis: `calc(${endPercentage}% - .25rem)`,
             pointerEvents: isDragging ? 'none' : 'auto',
          }"
          class="flex-shrink-0">
-         <slot name="end"></slot>
+         <slot name="end" v-bind="methodsToProvide.end"></slot>
       </div>
    </div>
 </template>

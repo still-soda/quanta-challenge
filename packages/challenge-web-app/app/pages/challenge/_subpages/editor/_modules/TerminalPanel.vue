@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useTerminal } from '../../../_composables/use-terminal';
 import Tab from '../_components/Tab.vue';
-import { DeleteFour, Plus } from '@icon-park/vue-next';
+import { DeleteFour, Plus, Down, Up } from '@icon-park/vue-next';
 import type { WebContainerProcess } from '@webcontainer/api';
 import TabSkeleton from '../_skeletons/TabSkeleton.vue';
+import type { IPanelMethods } from '~/components/st/SplitPanel/index.vue';
 
 type UseTerminalInstance = ReturnType<typeof useTerminal>;
 
@@ -136,6 +137,22 @@ const addTerminal = async () => {
    emits('addTerminal');
 };
 
+const props = defineProps<IPanelMethods>();
+
+const folded = ref(false);
+const toggleFold = () => {
+   folded.value = !folded.value;
+
+   if (folded.value) {
+      props.storePanelState();
+      props.resizeToFit();
+      props.setPanelLockState(true);
+   } else {
+      props.restorePanelState();
+      props.setPanelLockState(false);
+   }
+};
+
 defineExpose({
    attachProcess,
    writeTerminal,
@@ -148,10 +165,12 @@ defineExpose({
       fill-x
       direction="vertical"
       gap="0"
-      class="bg-[#181818] rounded-xl h-[calc(100%-0.5rem)]">
+      class="bg-[#181818] rounded-xl"
+      :class="{ 'h-[calc(100%-0.5rem)]': !folded }">
       <StSpace
          fill-x
          class="p-1 rounded-t-xl bg-accent-600"
+         :class="{ 'rounded-b-xl': folded }"
          justify="between"
          align="center"
          gap="0">
@@ -181,14 +200,22 @@ defineExpose({
                   </Tab>
                   <StSpace
                      @click="addTerminal"
-                     class="p-[0.25rem] rounded-[0.375rem] bg-accent-500 hover:bg-accent-400 transition-colors text-accent-200 cursor-pointer">
+                     class="p-[0.325rem] rounded-[0.375rem] bg-accent-500 hover:bg-accent-400 transition-colors text-accent-200 cursor-pointer">
                      <Plus />
                   </StSpace>
                </StSkeleton>
+               <StSpace fill-x justify="end">
+                  <StSpace
+                     @click="toggleFold"
+                     class="p-[0.325rem] rounded-[0.375rem] bg-accent-500 hover:bg-accent-400 transition-colors text-accent-200 cursor-pointer">
+                     <Up v-if="folded" />
+                     <Down v-else />
+                  </StSpace>
+               </StSpace>
             </StSpace>
          </StSpace>
       </StSpace>
-      <StSpace fill class="relative overflow-hidden">
+      <StSpace v-show="!folded" fill class="relative overflow-hidden">
          <StSpace fill class="relative my-2 mx-3">
             <main
                v-for="terminal in terminals"

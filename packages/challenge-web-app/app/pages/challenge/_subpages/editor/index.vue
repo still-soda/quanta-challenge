@@ -169,6 +169,7 @@ const terminal = useTemplateRef('terminal');
 
 // run project
 const editorStore = useEditorStore();
+const currentStep = ref(0);
 const runProject = async () => {
    const terminalInstance = await terminal.value?.createTerminal();
    const terminalId = terminalInstance?.id;
@@ -177,6 +178,7 @@ const runProject = async () => {
 
    // run boot commands
    editorStore.hasProjectInitialized = false;
+   currentStep.value = 1;
 
    if (problem.value?.bootCommand) {
       const bootCommands = handleCommands(problem.value.bootCommand);
@@ -195,6 +197,7 @@ const runProject = async () => {
    await terminal.value?.writeTerminal('\n');
 
    // run shell command (init commands)
+   currentStep.value = 2;
    if (problem.value?.initCommand) {
       const shell = await runCommand('sh');
       const initCommands = handleCommands(problem.value.initCommand).slice(
@@ -371,6 +374,13 @@ usePreventLeave({
    },
 });
 
+// steps
+const steps = [
+   { idle: '启动开发容器', running: '正在启动开发容器...' },
+   { idle: '安装项目依赖', running: '正在安装项目依赖...' },
+   { idle: '启动项目', running: '正在启动项目...' },
+];
+
 // seo enhancement
 useSeoMeta({
    title: `#${props.id} ${problem.value?.title} - Quanta Challenge`,
@@ -430,15 +440,18 @@ useSeoMeta({
                               :get-wc-instance="getInstance"
                               :default-fs="pathContentMap" />
                         </template>
-                        <template #end>
+                        <template #end="panelMethods">
                            <TerminalPanel
                               ref="terminal"
+                              v-bind="panelMethods"
                               @add-terminal="addTerminal" />
                         </template>
                      </StSplitPanel>
                   </template>
                   <template #end>
                      <PreviewPanel
+                        :steps="steps"
+                        :current-step="currentStep"
                         :preview-url="previewUrl"
                         :host-name="hostName" />
                   </template>
