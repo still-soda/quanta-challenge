@@ -36,8 +36,8 @@ const decreaseValue = () => {
       <slot name="prefix"></slot>
       <input
          v-model="value"
-         v-bind="$attrs"
          :type="password ? (visible ? 'text' : 'password') : ''"
+         v-bind="$attrs"
          :disabled="disabled"
          :class="[
             'bg-transparent border-none outline-none placeholder:text-accent-300 text-white flex-1',
