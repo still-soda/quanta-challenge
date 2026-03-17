@@ -1,5 +1,6 @@
 import prisma from '~~/lib/prisma';
 import { publicProcedure, router } from '../../trpc';
+import z from 'zod';
 
 // 获取所有标签
 const listAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
@@ -18,6 +19,16 @@ const listAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
    }));
 });
 
+const deleteTagProcedure = publicProcedure
+   .input(z.number())
+   .mutation(async ({ input }) => {
+      return await prisma.tags.delete({
+         where: { tid: input }
+      });
+   });
+
+
 export const tagRouter = router({
    list: listAllTagsProcedure,
+   deleteTag: deleteTagProcedure
 });

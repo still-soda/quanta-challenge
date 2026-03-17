@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GoldMedalTwo, TableReport } from '@icon-park/vue-next';
+import { GoldMedalTwo, TableReport, Tag } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '发布流程 - Quanta Challenge' });
 
@@ -18,28 +18,24 @@ const options = [
       icon: GoldMedalTwo,
       iconColor: '#F59E0B',
    },
+   {
+      title: '编辑标签',
+      description: '创建新标签或管理已有题目标签',
+      url: '/app/publish/editTag',
+      icon: Tag,
+      iconColor: '#FE4E4E',
+   }
 ];
 </script>
 
 <template>
    <StSpace fill justify="center" class="overflow-auto">
-      <StSpace
-         direction="vertical"
-         gap="1.5rem"
-         class="w-[44rem] pb-[10rem] my-6">
+      <StSpace direction="vertical" gap="1.5rem" class="w-[44rem] pb-[10rem] my-6">
          <h1 class="st-font-hero-bold">发布流程</h1>
 
          <StSpace direction="vertical" gap="1.5rem" fill-x>
-            <NuxtLink
-               v-for="option in options"
-               :key="option.title"
-               :to="option.url"
-               class="w-full">
-               <StSpace
-                  fill-x
-                  :to="option.url"
-                  justify="between"
-                  align="center"
+            <NuxtLink v-for="option in options" :key="option.title" :to="option.url" class="w-full">
+               <StSpace fill-x :to="option.url" justify="between" align="center"
                   class="p-6 border border-accent-300 rounded-xl group overflow-hidden relative hover:border-secondary/70 transition-colors cursor-pointer">
                   <StSpace direction="vertical" gap="0.5rem">
                      <h2 class="st-font-capture text-[1.25rem] text-white">
@@ -49,11 +45,7 @@ const options = [
                         {{ option.description }}
                      </p>
                   </StSpace>
-                  <Component
-                     :is="option.icon"
-                     :fill="option.iconColor"
-                     :strokeWidth="3"
-                     size="7rem"
+                  <Component :is="option.icon" :fill="option.iconColor" :strokeWidth="3" size="7rem"
                      class="absolute -right-5 -bottom-6 rotate-12 opacity-50 group-hover:opacity-90 group-hover:scale-125 transition-all duration-300" />
                </StSpace>
             </NuxtLink>

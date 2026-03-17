@@ -5,13 +5,13 @@
    "description": "",
    "main": "index.js",
    "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "prisma:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
-      "prisma:migrate:deploy": "prisma migrate deploy --schema=./prisma/schema.prisma",
-      "prisma:generate": "prisma generate --schema=./prisma/schema.prisma && node ./prisma/name-map/generate-script.mjs",
-      "prisma:update": "prisma migrate dev --schema=./prisma/schema.prisma && prisma generate --schema=./prisma/schema.prisma && node ./prisma/name-map/generate-script.mjs",
-      "prisma:mapping": "node ./prisma/name-map/generate-script.mjs"
-   },
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:migrate": "npx prisma migrate dev --schema=./prisma/schema.prisma",
+    "prisma:migrate:deploy": "npx prisma migrate deploy --schema=./prisma/schema.prisma",
+    "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma && node ./prisma/name-map/generate-script.mjs",
+    "prisma:update": "npx prisma migrate dev --schema=./prisma/schema.prisma && npx prisma generate --schema=./prisma/schema.prisma && node ./prisma/name-map/generate-script.mjs",
+    "prisma:mapping": "node ./prisma/name-map/generate-script.mjs"
+  },
    "exports": {
       ".": {
          "import": "./index.ts",

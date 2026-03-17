@@ -186,49 +186,36 @@ onMounted(() => {
       showEndMask.value = el.scrollLeft + el.clientWidth < el.scrollWidth - 8;
    });
 });
+
+// 获取用户注册天数的方法
+const { data: registrationData } = await useAsyncData('get registration days',
+   () => $trpc.protected.user.calCreatedDays.query()
+)
 </script>
 
 <template>
    <StSpace fill justify="center" class="overflow-y-auto overflow-x-hidden">
       <StSpace fill justify="center" direction="horizontal">
-         <StSpace
-            direction="vertical"
-            gap="0.5rem"
-            :style="{ width: `${width}rem` }"
+         <StSpace direction="vertical" gap="0.5rem" :style="{ width: `${width}rem` }"
             class="p-[0.5rem] pb-4 mt-[2rem] bg-accent-600 rounded-[1.5rem]">
             <StSpace fill-x direction="vertical">
-               <StImage
-                  :src="targetUser?.bannerImageUrl || DEFAULT_SPACE_URL"
-                  height="10rem"
-                  :width="`${width - 1.1}rem`"
-                  class="rounded-t-[1rem] rounded-b-none object-top absolute"
+               <StImage :src="targetUser?.bannerImageUrl || DEFAULT_SPACE_URL" height="10rem"
+                  :width="`${width - 1.1}rem`" class="rounded-t-[1rem] rounded-b-none object-top absolute"
                   object="cover" />
-               <StSpace
-                  class="px-[1.5rem] pr-[1rem] mt-[4rem] z-5 relative"
-                  gap="1rem"
-                  align="end"
-                  fill-x>
+               <StSpace class="px-[1.5rem] pr-[1rem] mt-[4rem] z-5 relative" gap="1rem" align="end" fill-x>
                   <StSpace class="relative shrink-0">
                      <div
-                        class="size-[7.5rem] rounded-[1rem] bg-gradient-to-br from-accent-600 to-accent-500 shadow-lg shadow-accent-700/30 absolute -left-1 -top-1"></div>
-                     <StImage
-                        :src="targetUser?.avatarUrl || DEFAULT_AVATAR_URL"
-                        width="7rem"
-                        height="7rem"
-                        class="!rounded-[0.75rem] z-50"
-                        object="cover" />
+                        class="size-[7.5rem] rounded-[1rem] bg-gradient-to-br from-accent-600 to-accent-500 shadow-lg shadow-accent-700/30 absolute -left-1 -top-1">
+                     </div>
+                     <StImage :src="targetUser?.avatarUrl || DEFAULT_AVATAR_URL" width="7rem" height="7rem"
+                        class="!rounded-[0.75rem] z-50" object="cover" />
                   </StSpace>
                </StSpace>
             </StSpace>
 
             <StSpace class="px-3 py-2" fill-x justify="between" align="center">
-               <StSpace
-                  direction="horizontal"
-                  align="center"
-                  gap="0.5rem"
-                  class="flex-wrap">
-                  <div
-                     class="st-font-third-bold font-family-manrope text-3xl text-shadow-sm tracking-wide">
+               <StSpace direction="horizontal" align="center" gap="0.5rem" class="flex-wrap">
+                  <div class="st-font-third-bold font-family-manrope text-3xl text-shadow-sm tracking-wide">
                      {{ targetUser?.displayName ?? targetUser?.name }}
                   </div>
                   <div
@@ -238,15 +225,9 @@ onMounted(() => {
                </StSpace>
 
                <StSpace v-if="isOwnSpace" gap="1rem">
-                  <Edit
-                     @click="openEditDrawer"
-                     :size="24"
-                     :strokeWidth="3"
+                  <Edit @click="openEditDrawer" :size="24" :strokeWidth="3"
                      class="text-secondary hover:text-secondary/50 cursor-pointer transition-colors" />
-                  <Config
-                     @click="openConfigDialog"
-                     :size="24"
-                     :strokeWidth="3"
+                  <Config @click="openConfigDialog" :size="24" :strokeWidth="3"
                      class="text-secondary hover:text-secondary/50 cursor-pointer transition-colors" />
                </StSpace>
             </StSpace>
@@ -257,86 +238,59 @@ onMounted(() => {
                </div>
             </StSpace>
 
-            <div
-               v-if="userInfo.length > 0"
-               class="h-[1px] w-full bg-accent-500" />
+            <div v-if="userInfo.length > 0" class="h-[1px] w-full bg-accent-500" />
 
-            <StGrid
-               v-if="userInfo.length > 0"
-               :cols="1"
-               fill-x
-               class="p-4 !gap-x-0">
-               <StSpace
-                  v-for="(item, idx) in userInfo"
-                  :key="idx"
-                  align="center"
-                  gap="6px"
-                  class="st-font-body-normal">
-                  <component
-                     :is="iconMapping[item.iconKey]"
-                     class="text-accent-200"
-                     :strokeWidth="3"
-                     :size="20" />
+            <StGrid v-if="userInfo.length > 0" :cols="1" fill-x class="p-4 !gap-x-0">
+               <StSpace v-for="(item, idx) in userInfo" :key="idx" align="center" gap="6px" class="st-font-body-normal">
+                  <component :is="iconMapping[item.iconKey]" class="text-accent-200" :strokeWidth="3" :size="20" />
                   <span class="text-accent-200">{{ item.label }}：</span>
                   <span>{{ item.value }}</span>
                </StSpace>
             </StGrid>
+            <StSpace>
+               <!-- 新增注册天数显示（其实是练手） -->
+               <div class="st-font-body-normal text-accent-200 p-[16px]">
+                  <span>注册天数: {{ registrationData?.days ?? '--' }}</span>
+               </div>
+            </StSpace>
          </StSpace>
 
          <StSpace direction="vertical" class="my-8" :style="{ width: `44rem` }">
             <StSpace fill>
-               <StSpace
-                  fill
-                  direction="vertical"
-                  gap="0rem"
+               <StSpace fill direction="vertical" gap="0rem"
                   class="relative overflow-hidden bg-gradient-to-br from-accent-600 via-accent-600 to-accent-500 rounded-[1rem] px-6 py-4">
                   <div class="font-family-manrope st-font-third-bold">
                      {{ commitStatistics?.correctRate ?? 0
-                     }}<span class="font-family-fira-code text-xl ml-0.5"
-                        >%</span
-                     >
+                     }}<span class="font-family-fira-code text-xl ml-0.5">%</span>
                   </div>
                   <div class="text-accent-100">正确率</div>
-                  <div
-                     class="absolute -right-2 -bottom-4 rotate-12 text-secondary opacity-75">
+                  <div class="absolute -right-2 -bottom-4 rotate-12 text-secondary opacity-75">
                      <CheckOne size="64" />
                   </div>
                </StSpace>
-               <StSpace
-                  fill
-                  direction="vertical"
-                  gap="0rem"
+               <StSpace fill direction="vertical" gap="0rem"
                   class="relative overflow-hidden bg-gradient-to-br from-accent-600 via-accent-600 to-accent-500 rounded-[1rem] px-6 py-4">
                   <div class="font-family-manrope st-font-third-bold">
                      {{ commitStatistics?.score ?? 0 }}
                   </div>
                   <div class="text-accent-100">总得分</div>
-                  <div
-                     class="absolute -right-2 -bottom-4 rotate-12 text-warning opacity-75">
+                  <div class="absolute -right-2 -bottom-4 rotate-12 text-warning opacity-75">
                      <Scoreboard size="64" />
                   </div>
                </StSpace>
-               <StSpace
-                  fill
-                  direction="vertical"
-                  gap="0rem"
+               <StSpace fill direction="vertical" gap="0rem"
                   class="relative overflow-hidden bg-gradient-to-br from-accent-600 via-accent-600 to-accent-500 rounded-[1rem] px-6 py-4">
                   <div class="font-family-manrope st-font-third-bold">
                      {{ commitStatistics?.passCount ?? 0 }}
                   </div>
                   <div class="text-accent-100">通过数</div>
-                  <div
-                     class="absolute -right-2 -bottom-4 rotate-12 text-blue-500 opacity-75">
+                  <div class="absolute -right-2 -bottom-4 rotate-12 text-blue-500 opacity-75">
                      <RockGesture size="64" />
                   </div>
                </StSpace>
             </StSpace>
 
-            <StSpace
-               v-if="recentProblems && recentProblems.length > 0"
-               fill-x
-               direction="vertical"
-               gap="0.25rem"
+            <StSpace v-if="recentProblems && recentProblems.length > 0" fill-x direction="vertical" gap="0.25rem"
                class="relative">
                <StSpace direction="horizontal" align="center" gap="0.5rem">
                   <History size="20" />
@@ -344,32 +298,19 @@ onMounted(() => {
                      最近提交的题目
                   </div>
                </StSpace>
-               <StSpace
-                  ref="scrollContainer"
-                  fill-x
-                  direction="horizontal"
-                  class="overflow-x-auto">
+               <StSpace ref="scrollContainer" fill-x direction="horizontal" class="overflow-x-auto">
                   <StSpace class="shrink-0" gap="0.5rem" fill-x>
-                     <a
-                        v-for="(problem, idx) in recentProblems"
-                        class="h-fit"
-                        target="_blank"
-                        :style="{ viewTransitionName: `card-${problem.pid}` }"
-                        :key="idx"
+                     <a v-for="(problem, idx) in recentProblems" class="h-fit" target="_blank"
+                        :style="{ viewTransitionName: `card-${problem.pid}` }" :key="idx"
                         :href="`/challenge/editor/${problem.pid}`">
-                        <StProblemCard
-                           imgHeight="7.5rem"
-                           class="!w-[15rem] h-fit"
+                        <StProblemCard imgHeight="7.5rem" class="!w-[15rem] h-fit"
                            :cover-image-name="problem.imageName">
-                           <StProblemCardTitle
-                              :title="problem.title ?? '匿名题目'" />
+                           <StProblemCardTitle :title="problem.title ?? '匿名题目'" />
                            <StProblemCardTags :tags="problem.tags ?? []" />
                            <StProblemCardDivider />
-                           <StProblemCardInfo
-                              class="pb-3"
-                              :class="{
-                                 'px-2': problem.difficulty !== 'very_hard',
-                              }">
+                           <StProblemCardInfo class="pb-3" :class="{
+                              'px-2': problem.difficulty !== 'very_hard',
+                           }">
                               <StProblemCardInfoItem title="通过率">
                                  <PassRate :rate="problem.passRate!" />
                               </StProblemCardInfoItem>
@@ -377,53 +318,34 @@ onMounted(() => {
                                  <Score :score="problem.totalScore!" />
                               </StProblemCardInfoItem>
                               <StProblemCardInfoItem title="难度" center>
-                                 <Difficulty
-                                    :difficulty="problem.difficulty!" />
+                                 <Difficulty :difficulty="problem.difficulty!" />
                               </StProblemCardInfoItem>
                            </StProblemCardInfo>
                         </StProblemCard>
                      </a>
                   </StSpace>
                </StSpace>
-               <div
-                  :class="[showEndMask ? 'opacity-100' : 'opacity-0']"
-                  class="absolute bottom-0 h-full w-4 bg-gradient-to-l right-0 from-accent-700 via-accent-070/70 to-transparent transition-opacity"></div>
+               <div :class="[showEndMask ? 'opacity-100' : 'opacity-0']"
+                  class="absolute bottom-0 h-full w-4 bg-gradient-to-l right-0 from-accent-700 via-accent-070/70 to-transparent transition-opacity">
+               </div>
             </StSpace>
 
-            <StSpace
-               fill-x
-               direction="vertical"
-               gap="0.75rem"
-               class="p-[0.5rem] bg-accent-600 rounded-[1rem] relative">
-               <SubmissionStatusCard
-                  v-if="isOwnSpace || spaceConfig?.showSubmissionStatus"
-                  status="personal-space"
-                  :is-visitor="!isOwnSpace"
-                  :username="targetUser?.name"
-                  class="!mt-0 min-h-[18.625rem]" />
+            <StSpace fill-x direction="vertical" gap="0.75rem" class="p-[0.5rem] bg-accent-600 rounded-[1rem] relative">
+               <SubmissionStatusCard v-if="isOwnSpace || spaceConfig?.showSubmissionStatus" status="personal-space"
+                  :is-visitor="!isOwnSpace" :username="targetUser?.name" class="!mt-0 min-h-[18.625rem]" />
 
-               <div
-                  v-if="isOwnSpace || spaceConfig?.showAchievements"
-                  class="h-[1px] w-full bg-accent-500" />
+               <div v-if="isOwnSpace || spaceConfig?.showAchievements" class="h-[1px] w-full bg-accent-500" />
 
-               <AchievementsCard
-                  v-if="isOwnSpace || spaceConfig?.showAchievements"
-                  status="personal-space"
-                  :is-visitor="!isOwnSpace"
-                  :username="targetUser?.name"
-                  class="!min-h-[16rem]" />
+               <AchievementsCard v-if="isOwnSpace || spaceConfig?.showAchievements" status="personal-space"
+                  :is-visitor="!isOwnSpace" :username="targetUser?.name" class="!min-h-[16rem]" />
             </StSpace>
          </StSpace>
       </StSpace>
 
       <!-- 编辑用户信息 Drawer -->
-      <UserInfoEditDrawer
-         v-model:opened="editDrawerOpened"
-         @updated="handleUserInfoUpdated" />
+      <UserInfoEditDrawer v-model:opened="editDrawerOpened" @updated="handleUserInfoUpdated" />
 
       <!-- 空间配置 Drawer -->
-      <SpaceConfigDrawer
-         v-model:opened="configDialogOpened"
-         @updated="handleSpaceConfigUpdated" />
+      <SpaceConfigDrawer v-model:opened="configDialogOpened" @updated="handleSpaceConfigUpdated" />
    </StSpace>
 </template>

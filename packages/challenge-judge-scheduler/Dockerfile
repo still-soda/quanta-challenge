@@ -35,6 +35,8 @@ COPY packages/shared ./packages/shared
 
 # 生成 Prisma 客户端
 WORKDIR /app/packages/database
+RUN pnpm add prisma --save-dev
+RUN pnpm add @prisma/client --save
 RUN pnpm prisma:generate
 
 # 构建项目

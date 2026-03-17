@@ -37,7 +37,7 @@ services:
     networks:
       - quanta-challenge-network
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Docker outside of Docker
+      -  D:/docker/qtc_postgres/data:/var/lib/postgresql/data # Docker outside of Docker
 
   challenge-judge-machine-agent:
     build:
