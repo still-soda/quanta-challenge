@@ -187,10 +187,6 @@ onMounted(() => {
    });
 });
 
-// 获取用户注册天数的方法
-const { data: registrationData } = await useAsyncData('get registration days',
-   () => $trpc.protected.user.calCreatedDays.query()
-)
 </script>
 
 <template>
@@ -247,12 +243,6 @@ const { data: registrationData } = await useAsyncData('get registration days',
                   <span>{{ item.value }}</span>
                </StSpace>
             </StGrid>
-            <StSpace>
-               <!-- 新增注册天数显示（其实是练手） -->
-               <div class="st-font-body-normal text-accent-200 p-[16px]">
-                  <span>注册天数: {{ registrationData?.days ?? '--' }}</span>
-               </div>
-            </StSpace>
          </StSpace>
 
          <StSpace direction="vertical" class="my-8" :style="{ width: `44rem` }">

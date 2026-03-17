@@ -19,16 +19,8 @@ const listAllTagsProcedure = publicProcedure.query(async ({ ctx }) => {
    }));
 });
 
-const deleteTagProcedure = publicProcedure
-   .input(z.number())
-   .mutation(async ({ input }) => {
-      return await prisma.tags.delete({
-         where: { tid: input }
-      });
-   });
 
 
 export const tagRouter = router({
-   list: listAllTagsProcedure,
-   deleteTag: deleteTagProcedure
+   list: listAllTagsProcedure
 });

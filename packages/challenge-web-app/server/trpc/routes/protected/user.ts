@@ -485,27 +485,6 @@ const changePasswordProcedure = protectedProcedure
       return true;
    });
 
-const calCreatedDaysProcedure = protectedProcedure
-   .input(z.void())
-   .query(async ({ ctx }) => {
-      ctx
-      const user = await prisma.user.findUnique({
-         where: { id: ctx.user.userId },
-         select: { createdAt: true },
-      });
-      if (!user) {
-         throw new TRPCError({ code: 'NOT_FOUND', message: '找不到该用户' });
-      }
-      const start = user.createdAt.getTime();
-      const now = new Date().getTime();
-
-      const diffDays = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      return{
-         days: diffDays,
-         since: user.createdAt
-      }
-   })
-
 export const userRouter = router({
    getUserInfo: getUserInfoProcedure,
    updateUserInfo: updateUserInfoProcedure,
@@ -515,6 +494,5 @@ export const userRouter = router({
    updateUserSpaceConfig: updateUserSpaceConfigProcedure,
    getCommitStatistic: getCommitStatisticProcedure,
    getRecentProblems: getRecentProblemsProcedure,
-   changePassword: changePasswordProcedure,
-   calCreatedDays: calCreatedDaysProcedure
+   changePassword: changePasswordProcedure
 });

@@ -21,7 +21,7 @@ const options = [
    {
       title: '编辑标签',
       description: '创建新标签或管理已有题目标签',
-      url: '/app/publish/editTag',
+      url: '/app/publish/edit-tag',
       icon: Tag,
       iconColor: '#FE4E4E',
    }
