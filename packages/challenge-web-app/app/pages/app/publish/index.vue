@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GoldMedalTwo, TableReport } from '@icon-park/vue-next';
+import { GoldMedalTwo, TableReport, Tag } from '@icon-park/vue-next';
 
 useSeoMeta({ title: '发布流程 - Quanta Challenge' });
 
@@ -18,6 +18,13 @@ const options = [
       icon: GoldMedalTwo,
       iconColor: '#F59E0B',
    },
+   {
+      title: '编辑标签',
+      description: '创建新标签或管理已有题目标签',
+      url: '/app/publish/edit-tag',
+      icon: Tag,
+      iconColor: '#FE4E4E',
+   }
 ];
 </script>
 
