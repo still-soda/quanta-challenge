@@ -3,7 +3,11 @@ import { ref, computed, onMounted } from 'vue';
 import type { ISelectOption } from '~/components/st/Select/type';
 import TagEditingDrawer from '../problem/_drawers/TagEditingDrawer.vue'
 import { ExpandDown, FoldUpOne, Box, Plus } from '@icon-park/vue-next';
+import { dialog } from '~/composables/use-dialog';
+import { useMessage } from '~/components/st/Message/use-message';
+
 const { $trpc } = useNuxtApp();
+const message = useMessage();
 
 const tagOptions = ref<(ISelectOption & { color: string })[]>([]);
 const isExpanded = ref(false);
@@ -36,23 +40,36 @@ const handleCreated = () => {
 };
 
 const deleteTag = async (tid: number) => {
-    if (!confirm('确定要删除这个标签吗?')) return;
+    const confirmed = await dialog.confirm({
+        title: '删除标签',
+        description: '确定要删除这个标签吗？此操作不可撤销。',
+        variant: 'danger',
+        confirmText: '删除',
+        cancelText: '取消'
+    });
+
+    if (!confirmed) return;
+
+    const loading = message.info('正在删除...', '', { duration: 0, loading: true });
+
     try {
         await $trpc.admin.tag.delete.mutate({
             tid: tid
         });
         await fetchTags();
-
+        loading.close();
+        message.success('删除成功');
     } catch (error) {
+        loading.close();
         console.error("删除失败", error);
         const errorCode = (error as any)?.data?.code;
 
         if (errorCode === 'UNAUTHORIZED' || errorCode === 'FORBIDDEN') {
-            alert('删除失败：您没有管理员权限');
+            message.error('删除失败', '您没有管理员权限');
         } else if (errorCode === 'NOT_FOUND') {
-            alert('删除失败：找不到该标签（可能已被删除）');
+            message.error('删除失败', '找不到该标签（可能已被删除）');
         } else {
-            alert('删除失败，请稍后重试');
+            message.error('删除失败', '请稍后重试');
         }
     }
 }
