@@ -8,8 +8,11 @@ import type { StForm } from '#components';
 import { useProblemPublicationForm } from './_composables/use-problem-publication-form';
 import { UploadTwo } from '@icon-park/vue-next';
 import { normalizePath, joinPath } from '~/utils/path-utils';
+import { useMessage } from '~/components/st/Message/use-message';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });
+
+const message = useMessage();
 
 const outerClass =
    'border !py-4 !px-4 !rounded-[0.5rem] w-full focus-within:!border-primary';
@@ -99,13 +102,21 @@ const handleSubmit = async () => {
       });
    };
    submitLoading.value = true;
-   const result = await atLeastTime(300, upload()).catch((error) => {
-      alert('发布题目失败:' + error);
-      console.error(error);
+   try {
+      // 等待上传结果
+      const result = await atLeastTime(300, upload());
+      // 只有成功了，才进行跳转
+      if (result?.problemId) {
+         navigateTo(`/app/publish/problem/detail/${result.problemId}`);
+      }
+   } catch (error) {
+      // 如果失败了，进入这里
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      message.error("发布题目失败", errorMsg);
+   } finally {
+      // 无论成功还是失败，都要关掉 loading 状态
       submitLoading.value = false;
-      return;
-   });
-   navigateTo(`/app/publish/problem/detail/${result?.problemId}`);
+   }
 };
 </script>
 
