@@ -12,6 +12,8 @@ import { useMessage } from '~/components/st/Message/use-message';
 
 useSeoMeta({ title: '发布题目 - Quanta Challenge' });
 
+const message = useMessage();
+
 const outerClass =
    'border !py-4 !px-4 !rounded-[0.5rem] w-full focus-within:!border-primary';
 let storageName = 'publishFormdata';
@@ -109,7 +111,6 @@ const handleSubmit = async () => {
       }
    } catch (error) {
       // 如果失败了，进入这里
-      const message = useMessage();
       const errorMsg = error instanceof Error ? error.message : String(error);
       message.error("发布题目失败", errorMsg);
    } finally {

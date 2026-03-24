@@ -1,42 +1,52 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import type { ISelectOption } from '~/components/st/Select/type';
-import TagEditingDrawer from '../problem/_drawers/TagEditingDrawer.vue'
+import TagEditingDrawer from '../problem/_drawers/TagEditingDrawer.vue';
 import { ExpandDown, FoldUpOne, Box, Plus } from '@icon-park/vue-next';
 import { dialog } from '~/composables/use-dialog';
 import { useMessage } from '~/components/st/Message/use-message';
+import { logger } from '~~/lib/logger';
+
+useSeoMeta({
+    title: '标签管理 - Quanta Challenge',
+});
 
 const { $trpc } = useNuxtApp();
 const message = useMessage();
+const runtimeConfig = useRuntimeConfig();
+const appBaseUrl = runtimeConfig.public.appBaseUrl;
 
-const tagOptions = ref<(ISelectOption & { color: string })[]>([]);
 const isExpanded = ref(false);
 const MAX_VISIBLE_TAGS = 5;
 
-const fetchTags = async (): Promise<(ISelectOption & { color: string })[]> => {
-    const rawTags = await $trpc.public.tag.list.query();
-    // 加工数据
-    const formattedTags = rawTags.map((tag) => ({
+const { data: rawTags, error, refresh } = useAsyncData('tags', () =>
+    $trpc.public.tag.list.query()
+);
+//监听错误
+watch(error, (newError) => {
+    if (newError) {
+        logger.error( newError, '加载标签失败');
+        message.error('标签加载失败', '请检查网络连接或稍后重试');
+    }
+}, { immediate: true });
+
+const tagOptions = computed(() => {
+    if (!rawTags.value) return [];
+
+    return rawTags.value.map((tag) => ({
         label: tag.name,
         value: tag.tid,
         color: tag.color ?? '#FA7C0E',
-        imageUrl: tag.url ? `http://localhost:3000${tag.url}` : undefined,
-    })).toSorted((a, b) =>
-        a.label.localeCompare(b.label)
-    );
-
-    tagOptions.value = formattedTags;
-    return formattedTags;
-};
+        imageUrl: tag.url ? `${appBaseUrl}${tag.url}` : undefined,
+    })).toSorted((a, b) => a.label.localeCompare(b.label));
+});
 
 onMounted(() => {
-    fetchTags();
 });
 
 const isDrawerShow = ref(false);
-const handleCreated = () => {
-    console.log('新标签创建成功，准备刷新列表');
-    fetchTags()
+const handleCreated = async () => {
+    await refresh();
 };
 
 const deleteTag = async (tid: number) => {
@@ -56,8 +66,8 @@ const deleteTag = async (tid: number) => {
         await $trpc.admin.tag.delete.mutate({
             tid: tid
         });
-        await fetchTags();
         loading.close();
+        await refresh();
         message.success('删除成功');
     } catch (error) {
         loading.close();
@@ -110,7 +120,8 @@ const visibleTags = computed(() => {
                                 class="w-12 h-12 bg-accent-700 rounded-[0.5rem] border border-accent-500 overflow-hidden">
                                 <img v-if="tag.imageUrl"
                                     class="w-8 h-8 object-contain"
-                                    :src="tag.imageUrl" alt="tag-icon">
+                                    :src="tag.imageUrl"
+                                    :alt="`${tag.label} 标签图标`">
                                 <Box v-else class="text-accent-400 text-2xl" />
                             </StSpace>
 
@@ -130,7 +141,7 @@ const visibleTags = computed(() => {
 
                         <StSpace gap="0.5rem">
                             <StButton theme="danger" size="sm" bordered
-                                class="!px-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                                class="!px-3 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                                 @click="deleteTag(tag.value as number)">
                                 删除
                             </StButton>
