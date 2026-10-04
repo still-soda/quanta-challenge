@@ -62,11 +62,14 @@ export default defineTask({
             });
          });
       } catch (error) {
+         // pino 签名是 logger.error(obj, msg)；直接传 Error 会被当作消息参数而丢失堆栈，
+         // 必须放在对象里（err 字段）才会被正确序列化。
          logger.error(
+            { err: error },
             '[Job:UpdateRankHistory] Failed to update rank history.',
-            error,
          );
-         logger.log('Data: ', JSON.stringify(data));
+         // logger.log 不存在（pino 没有该方法），用 info
+         logger.info({ data }, '[Job:UpdateRankHistory] Data:');
          return { result: [] };
       } finally {
          await redis.del(jobKey);
