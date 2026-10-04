@@ -1,5 +1,7 @@
 import { logger } from '~~/lib/logger';
 import prisma from '~~/lib/prisma';
+import { observer } from './achievement';
+import type { ValidPath } from '~~/lib/track-wrapper';
 
 /**
  * 判断是否存在某题目的排行榜
@@ -187,6 +189,121 @@ const getGlobalRankings = async (limit: number = 100) => {
 };
 
 /**
+ * 按权威公式重算并写入用户的统计数据（分数 / 正确率 / 通过题数）。
+ *
+ * 公式来自 `packages/database/sql/update-user_statistics.psql`（该文件的定义是权威来源）：
+ *   score        = Σ 各 baseId 上的 MAX(score)   （仅 type='judge' AND result='success'）
+ *   passCount    = COUNT(DISTINCT baseId)        （仅成功记录）
+ *   correctRate  = 成功记录数 / 全部 judge 记录数 × 100
+ *
+ * 为什么必须整表重算而不是增量累加：
+ * 增量写法需要算出"本次提交让总分涨了多少"，而同一道题重复提交成功并不会加分
+ * （取的是 per-baseId 的 MAX）。原实现用 `历史最高分 - 本次得分` 作为增量，
+ * 对"每次都拿满分"的题恒等于 0，于是分数永远是 0。
+ * 整表重算式天然幂等，重复提交、改分、补判都不会算错。
+ *
+ * @returns `{ scoreDiff, score }`：分数变化量（用于同步 Redis 排行榜）与重算后的总分
+ */
+const recalculateUserStatistics = async (
+   userId: string,
+): Promise<{ scoreDiff: number; score: number }> => {
+   const [before] = await prisma.$queryRaw<{ score: number | null }[]>`
+      SELECT score FROM user_statistics WHERE "userId" = ${userId}
+   `;
+   const previousScore = Number(before?.score ?? 0);
+
+   // 与 update-user_statistics.psql 中的 CTE 完全一致
+   await prisma.$executeRaw`
+      WITH scores AS (
+         SELECT "userId", SUM(max_score) AS score
+         FROM (
+            SELECT judge_records."userId", MAX(judge_records.score) AS max_score
+            FROM judge_records
+            JOIN problems ON judge_records."problemId" = problems.pid
+            WHERE judge_records.type = 'judge' AND judge_records.result = 'success'
+            GROUP BY judge_records."userId", problems."baseId"
+         ) AS per_problem_max
+         GROUP BY "userId"
+      ),
+      passProblemIds AS (
+         SELECT judge_records."userId", COUNT(DISTINCT problems."baseId") AS pass_count
+         FROM judge_records
+         JOIN problems ON judge_records."problemId" = problems.pid
+         WHERE judge_records.type = 'judge' AND judge_records.result = 'success'
+         GROUP BY judge_records."userId"
+      ),
+      passRecords AS (
+         SELECT judge_records."userId", COUNT(*) AS pass_count
+         FROM judge_records
+         JOIN problems ON judge_records."problemId" = problems.pid
+         WHERE judge_records.type = 'judge' AND judge_records.result = 'success'
+         GROUP BY judge_records."userId"
+      ),
+      allRecords AS (
+         SELECT judge_records."userId", COUNT(*) AS total_count
+         FROM judge_records
+         JOIN problems ON judge_records."problemId" = problems.pid
+         WHERE judge_records.type = 'judge'
+         GROUP BY judge_records."userId"
+      )
+      INSERT INTO user_statistics ("userId", score, "correctRate", "passCount", "createdAt", "updatedAt")
+      SELECT
+         ${userId},
+         COALESCE(scores.score, 0),
+         CASE
+            WHEN COALESCE(allRecords.total_count, 0) = 0 THEN 0
+            ELSE ROUND(COALESCE(passRecords.pass_count, 0)::decimal / allRecords.total_count * 100, 2)
+         END,
+         COALESCE(passProblemIds.pass_count, 0),
+         NOW(),
+         NOW()
+      FROM (SELECT 1) AS dummy
+      LEFT JOIN scores ON scores."userId" = ${userId}
+      LEFT JOIN passProblemIds ON passProblemIds."userId" = ${userId}
+      LEFT JOIN passRecords ON passRecords."userId" = ${userId}
+      LEFT JOIN allRecords ON allRecords."userId" = ${userId}
+      ON CONFLICT ("userId") DO UPDATE SET
+         score = EXCLUDED.score,
+         "correctRate" = EXCLUDED."correctRate",
+         "passCount" = EXCLUDED."passCount",
+         "updatedAt" = NOW()
+   `;
+
+   const [after] = await prisma.$queryRaw<{ score: number | null }[]>`
+      SELECT score FROM user_statistics WHERE "userId" = ${userId}
+   `;
+   const newScore = Number(after?.score ?? 0);
+
+   observer.manualMarkDirty([
+      'user_statistics.correctRate',
+      'user_statistics.passCount',
+      'user_statistics.score',
+   ] as ValidPath[]);
+
+   return { scoreDiff: newScore - previousScore, score: newScore };
+};
+
+/**
+ * 把用户在全局排行榜（Redis zset）里的分数设为绝对值。
+ *
+ * 不能用 zincrby 累加：`recalculateUserStatistics` 刚把数据库里的分数改成新值，
+ * 若此刻缓存已被清掉，`udpateGlobalRanking` 会先从数据库重载（新值已包含增量）
+ * 再 zincrby 加一次，导致重复计分（实测把 40 分算成了 80 分）。
+ *
+ * 由于 Redis 缓存是"数据库 user_statistics.score 的投影"，
+ * 这里统一用 zadd 写绝对值；缓存缺号会由 loadGlobalRankings 兜底补齐。
+ */
+const setUserGlobalRankingScore = async (userId: string, score: number) => {
+   const redis = useRedis();
+   const rankingKey = `global:rankings`;
+
+   if (!(await redis.exists(rankingKey))) {
+      await loadGlobalRankings();
+   }
+   await redis.zadd(rankingKey, score, userId);
+};
+
+/**
  * 获取用户在全局排行榜中的排名
  * @param userId 用户ID
  * @returns
@@ -324,4 +441,6 @@ export const rankService = {
    udpateGlobalRanking,
    loadGlobalRankings,
    getGlobalRankingIntervals,
+   recalculateUserStatistics,
+   setUserGlobalRankingScore,
 };
