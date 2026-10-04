@@ -16,7 +16,7 @@ export class LRUMap<K, V> extends Map<K, V> {
    /**
     * 获取值，如果存在则将其移到最前面（最近使用）
     */
-   get(key: K): V | undefined {
+   override get(key: K): V | undefined {
       const value = super.get(key);
       if (value !== undefined) {
          // 重新设置以更新顺序（移到最前面）
@@ -29,7 +29,7 @@ export class LRUMap<K, V> extends Map<K, V> {
    /**
     * 设置键值对，如果超过最大容量则删除最旧的项
     */
-   set(key: K, value: V): this {
+   override set(key: K, value: V): this {
       // 如果键已存在，先删除旧的
       if (super.has(key)) {
          super.delete(key);
@@ -120,7 +120,7 @@ export class LRUMap<K, V> extends Map<K, V> {
    /**
     * 获取字符串表示
     */
-   toString(): string {
+   override toString(): string {
       const entries = Array.from(super.entries());
       return `LRUMap(${this.maxSize}) { ${entries
          .map(([k, v]) => `${k} => ${v}`)
