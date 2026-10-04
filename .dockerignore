@@ -1,12 +1,39 @@
-node_modules
-.git
-dist
-*.log
-test
-.turbo
-.nuxt
-.output
-local_store
+# Keep the build context small and, more importantly, keep host-installed
+# dependencies out of the image.
+#
+# Why this file matters beyond context size:
+# pnpm installs each workspace package's dependencies as symlinks into the
+# top-level .pnpm store. If packages/<pkg>/node_modules is copied into the image
+# *after* `pnpm install` has run there, it overwrites those symlinks and the
+# dependencies become unresolvable. The visible symptom was:
+#   Error: Cannot find module '/app/packages/database/node_modules/prisma/build/index.js'
+# during `prisma generate`, even though the install step had created it correctly.
+#
+# Docker 29 does not apply the bare `node_modules` pattern to nested directories
+# (verified: /node_modules was excluded, /packages/database/node_modules was not),
+# so the pattern is written with an explicit leading `**/` to match at any depth.
+**/node_modules
 
-# 判题调度器运行时产生的快照与测试残留；必须排除，否则会被打进镜像并持续增大构建上下文
-tmp
+.git
+.gitignore
+
+# Build outputs
+**/dist
+**/.nuxt
+**/.output
+**/.turbo
+
+# Judge runtime artifacts (scheduler and web app share this directory)
+**/local_store
+**/tmp
+
+# Logs
+**/*.log
+
+# Test scratch dirs kept in the working tree
+.test-problem
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
