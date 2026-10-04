@@ -66,17 +66,21 @@ export class DockerService extends Singleton {
    /**
     * 周期清扫：进程内清理失败（job 失败、进程被强杀）时，容器会在分钟级被自愈回收。
     *
-    * 阈值为 0：未被 activeLiveServerIds 登记的 live-server 容器一定是孤儿。
-    * 因为正常路径下容器一创建就登记，close() 时才注销。
+    * ⚠️ 宽限期（graceMs）不能为 0。
+    * 容器是"先创建、等 Ready 后才登记进 activeLiveServerIds"的，这中间有一个未登记窗口；
+    * 若清扫器此时扫描，会把**判题正在进行中**的容器当成孤儿删掉，判题机随即解析不到
+    * 该容器的网络别名，最终以 "Judge Machine response timeout" 失败。
+    * （实测：minAgeMs=0 时容器创建 6 秒即被删除，判题必失败。）
+    * 因此宽限期必须显著大于容器的正常启动耗时与单次判题耗时。
     */
-   startLiveServerSweeper(intervalMs = 30_000) {
+   startLiveServerSweeper(intervalMs = 30_000, graceMs = 5 * 60 * 1000) {
       if (this.sweepTimer) return;
       this.sweepTimer = setInterval(() => {
-         void this.sweepStaleLiveServers({ minAgeMs: 0 });
+         void this.sweepStaleLiveServers({ minAgeMs: graceMs });
       }, intervalMs);
       this.sweepTimer.unref?.();
       console.log(
-         `[INFO] Live-server sweeper started (every ${intervalMs / 1000}s)`
+         `[INFO] Live-server sweeper started (every ${intervalMs / 1000}s, grace ${graceMs / 1000}s)`
       );
    }
 
@@ -163,6 +167,11 @@ export class DockerService extends Singleton {
             stderr: true,
          });
          await container.start();
+         // 立刻登记为"使用中"，不能等 waitForReady 之后再登记：
+         // 否则在"容器已存在但尚未登记"的窗口里，定时清扫器会把它当孤儿删掉，
+         // 判题机随即解析不到该容器的网络别名（ERR_NAME_NOT_RESOLVED），
+         // 最终以 "Judge Machine response timeout" 失败。
+         this.activeLiveServerIds.add(container.id);
 
          const waitForReady = new Promise<void>((resolve, reject) => {
             let hasReady = false;
@@ -208,7 +217,7 @@ export class DockerService extends Singleton {
 
       try {
          const result = await createContainer();
-         this.activeLiveServerIds.add(result.containerId);
+         // 容器在创建过程中（container.start() 之后）就已登记，这里不再重复登记。
          return result;
       } catch (error) {
          console.error('Error starting live server container:', error);
