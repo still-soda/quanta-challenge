@@ -1,0 +1,25 @@
+# 统一换行符，避免 Windows(core.autocrlf=true) 下出现"内容没改但显示已修改"的虚假 diff。
+#
+# 典型症状：packages/database/prisma/name-map/_output.ts 由生成脚本写出 LF，
+# 而 git 检出时转成 CRLF，于是 git status 永远显示它被修改，实际 numstat 为空。
+* text=auto eol=lf
+
+# 二进制文件不要当作文本处理
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+
+# Windows 批处理必须保留 CRLF，否则 cmd 可能无法正确解析
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 这些文件历史上就以 CRLF 入库，且内容不会变动。
+# 显式钉住 eol=crlf 以匹配已入库内容，避免 `git add --renormalize .`
+# 把它们改写成 LF（那会产生无意义的整文件 diff）。
+packages/challenge-web-app/app/assets/fonts/** -text eol=crlf
