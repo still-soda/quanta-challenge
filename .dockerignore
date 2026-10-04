@@ -1,0 +1,12 @@
+node_modules
+.git
+dist
+*.log
+test
+.turbo
+.nuxt
+.output
+local_store
+
+# 判题调度器运行时产生的快照与测试残留；必须排除，否则会被打进镜像并持续增大构建上下文
+tmp
