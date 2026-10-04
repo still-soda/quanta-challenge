@@ -1,0 +1,40 @@
+{
+   // 服务端类型检查专用配置。
+   //
+   // 为什么不直接用根 tsconfig.json 跑 tsc：
+   //   根配置是 Nuxt 生成的 project references 枢纽，files 为空，
+   //   直接 `tsc -p .` 不会检查任何文件。
+   //
+   // 为什么要显式 include ../lib：
+   //   Nuxt 的 server 作用域只包含 ../server/**/*，app 作用域只包含 ../app/**/*，
+   //   两边都**不包含 lib/**。而 lib/logger.ts 等服务端工具是被 server 代码
+   //   直接 import 的——不显式纳入，这部分代码永远不会被类型检查覆盖。
+   //
+   // 为什么需要 allowImportingTsExtensions：
+   //   packages/database/index.ts 使用 `./prisma/lib/prisma.ts` 这类**带 .ts 后缀**
+   //   的导入。这是刻意的——Node 22 的类型剥离（type stripping）要求显式后缀，
+   //   而 Docker 镜像里正是用 `node scripts/prisma-seed.ts` 直接运行 TS 文件。
+   //   因此这里放宽以匹配真实的运行环境，而不是去改那个导入。
+   "extends": "./.nuxt/tsconfig.server.json",
+   "compilerOptions": {
+      "allowImportingTsExtensions": true,
+      "noEmit": true
+   },
+   // 只纳入 server 代码实际 import 的那几个 lib 工具。
+   // 不用 "lib/**/*" 是因为 lib/test/*.spec.ts 属于测试，应由 vitest 处理；
+   // 也不能加 "app/**/*"——app 作用域依赖 Vue 的自动导入类型，必须用 vue-tsc
+   // 检查，用 tsc 检查会产生大量假报错。
+   // 关于 include 的取舍：
+   //   · 必须纳入 .nuxt/types/nitro-imports.d.ts —— 它声明了 useRuntimeConfig / useRedis
+   //     等 **Nitro 侧**自动导入，缺了会报 "Cannot find name 'useRuntimeConfig'"。
+   //   · 不能纳入 .nuxt/nuxt.d.ts —— 它会把 app 侧（Vue）自动导入一并引入，
+   //     而这里用 tsc（非 vue-tsc）检查，会连带检查 app/utils/* 并产生假报错。
+   //   · lib 只列 server 实际 import 的三个文件；lib/test/*.spec.ts 交给 vitest。
+   "include": [
+      ".nuxt/types/nitro-imports.d.ts",
+      "server/**/*",
+      "lib/logger.ts",
+      "lib/prisma.ts",
+      "lib/track-wrapper.ts"
+   ]
+}
