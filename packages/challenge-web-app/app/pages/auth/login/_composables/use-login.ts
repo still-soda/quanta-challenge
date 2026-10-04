@@ -27,7 +27,7 @@ export const useEmailLogin = () => {
 
       try {
          loading.value = true;
-         const result = await $trpc.auth.login.email.query({
+         const result = await $trpc.auth.login.email.mutate({
             email: formdata.email,
             password: formdata.password,
          });
