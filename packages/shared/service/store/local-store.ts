@@ -1,9 +1,12 @@
 import path from 'path';
 import type { IStore } from './i-store';
 import fs from 'fs/promises';
+import { resolveLocalStorePath } from '../../utils/local-store-path';
 
 export class LocalStore implements IStore {
-   private storePath: string = process.env.LOCAL_STORE_PATH || './local_store';
+   // 相对路径 './local_store' 会按进程 cwd 解析，不同进程会落到不同目录，
+   // 导致写入方与读取方看到不同的文件。统一走解析器。
+   private storePath: string = resolveLocalStorePath();
 
    constructor() {
       fs.mkdir(this.storePath, { recursive: true });
