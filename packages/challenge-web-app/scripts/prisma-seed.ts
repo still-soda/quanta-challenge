@@ -9,6 +9,13 @@ async function main() {
    const email = process.env.SUPER_EMAIL || 'admin@admin.com';
    const passwordHash = await hashPassword(password);
 
+   if (!process.env.SUPER_PASSWORD) {
+      console.warn(
+         '⚠️  未设置 SUPER_PASSWORD，正在使用内置的默认口令。' +
+            '生产环境请务必通过环境变量提供强口令。',
+      );
+   }
+
    const existingUser = await prisma.user.findUnique({
       where: { name: account },
    });
@@ -37,8 +44,9 @@ async function main() {
       },
    });
 
+   // 不打印口令：容器日志在共用实验环境中通常可被多人读取
    console.log(
-      `✅ Seeded admin user:\n\n  - Account: ${account}\n  - Email: ${email}\n  - Password: ${password}\n`
+      `✅ Seeded admin user:\n\n  - Account: ${account}\n  - Email: ${email}\n`,
    );
 }
 
