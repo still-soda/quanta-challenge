@@ -13,6 +13,32 @@ const env = (key: string, fallback: string) => process.env[key] || fallback;
 const envInt = (key: string, fallback: number) =>
    process.env[key] ? parseInt(process.env[key] as string) : fallback;
 
+/**
+ * 读取"必须显式提供"的密钥。
+ *
+ * 背景：accessToken / refreshToken 原先都有硬编码兜底值（'default_access_token_secret'）。
+ * 这些值在源码里公开可见，一旦部署时漏配环境变量，任何拿到源码的人都能用它签发
+ * 合法 token，从而冒充任意用户（含管理员）。这类"静默降级"比直接启动失败危险得多，
+ * 因此这里在**生产环境**下强制要求配置，缺失就立刻抛错终止启动，
+ * 把问题暴露在部署阶段而不是留到线上。
+ *
+ * 开发环境仍保留兜底值，保证 `pnpm dev` 开箱可用。
+ */
+const envSecret = (key: string) => {
+   const value = process.env[key];
+   if (value) return value;
+
+   if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+         `[配置错误] 生产环境必须设置 ${key}。` +
+            `该密钥用于签发登录凭证，缺失时若回退到内置默认值，` +
+            `任何人都能伪造任意用户的登录态。`,
+      );
+   }
+
+   return `dev_only_${key}`;
+};
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
    compatibilityDate: '2025-07-15',
@@ -184,11 +210,9 @@ export default defineNuxtConfig({
          appBaseUrl: env('APP_SERVER', 'http://localhost:3000'),
       },
       secret: {
-         accessToken: env('ACCESS_TOKEN_SECRET', 'default_access_token_secret'),
-         refreshToken: env(
-            'REFRESH_TOKEN_SECRET',
-            'default_refresh_token_secret',
-         ),
+         // 这两个必须是显式配置的真实密钥，不能用内置默认值（见 envSecret 说明）
+         accessToken: envSecret('ACCESS_TOKEN_SECRET'),
+         refreshToken: envSecret('REFRESH_TOKEN_SECRET'),
          accessTokenExpiresIn: env('ACCESS_TOKEN_EXPIRES_IN', '15m'),
          refreshTokenExpiresIn: env('REFRESH_TOKEN_EXPIRES_IN', '7d'),
       },
