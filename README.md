@@ -128,13 +128,25 @@ pnpm install
 
 ### 启动开发环境
 
-#### 方式一：Docker Compose（推荐）
+#### 方式一：Docker Compose
+
+> ⚠️ **必须先构建判题机镜像**（见下方第 0 步）。
+>
+> `docker/docker-compose*.yaml` 里的 `challenge-judge-machine-agent` 与
+> `challenge-live-server-agent` 都带有 `profiles: [ignore]`，**Compose 不会构建它们**。
+> 而调度器启动时会通过 Docker API 拉起 `challenge-judge-machine-agent` 容器，
+> 镜像不存在则调度器初始化直接失败（所有判题停在 pending）。
+> 这两个镜像由调度器在运行期按需创建，所以无法用 Compose 管理，只能预先构建。
 
 ```bash
-# 启动所有服务（包括 PostgreSQL 和 Redis）
+# 0. 先构建两个判题相关镜像（只需在新环境首次部署，或这两处代码变更后执行）
+pnpm --filter @challenge/judge-machine-agent docker:build
+pnpm --filter @challenge/live-server-agent docker:build
+
+# 1. 构建并启动 Web 应用、调度器、PostgreSQL、Redis
 pnpm docker:up:dev
 
-# 查看服务日志
+# 2. 查看服务日志
 docker-compose -f docker/docker-compose.development.yaml logs -f
 ```
 
