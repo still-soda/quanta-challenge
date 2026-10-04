@@ -42,6 +42,15 @@ const emailRegisterProcedure = publicProcedure
          });
       }
 
+      // 要求先通过邮箱验证码校验，防止绕过验证直接注册
+      const verified = await redis.get('email_verified:' + email);
+      if (!verified) {
+         throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: '请先完成邮箱验证码校验',
+         });
+      }
+
       const pwdHash = await hashPassword(password);
 
       const { userId } = await prisma.auth.create({
@@ -62,6 +71,9 @@ const emailRegisterProcedure = publicProcedure
       });
       const tokens = generateTokens({ userId, role: 'USER' });
       const csrfToken = crypto.randomUUID();
+
+      // 验证标记一次性使用
+      await redis.del('email_verified:' + email);
 
       const opt = {
          httpOnly: true,
@@ -164,6 +176,9 @@ const verifyCodeProcedure = publicProcedure
       }
 
       await redis.del('verify_code:' + email);
+      // 记录"该邮箱已验证成功"，供注册接口校验；
+      // 否则可直接调用 register.email 跳过邮箱验证完成注册。
+      await redis.setex('email_verified:' + email, 15 * 60, '1');
 
       return { success: true };
    });

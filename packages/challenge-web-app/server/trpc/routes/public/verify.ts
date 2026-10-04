@@ -15,6 +15,7 @@ const sendVerifyCodeProcedure = publicProcedure
    .mutation(async ({ input }) => {
       const { email } = input;
 
+      // 仅在发送成功后写入验证码，避免发信失败但用户仍可"验证通过"
       const verifyCode = Math.random().toString(10).slice(-4);
       const result = await sendEmail({
          to: email,
@@ -24,12 +25,17 @@ const sendVerifyCodeProcedure = publicProcedure
          }),
       });
 
-      const redis = useRedis();
-      redis.setex(`verify_code:${email}`, 15 * 60, verifyCode);
-
       logger.info(result);
 
-      return result.success;
+      if (!result.success) {
+         return false;
+      }
+
+      // 必须 await：否则验证码可能尚未落库，用户立刻输入会校验失败
+      const redis = useRedis();
+      await redis.setex(`verify_code:${email}`, 15 * 60, verifyCode);
+
+      return true;
    });
 
 export const verifyRoute = router({
