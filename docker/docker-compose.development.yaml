@@ -10,13 +10,18 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # 变量名必须与 nuxt.config.ts 中 process.env 读取的名称一致。
+      # 原 NUXT_REDIS_HOST / NUXT_APP_BASE_SERVER / NUXT_JUDGE_SERVER_URL 与实际读取的
+      # REDIS_HOST / APP_SERVER / JUDGE_SERVER 不匹配，等于从未生效。
       - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
-      - NUXT_REDIS_HOST=redis
-      - NUXT_APP_BASE_SERVER=https://localhost:3000
-      - NUXT_JUDGE_SERVER_URL=http://challenge-judge-scheduler:1888
-      - SUPER_ACCOUNT=stillsoda
-      - SUPER_PASSWORD=stillsoda123
-      - SUPER_EMAIL=stillsoda123@admin.com
+      - REDIS_HOST=redis
+      # 使用 http：开发环境走本地 HTTP，写 https 会让 cookie 的 secure 属性与协议不符
+      - APP_SERVER=http://localhost:3000
+      - JUDGE_SERVER=http://challenge-judge-scheduler:1888
+      # 从 docker/.env 读取，避免把管理员口令写进版本库（可用 SUPER_ADMIN_PASSWORD 等覆盖）
+      - SUPER_ACCOUNT=${SUPER_ADMIN_ACCOUNT:-stillsoda}
+      - SUPER_PASSWORD=${SUPER_ADMIN_PASSWORD:-stillsoda123}
+      - SUPER_EMAIL=${SUPER_ADMIN_EMAIL:-stillsoda123@admin.com}
     depends_on:
       - challenge-judge-scheduler
       - redis
@@ -29,8 +34,16 @@ services:
       context: ../
       dockerfile: packages/challenge-judge-scheduler/Dockerfile
     environment:
+      # 调度器的 src/index.ts 只在 NODE_ENV=production 时启动 HTTP 监听，
+      # 缺失该变量会让容器起来但 1888 端口无人监听。
+      - NODE_ENV=production
+      - PORT=1888
       - DATABASE_URL=postgres://quanta:quanta@postgres:5432/quanta_db
       - REDIS_HOST=redis
+      # 判题完成后调度器需回调 Web 应用同步排行榜与通知，缺失时会指向自身的 localhost:3000
+      - APP_SERVER_URL=http://challenge-web-app:3000
+      # 与 Web 应用共享同一个回调签名密钥；不一致会让所有回调被 403 拦掉
+      - OPENAPI_WEBHOOK_SECRET=${OPENAPI_WEBHOOK_SECRET:-your_openapi_webhook_secret_here}
     depends_on:
       - redis
       - postgres
@@ -38,6 +51,9 @@ services:
       - quanta-challenge-network
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Docker outside of Docker
+      # 必须与 Web 应用共用同一个 local_store，否则调度器写出的题目封面
+      # （判题首屏截图）Web 端 /api/static 读不到，所有封面都 404。
+      - qtc_app_storage:/app/packages/web/local_store
 
   challenge-judge-machine-agent:
     build:
@@ -59,11 +75,15 @@ services:
     image: "redis:7-alpine"
     ports:
       - "26379:6379"
+    # Docker Desktop 重启 / 机器休眠唤醒后容器不会自动回来。
+    # 没有这条策略时的典型症状：Web 能打开，但所有数据库操作报错、调度器静默不工作。
+    restart: unless-stopped
     networks:
       - quanta-challenge-network
 
   postgres:
     image: "postgres:16-alpine"
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=quanta
       - POSTGRES_PASSWORD=quanta
