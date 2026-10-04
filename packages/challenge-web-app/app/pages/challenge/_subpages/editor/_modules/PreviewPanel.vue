@@ -4,6 +4,9 @@ import {
    CheckOne,
    FullScreenTwo,
    LoadingFour,
+   // 注意：@icon-park/vue-next 导出的名字是 OffScreen，没有 OffScreenTwo。
+   // 原先这里写的是 OffScreenTwo（且并未 import），全屏退出按钮会渲染成 undefined 组件。
+   OffScreen,
    Refresh,
    Round,
    WholeSiteAccelerator,
@@ -15,6 +18,8 @@ const props = defineProps<{
    previewUrl?: string;
    steps?: { idle: string; running: string }[];
    currentStep?: number;
+   /** 环境不支持时展示的原因；非空时不再显示"正在启动"步骤列表 */
+   unsupportedReason?: string | null;
 }>();
 
 const displayUrl = computed(() => {
@@ -98,9 +103,32 @@ const refresh = () => {
             direction="vertical"
             fill
             center
-            class="grayscale-100">
-            <IconLogo class="w-[24rem] scale-[175%] opacity-50 mb-4 -mt-4" />
-            <StSpace direction="vertical" gap="0.5rem">
+            :class="props.unsupportedReason ? '' : 'grayscale-100'">
+            <!-- 出错时不要保留 grayscale：会把红色错误文字一并去色，导致提示看起来像灰色占位而没人注意 -->
+            <IconLogo
+               v-if="!props.unsupportedReason"
+               class="w-[24rem] scale-[175%] opacity-50 mb-4 -mt-4" />
+            <!-- 环境不满足 WebContainer 要求时，明确告诉用户原因，
+                 否则页面只会一直停留在"正在启动开发容器…"，无法自行排查 -->
+            <StSpace
+               v-if="props.unsupportedReason"
+               direction="vertical"
+               gap="0.5rem"
+               align="center"
+               class="max-w-[34rem] px-6 text-center">
+               <span class="st-font-body-bold text-error">
+                  无法启动在线开发容器
+               </span>
+               <span class="st-font-caption text-accent-100 break-all">
+                  {{ props.unsupportedReason }}
+               </span>
+               <span class="st-font-caption text-accent-300">
+                  在浏览器按 F12 打开控制台可看到 [webcontainer] 开头的诊断日志。
+                  在线运行需要：访问地址为 localhost 或 HTTPS、浏览器支持跨源隔离，
+                  且能正常访问 stackblitz.com。
+               </span>
+            </StSpace>
+            <StSpace v-else direction="vertical" gap="0.5rem">
                <StSpace
                   v-if="!previewUrl"
                   v-for="(step, idx) in steps ?? []"
@@ -142,7 +170,7 @@ const refresh = () => {
                   center
                   no-shrink
                   class="size-[3rem] rounded-full bg-accent-600 text-accent-200 opacity-50 absolute hover:opacity-80 transition-opacity cursor-pointer right-4 top-4 z-[10001]">
-                  <OffScreenTwo />
+                  <OffScreen />
                </StSpace>
                <iframe :src="previewUrl" class="size-full"></iframe>
             </div>

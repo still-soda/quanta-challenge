@@ -31,7 +31,14 @@ const { event } = useEventEmitter('challenge-layout', 'commit');
 const isCommitting = ref(false);
 const currentStep = ref(0);
 watch(event, async () => {
-   if (!editorStore.hasProjectInitialized) return;
+   if (!editorStore.hasProjectInitialized) {
+      // 原先这里直接 return，用户看不到任何反馈。现在说明原因。
+      console.warn(
+         '[challenge] 提交被阻止：',
+         editorStore.commitBlockedReason ?? '在线开发容器尚未就绪',
+      );
+      return;
+   }
    opened.value = true;
 
    if (isCommitting.value || !props.buildCommand || !props.uploadDir) return;
