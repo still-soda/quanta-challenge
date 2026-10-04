@@ -151,6 +151,25 @@ const judgeResult = computed<any>(() => {
       : null;
 });
 
+/**
+ * 判题失败时的原因。
+ *
+ * 判题异常时调度器写入的是对象 { errorMessage }，而不是检查点数组；
+ * 原先只判断 Array.isArray，导致这种情况落到 null，判题详情区域渲染为空白——
+ * 用户只看到"未通过"却没有任何原因，无法判断是自己代码的问题还是平台故障。
+ */
+const judgeErrorMessage = computed<string | null>(() => {
+   if (!detail.value || detail.value.result === 'pending') return null;
+   const info: any = detail.value?.info;
+   if (Array.isArray(info)) return null;
+   if (info && typeof info === 'object') {
+      return info.errorMessage || info.message || '判题服务返回了未知错误';
+   }
+   // 既没有检查点数组、也没有可读错误对象：给出兜底文案，
+   // 否则下方渲染分支会退回骨架屏，看起来像"永远在判题中"。
+   return '判题未返回有效结果';
+});
+
 const StatusIcon = () => {
    if (detail.value?.result === 'success') {
       return <CheckSmall class='text-success' size='20' />;
@@ -254,7 +273,22 @@ const StatusIcon = () => {
                         <span class="st-font-body-bold">判题详情</span>
                      </StSpace>
                      <JudgeResultSkeleton v-if="detail?.result === 'pending'" />
-                     <StJudgeResult v-else :judge-result="judgeResult" />
+                     <JudgeResultSkeleton v-else-if="!judgeResult && !judgeErrorMessage" />
+                     <StJudgeResult v-else-if="judgeResult" :judge-result="judgeResult" />
+                     <div
+                        v-else
+                        class="w-full rounded-[0.375rem] border border-error/40 bg-error/5 px-4 py-3">
+                        <p class="st-font-body-bold text-error mb-1">
+                           判题未能完成
+                        </p>
+                        <p class="st-font-caption text-accent-200 break-all">
+                           {{ judgeErrorMessage }}
+                        </p>
+                        <p class="st-font-caption text-accent-400 mt-2">
+                           如果是平台原因（如判题服务未就绪、超时），请稍后重试或联系管理员；
+                           若是超时，请检查代码是否存在死循环或长时间未渲染的页面。
+                        </p>
+                     </div>
                   </StSpace>
                </StSpace>
             </StSpace>
