@@ -44,6 +44,11 @@ services:
       - APP_SERVER_URL=http://challenge-web-app:3000
       # 与 Web 应用共享同一个回调签名密钥；不一致会让所有回调被 403 拦掉
       - OPENAPI_WEBHOOK_SECRET=${OPENAPI_WEBHOOK_SECRET:-your_openapi_webhook_secret_here}
+      # 调度器在容器里，容器内的 localhost 指向自身，必须走 host.docker.internal
+      # 才能连到宿主机上映射出来的判题机端口 1889。
+      - JUDGE_MACHINE_WS_URL=ws://host.docker.internal:1889/link
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
       - postgres

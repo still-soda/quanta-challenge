@@ -416,7 +416,20 @@ export class DockerService extends Singleton {
    }
 
    async connectWebSocket() {
-      const ws = new WebSocket(`ws://localhost:1889/link`);
+      // 判题机容器的 3000 端口被映射到宿主机的 1889，调度器通过 WebSocket 把任务发给它。
+      //
+      // 这个地址取决于调度器跑在哪里，写死任何一种都会在另一种形态下挂住：
+      //   - 调度器跑在宿主机（pnpm dev）：localhost 即可，且该环境下
+      //     host.docker.internal 往往无法解析（本项目实测如此），所以默认值仍取 localhost；
+      //   - 调度器跑在容器里（docker compose，即 Dockerfile 的目标形态）：容器内的
+      //     localhost 指向容器自身，连不上宿主机的 1889。此时必须由 compose 注入
+      //     JUDGE_MACHINE_WS_URL=ws://host.docker.internal:1889/link。
+      //
+      // 两种情况下失败的症状都是"静默挂起"：init() 卡在 connectWebSocket，
+      // 调度器既不监听 1888 也不报错，日志停在"正在初始化服务依赖..."。
+      const wsUrl =
+         process.env.JUDGE_MACHINE_WS_URL ?? 'ws://localhost:1889/link';
+      const ws = new WebSocket(wsUrl);
       await new Promise<void>((resolve) => {
          ws.addEventListener('open', () => {
             resolve();

@@ -41,6 +41,13 @@ services:
       # 回调签名密钥：必须与 challenge-web-app 的 OPENAPI_WEBHOOK_SECRET 完全一致。
       # 不一致时 Web 端中间件返回 403，分数/统计/排行榜/通知全部静默不更新。
       - OPENAPI_WEBHOOK_SECRET=${OPENAPI_WEBHOOK_SECRET:?请设置 OPENAPI_WEBHOOK_SECRET}
+      # 调度器在容器里，容器内的 localhost 指向自身，必须走 host.docker.internal
+      # 才能连到宿主机上映射出来的判题机端口 1889。
+      # 缺失时 init() 会静默卡在 connectWebSocket，调度器既不监听 1888 也不报错。
+      - JUDGE_MACHINE_WS_URL=ws://host.docker.internal:1889/link
+    extra_hosts:
+      # Linux 上 host.docker.internal 默认不存在，需要显式注入 host-gateway
+      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
       - postgres
