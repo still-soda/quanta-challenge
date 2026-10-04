@@ -20,11 +20,18 @@ const username = computed(
    () => authStore.user?.displayName || authStore.user?.name || '用户',
 );
 
-const avatarUrl = computed(() =>
-   authStore.user?.imageId
-      ? `/api/static/${authStore.user.imageId}.jpg`
-      : DEFAULT_AVATAR_URL,
-);
+const avatarUrl = computed(() => {
+   // 用数据库里的文件名 avatar.name，而不是 imageId 硬拼 .jpg：
+   // 实际文件是 .png/.webp，硬拼 .jpg 必然 404。
+   const user = authStore.user as
+      | (typeof authStore.user & { avatar?: { name?: string } | null })
+      | null;
+   const name = user?.avatar?.name;
+   if (name) return `/api/static/${name}`;
+   return user?.imageId
+      ? `/api/static/${user.imageId}`
+      : DEFAULT_AVATAR_URL;
+});
 
 const description = computed(() => {
    return isAdmin.value ? '管理员' : '普通用户';

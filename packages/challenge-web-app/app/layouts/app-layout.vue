@@ -13,9 +13,16 @@ const username = computed(
    () => authStore.user?.displayName || authStore.user?.name || '用户'
 );
 
-const avatarUrl = computed(() =>
-   authStore.user?.imageId ? `/api/static/${authStore.user.imageId}.jpg` : ''
-);
+const avatarUrl = computed(() => {
+   // 必须用数据库里的文件名（avatar.name = `<uuid>.<ext>`），不能拿 imageId 硬拼 .jpg。
+   // 实际文件是 .png/.webp，硬拼 .jpg 会 404，头像一直是坏的。
+   const user = authStore.user as
+      | (typeof authStore.user & { avatar?: { name?: string } | null })
+      | null;
+   const name = user?.avatar?.name;
+   if (name) return `/api/static/${name}`;
+   return user?.imageId ? `/api/static/${user.imageId}` : '';
+});
 
 const description = computed(() => {
    return isAdmin.value ? '管理员' : '普通用户';
