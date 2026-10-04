@@ -52,9 +52,20 @@ export class PlaywrightService extends Singleton {
          .trim();
    }
 
+   /**
+    * 单次页面导航超时。
+    *
+    * Playwright 默认 30s，与调度器等待判题机的 30s 上限完全相同；一旦页面加载慢，
+    * 双方同时到期，判题机就来不及回包，用户只能拿到 "Judge Machine response timeout"
+    * 和一片空白的判题详情。这里显著收紧，确保判题机总能在调度器超时前给出明确结论。
+    */
+   private navigateTimeoutMs: number = Number(
+      process.env.JUDGE_NAVIGATE_TIMEOUT_MS ?? 10_000
+   );
+
    async openPage(
       url: string,
-      maxRetries: number = 3
+      maxRetries: number = 2
    ): Promise<{
       context: BrowserContext;
       page: Page;
@@ -66,7 +77,13 @@ export class PlaywrightService extends Singleton {
          const browser = await this.pickAliveBrowser();
          const context = await browser.newContext();
          const page = await context.newPage();
-         await page.goto(url);
+         // 显式设置导航与默认操作超时，避免继承 Playwright 的 30s 默认值
+         page.setDefaultTimeout(this.navigateTimeoutMs);
+         page.setDefaultNavigationTimeout(this.navigateTimeoutMs);
+         await page.goto(url, {
+            timeout: this.navigateTimeoutMs,
+            waitUntil: 'domcontentloaded',
+         });
          return {
             context,
             page,
