@@ -9,6 +9,7 @@ import type { IStoreService } from '../../utils/store';
 import path from 'path';
 import { LocalStoreService } from '../../utils/local-store';
 import { delay } from '../../utils/wait';
+import { ignoreError } from '../../utils/ignore-error';
 import * as db from './db';
 import { JudgeJob } from './types';
 
@@ -122,7 +123,7 @@ const processResult = async (
 export const judgeProcessor: Processor<JobType> = async (job) => {
    const pendingTime = Date.now() - job.data.queueTimestamp;
    const startTime = Date.now();
-   let cleanup;
+   let cleanup: (() => Promise<void>) | undefined;
 
    try {
       if (!DockerService.instance.judgeMachineWs) {
@@ -160,7 +161,13 @@ export const judgeProcessor: Processor<JobType> = async (job) => {
    } catch (error: any) {
       // 处理错误
       await db.saveErrorRecord({ error, pendingTime, startTime, job });
-      // cleanup && cleanup();
+      // 必须清理：live-server 容器与 tmp/<uuid> 快照目录不会自动消失，
+      // 原实现把这行注释掉后，每次失败判题都会永久残留一个容器和一份临时文件，
+      // 长期运行会把磁盘吃满。cleanup 本身是幂等的（force: true / ignoreError）。
+      if (cleanup) {
+         const closeContainer = cleanup;
+         await ignoreError(() => closeContainer());
+      }
 
       return {
          judgeRecordId: job.data.judgeRecordId,
