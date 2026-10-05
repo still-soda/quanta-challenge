@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { logger } from '~~/lib/logger';
 import prisma from '~~/lib/prisma';
 import { observer } from './achievement';
@@ -304,6 +305,61 @@ const setUserGlobalRankingScore = async (userId: string, score: number) => {
 };
 
 /**
+ * 抓取一次"今日排名快照"写入 ranking_histories。
+ *
+ * ## 为什么要在分数变化时抓，而不是只靠定时任务
+ *
+ * 排名变化卡片读的是 `getMyRankingTrends`，而它唯一的数据源就是 `ranking_history`。
+ * 原本只有 `nitro.scheduledTasks` 里那个「每天 0 点」的任务会写这张表，于是：
+ *
+ * 1. 自建部署下 Nitro 的定时任务未必会被触发（没有外部 cron 时它不会跑），
+ *    实测本环境该表只有三条手工遗留数据，rank 恒为 1、score 恒为 0；
+ * 2. **更致命的是历史本身**：定时任务只在当天 0 点记录一次，
+ *    如果 0 点时用户还没有分数，这一天就永远不会被记录。
+ *    Felix 拿到 100 分后反超 admin，但表里根本没有这条变化 ——
+ *    排名变化卡片因此永远显示"无变化"。
+ *
+ * 所以在每次总分变化后补抓一次当天快照：同一天内重复提交只会覆盖当天的记录，
+ * 不影响按天比较的语义，而趋势从此能够自愈，不再依赖定时任务是否真的跑了。
+ */
+const captureRankingSnapshot = async () => {
+   const redis = useRedis();
+   const rankingKey = `global:rankings`;
+
+   if (!(await redis.exists(rankingKey))) {
+      await loadGlobalRankings();
+   }
+
+   // 必须用 zrevrange（分数从高到低）。
+   //
+   // 原实现用 zrange（升序），却把下标直接当名次（rank = i/2 + 1），
+   // 于是**分数最低的人拿到第 1 名**，与 getSelfGlobalRanking 使用的 zrevrank
+   // （降序）互相矛盾 —— 排名历史里同一时刻的 rank 与 score 对不上，
+   // 表现为"排名变化"毫无意义（例如 rank 2 的人分数反而比 rank 1 高）。
+   const userScores = await redis.zrevrange(rankingKey, 0, -1, 'WITHSCORES');
+   const data: { userId: string; score: number; rank: number }[] = [];
+   for (let i = 0; i < userScores.length; i += 2) {
+      data.push({
+         userId: userScores[i] as string,
+         score: parseInt(userScores[i + 1] as string),
+         rank: i / 2 + 1,
+      });
+   }
+   if (data.length === 0) return;
+
+   const date = dayjs().startOf('day').toDate();
+   // 该表没有 (userId, date) 唯一约束，因此用"先删后建"保证当天幂等，
+   // 与 server/tasks/db/update-rank-history.ts 的做法保持一致。
+   await prisma.$transaction(async (tx) => {
+      await tx.rankingHistory.deleteMany({ where: { date } });
+      await tx.rankingHistory.createMany({
+         data: data.map(({ userId, score, rank }) => ({ userId, score, rank, date })),
+         skipDuplicates: true,
+      });
+   });
+};
+
+/**
  * 获取用户在全局排行榜中的排名
  * @param userId 用户ID
  * @returns
@@ -443,4 +499,5 @@ export const rankService = {
    getGlobalRankingIntervals,
    recalculateUserStatistics,
    setUserGlobalRankingScore,
+   captureRankingSnapshot,
 };

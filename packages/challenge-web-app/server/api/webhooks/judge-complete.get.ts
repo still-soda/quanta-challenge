@@ -69,6 +69,17 @@ export default defineEventHandler(async (event) => {
    // 用增量会在"缓存被清后重载再累加"的场景里重复计分。
    await rankService.setUserGlobalRankingScore(userId, totalScore);
 
+   // 抓一次"今日排名快照"，供仪表盘的排名变化（getMyRankingTrends）使用。
+   //
+   // 必须吞掉这里的异常：快照只是展示用的附属数据，
+   // 绝不能因为它的写入失败而让判题结果的处理（分数、排行榜、通知）整体失败。
+   await rankService.captureRankingSnapshot().catch((err) => {
+      logger.warn(
+         { err, userId },
+         'Failed to capture ranking snapshot (不影响判题结果)',
+      );
+   });
+
    await notificationService.sendNotification({
       type: 'JUDGE',
       title: '判题完成通知',

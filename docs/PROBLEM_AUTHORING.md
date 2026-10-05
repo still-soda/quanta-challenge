@@ -206,6 +206,46 @@ netstat -ano | Select-String ':3000'
 
 ---
 
+## 六、仪表盘"排名变化"的两个坑（这两个叠加导致它永远不动）
+
+### 🔴 坑 15：排名快照只在每天 0 点写一次 → 变化根本没被记录
+
+`排名变化` 卡片读 `getMyRankingTrends`，唯一数据源是 `ranking_histories` 表，
+而该表原本只由 `nitro.scheduledTasks` 里「每天 0 点」的任务写。问题有两点：
+
+1. 自建部署下 Nitro 的定时任务**未必会被触发**（没有外部 cron 时它不会跑）；
+   代码里也没有任何手动触发该任务的 HTTP 入口，查不出、补不了。
+2. **更致命**：一天只记一次。如果 0 点时用户还没有分数，这一天就永远缺失 ——
+   "Felix 拿到 100 分反超 admin"这种当天发生的变化**根本没有被记录**，
+   所以曲线永远是一条水平线。
+
+**修法**：在 `judge-complete` 回调里、分数更新之后补抓一次当天快照
+（`rankService.captureRankingSnapshot()`），同一天内重复提交只覆盖当天记录，
+按天比较的语义不变，但趋势从此**自愈**，不再依赖定时任务是否真的跑了。
+该调用必须 `.catch()` 吞掉异常 —— 快照只是展示数据，不能让它拖垮判题结果处理。
+
+### 🔴 坑 16：用 `zrange`（升序）算名次 → 最低分拿第 1 名
+
+```js
+// ❌ 错：zrange 是从低到高，下标却直接当名次
+const arr = await redis.zrange(key, 0, -1, 'WITHSCORES');
+data.push({ userId: arr[i], score: arr[i + 1], rank: i / 2 + 1 });
+
+// ✅ 对：名次必须按分数降序
+const arr = await redis.zrevrange(key, 0, -1, 'WITHSCORES');
+```
+
+而 `getSelfGlobalRanking`（"我的排名"）用的是 `zrevrank`（降序）。
+**两处算法不一致**，于是同一时刻的 rank 与 score 互相矛盾
+（实测：rank=2 的人分数反而比 rank=1 高），排名历史整体错乱。
+
+`server/tasks/db/update-rank-history.ts` 里有同样的错误，两处都要改。
+
+**排查这类问题的捷径**：直接把 Redis 原始返回打出来对照。
+本次就是靠 `zrevrange` 与 `zrange` 的原始输出一眼看出顺序被颠倒。
+
+---
+
 ## 五、上传前的检查清单
 - [ ] 答案模板跑预检 = **明显低分**（证明判题能抓错）
 - [ ] 每个 `defineCheckPoint` handler **都 return 了分数**
