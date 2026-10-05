@@ -1,0 +1,63 @@
+{
+   // app 侧（Vue 组件）类型检查专用配置 —— 用 vue-tsc 运行：
+   //   pnpm typecheck:app
+   //
+   // 为什么必须单独一份、且必须用 vue-tsc：
+   //   app/** 依赖 Vue 的自动导入（ref / computed / defineStore ...）与 SFC 语法，
+   //   纯 tsc 无法解析 .vue 文件，也会把响应式类型判错。
+   //
+   // 为什么 include 要收窄：
+   //   Nuxt 生成的 app 作用域会通过 ./types/nitro-nuxt.d.ts 把 **server 文件**也纳入，
+   //   而 server 已由 tsconfig.typecheck.server.json 单独检查。两边同时检查会重复报错。
+   //
+   // ⚠️ exclude 是「整体替换」而非追加：
+   //   子配置一旦写了 exclude，父级（.nuxt/tsconfig.app.json）里那条关键的 "../server"
+   //   就会丢失，server 文件会重新进入检查范围（实测报错从 9 涨到 61）。
+   //   修改 exclude 时务必对照 .nuxt/tsconfig.app.json 确认没有漏掉 "../server"。
+   "extends": "./.nuxt/tsconfig.app.json",
+   "compilerOptions": {
+      "noEmit": true,
+
+      // packages/database/index.ts 用 `./prisma/lib/prisma.ts` 这类带 .ts 后缀的导入。
+      // 这是刻意的：Node 22 的类型剥离要求显式后缀，Docker 里用
+      // `node scripts/prisma-seed.ts` 直接运行 TS 文件。放宽检查配置而不是改那个导入。
+      "allowImportingTsExtensions": true,
+
+      // 下面三项与 server 作用域对齐。
+      // app 作用域默认更严（noUncheckedIndexedAccess / verbatimModuleSyntax 为 true），
+      // 而 app 通过 AppRouter 类型间接引用了全部 server 代码，于是同一份 server 代码
+      // 在两处得出互相矛盾的结论（实测 61 个错 vs 0 个错）。
+      // server 的严格检查由 tsconfig.typecheck.server.json 负责，不在这里重复。
+      "noUncheckedIndexedAccess": false,
+      "verbatimModuleSyntax": false,
+      "module": "ESNext"
+   },
+   "include": [
+      ".nuxt/nuxt.d.ts",
+      "app/**/*",
+      "shared/**/*.d.ts",
+      "*.d.ts"
+   ],
+   "exclude": [
+      "../node_modules",
+      "../../../node_modules",
+      "../dist",
+      "../.data",
+      "../modules/*/runtime/server/**/*",
+      "../layers/*/server/**/*",
+      "../layers/*/modules/*/runtime/server/**/*",
+      "../modules/*.*",
+      "../nuxt.config.*",
+      "../.config/nuxt.*",
+      "../layers/*/nuxt.config.*",
+      "../layers/*/.config/nuxt.*",
+      "../layers/*/modules/**/*",
+      "dev",
+      "../server",
+      "node_modules",
+      ".nuxt/dist",
+      ".output",
+      "dist",
+      "**/*.spec.ts"
+   ]
+}

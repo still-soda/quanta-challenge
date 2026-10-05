@@ -58,6 +58,35 @@ html {
    width: 100vw;
    height: 100vh;
    overflow-x: hidden;
+   /*
+    * 默认禁止选中文字。
+    *
+    * 拖拽布局、点击按钮、划动列表时很容易误选到旁边的文字，看起来像界面"坏掉了"。
+    * 需要保留选中的地方在下面用 user-select: text 单独放开，
+    * 新增需要可选的区域也可以直接加 .st-selectable 类。
+    */
+   user-select: none;
+   -webkit-user-select: none;
+}
+
+/*
+ * 例外：输入、编辑、代码阅读这些场景必须能选中，否则无法复制粘贴。
+ */
+input,
+textarea,
+select,
+option,
+pre,
+code,
+kbd,
+[contenteditable='true'],
+[contenteditable=''],
+.st-selectable,
+.st-selectable *,
+.monaco-editor,
+.monaco-editor * {
+   user-select: text;
+   -webkit-user-select: text;
 }
 
 body {

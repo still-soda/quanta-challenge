@@ -37,7 +37,10 @@ export default defineTask({
             await rankService.loadGlobalRankings();
          }
 
-         const userScores = await redis.zrange(rankingKey, 0, -1, 'WITHSCORES');
+         // 必须用 zrevrange（分数从高到低），否则最低分会拿到第 1 名。
+         // 详见 services/rank.ts 中 captureRankingSnapshot 的说明：
+         // zrange 是升序，而名次必须按降序计算，二者混用会让排名历史错乱。
+         const userScores = await redis.zrevrange(rankingKey, 0, -1, 'WITHSCORES');
          for (let i = 0; i < userScores.length; i += 2) {
             data.push({
                userId: userScores[i],
@@ -62,11 +65,14 @@ export default defineTask({
             });
          });
       } catch (error) {
+         // pino 签名是 logger.error(obj, msg)；直接传 Error 会被当作消息参数而丢失堆栈，
+         // 必须放在对象里（err 字段）才会被正确序列化。
          logger.error(
+            { err: error },
             '[Job:UpdateRankHistory] Failed to update rank history.',
-            error,
          );
-         logger.log('Data: ', JSON.stringify(data));
+         // logger.log 不存在（pino 没有该方法），用 info
+         logger.info({ data }, '[Job:UpdateRankHistory] Data:');
          return { result: [] };
       } finally {
          await redis.del(jobKey);

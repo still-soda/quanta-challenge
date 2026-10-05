@@ -7,9 +7,8 @@ export default defineEventHandler((event) => {
 
    const timestamp = getCookie(event, 'webhook_timestamp');
    if (!timestamp) {
-      logger.warn('Webhook authentication failed: missing timestamp', {
-         path: event.path,
-      });
+      // pino 的签名是 logger.warn(obj, msg)；参数顺序写反会导致结构化上下文丢失
+      logger.warn({ path: event.path }, 'Webhook authentication failed: missing timestamp');
       throw createError({
          statusCode: 403,
          message: 'Missing webhook timestamp',
@@ -18,9 +17,7 @@ export default defineEventHandler((event) => {
 
    const sign = getCookie(event, 'sign');
    if (!sign) {
-      logger.warn('Webhook authentication failed: missing signature', {
-         path: event.path,
-      });
+      logger.warn({ path: event.path }, 'Webhook authentication failed: missing signature');
       throw createError({
          statusCode: 403,
          message: 'Missing webhook signature',
@@ -40,7 +37,7 @@ export default defineEventHandler((event) => {
    });
 
    if (!verified) {
-      logger.warn('Webhook authentication failed', { path: event.path, query });
+      logger.warn({ path: event.path, query }, 'Webhook authentication failed');
       throw createError({
          statusCode: 403,
          message: 'Invalid webhook signature',

@@ -60,7 +60,7 @@ onMounted(() => {
 const pathContentMap = ref<Record<string, { vid: string; content: string }>>();
 const pathTreeNodeMap = ref<Record<string, IFileSystemItem>>();
 const fsTree = ref<IFileSystemItem[]>();
-const mounted = Promise.withResolvers<void>();
+const mounted = (() => { let r; const p = new Promise<void>(res => { r = res; }); return { promise: p, resolve: r! }; })();
 const getProject = async () => {
    if (!props.id || isNaN(props.id)) {
       throw new Error('Problem ID is required');
@@ -95,10 +95,23 @@ const getProject = async () => {
       pathTreeNodeMap.value![path] = file;
    });
 
-   mountFileSystem(contentMap).then(mounted.resolve);
+   mountFileSystem(contentMap)
+      .then(mounted.resolve)
+      .catch((err) => {
+         // 挂载失败必须显式处理：否则 mounted.promise 永不 settle，
+         // runProject 会永久卡在 await 上，界面停在"正在启动开发容器…"。
+         console.error('[challenge] 挂载文件系统失败:', err);
+         unsupportedReason.value =
+            err?.message ?? '初始化在线开发环境失败';
+      });
    return result;
 };
-onMounted(getProject);
+onMounted(() => {
+   getProject().catch((err) => {
+      console.error('[challenge] 加载题目文件失败:', err);
+      unsupportedReason.value = err?.message ?? '加载题目文件失败';
+   });
+});
 
 // file manager
 const selectedPath = ref<string>();
@@ -161,20 +174,104 @@ onMounted(() => {
 });
 
 // terminal
-const { mountFileSystem, runCommand, getInstance, exposeServer, writeFile } =
-   useWebContainer({
-      workdirName: 'workspace',
-   });
+const {
+   mountFileSystem,
+   runCommand,
+   getInstance,
+   exposeServer,
+   writeFile,
+   onWebContainerFailed,
+} = useWebContainer({
+   workdirName: 'workspace',
+});
 const terminal = useTemplateRef('terminal');
+
+// 容器启动失败时的提示状态（由 runProject 与 webcontainer 失败回调共同写入）
+const unsupportedReason = ref<string | null>(null);
+
+// WebContainer 自身启动失败时也要落到界面上（必须放在 useWebContainer 之后，
+// 否则会在初始化前访问 onWebContainerFailed，触发 TDZ 错误）
+onWebContainerFailed((err: any) => {
+   unsupportedReason.value =
+      err?.message ?? 'WebContainer 启动失败（可能是浏览器不支持跨源隔离）';
+});
 
 // run project
 const editorStore = useEditorStore();
 const currentStep = ref(0);
+
+/**
+ * WebContainer 依赖跨源隔离（SharedArrayBuffer）。若 COOP/COEP 响应头被反向代理或
+ * CDN 剥离、或浏览器不支持，WebContainer.boot() 会静默失败，页面只会永久停留在
+ * "正在启动开发容器…"，用户完全无法判断原因。这里提前检测并给出明确提示。
+ */
+const checkRuntimeSupport = (): string | null => {
+   if (!import.meta.client) return null;
+
+   // 非安全的来源（例如用局域网 IP 走 http 访问）不会有安全上下文，
+   // SharedArrayBuffer 直接不可用。这种情况提示要具体，否则很难自己想到。
+   const { protocol, hostname } = window.location;
+   const isLocalhost =
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '[::1]' ||
+      hostname === '::1';
+
+   if (!isLocalhost && protocol !== 'https:') {
+      return (
+         `当前访问地址是 ${protocol}//${hostname}，既不是 localhost 也不是 HTTPS。` +
+         '浏览器只在安全上下文中提供 SharedArrayBuffer，因此在线编辑器无法在此地址运行。' +
+         '请改用 http://localhost:3000 访问，或为站点配置 HTTPS。'
+      );
+   }
+
+   if (typeof SharedArrayBuffer === 'undefined') {
+      return '当前浏览器不支持 SharedArrayBuffer。';
+   }
+   if (!window.crossOriginIsolated) {
+      return (
+         '页面未处于跨源隔离状态（crossOriginIsolated = false）。' +
+         '通常是 COOP/COEP 响应头被反向代理或 CDN 剥离所致，也可能是浏览器扩展干扰。'
+      );
+   }
+   return null;
+};
+
+// 把失败原因同步到 store：提交按钮原先只会"变灰且不解释"，
+// 用户会以为没有提交按钮。写入后按钮点击时会给出具体原因。
+watch(unsupportedReason, (reason) => {
+   if (reason) editorStore.initFailureReason = reason;
+});
+
 const runProject = async () => {
+   // 标记启动流程已开始，便于区分"进行中"与"从未触发"
+   editorStore.initStarted = true;
+
+   const reason = checkRuntimeSupport();
+   if (reason) {
+      unsupportedReason.value = reason;
+      console.error('[challenge] 运行环境检查未通过:', reason);
+      return;
+   }
+
    const terminalInstance = await terminal.value?.createTerminal();
    const terminalId = terminalInstance?.id;
 
-   await Promise.all([mounted.promise, loaded.promise]);
+   // 兜底超时：即使 mounted.promise 因某种原因没有 settle，也不能让界面无限卡住。
+   await Promise.race([
+      Promise.all([mounted.promise, loaded.promise]),
+      new Promise((_, reject) =>
+         setTimeout(
+            () =>
+               reject(
+                  new Error(
+                     '在线开发环境初始化超时（WebContainer 未能在 60 秒内就绪）',
+                  ),
+               ),
+            60_000,
+         ),
+      ),
+   ]);
 
    // run boot commands
    editorStore.hasProjectInitialized = false;
@@ -214,7 +311,15 @@ const runProject = async () => {
       }
    }
 };
-onMounted(runProject);
+
+// 启动失败时不要静默：把原因暴露到界面上
+onMounted(() => {
+   runProject().catch((error: any) => {
+      console.error('[challenge] 启动开发容器失败:', error);
+      unsupportedReason.value =
+         error?.message || '启动在线开发环境失败，请刷新页面重试。';
+   });
+});
 
 // handle add terminal
 const addTerminal = async () => {
@@ -299,7 +404,7 @@ const { data: problem } = await useAsyncData(
    `problem-detail-${props.id}`,
    getProblemDetail,
 );
-const loaded = Promise.withResolvers<void>();
+const loaded = (() => { let r; const p = new Promise<void>(res => { r = res; }); return { promise: p, resolve: r! }; })();
 watch(problem, () => problem.value && loaded.resolve(), { immediate: true });
 
 const appBaseUrl = useRuntimeConfig().public.appBaseUrl;
@@ -453,7 +558,8 @@ useSeoMeta({
                         :steps="steps"
                         :current-step="currentStep"
                         :preview-url="previewUrl"
-                        :host-name="hostName" />
+                        :host-name="hostName"
+                        :unsupported-reason="unsupportedReason" />
                   </template>
                </StSplitPanel>
             </template>

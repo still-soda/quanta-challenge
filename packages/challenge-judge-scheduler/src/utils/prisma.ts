@@ -1,4 +1,2 @@
-import prismaClient from '@challenge/database';
-
-const prisma = prismaClient.default;
+import prisma from '@challenge/database';
 export default prisma;

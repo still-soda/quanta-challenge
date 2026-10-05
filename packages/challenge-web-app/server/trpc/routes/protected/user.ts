@@ -411,10 +411,11 @@ const getRecentProblemsProcedure = protectedProcedure
          const passRate = totalCount === 0 ? 0 : (passCount / totalCount) * 100;
          return {
             ...p,
+            // 同 public/problem.ts：无封面返回 null，避免拼出 /api/static/unknown（403）
             imageName:
                p.CoverImage?.name ||
                p.ProblemDefaultCover[0].image?.name ||
-               'unknown',
+               null,
             imageHash:
                p.CoverImage?.thumbhash ||
                p.ProblemDefaultCover[0].image?.thumbhash ||

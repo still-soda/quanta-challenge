@@ -1,8 +1,6 @@
 import prisma from '~~/lib/prisma';
 import z from 'zod';
 import { rankService } from '~~/server/trpc/services/rank';
-import { observer } from '~~/server/trpc/services/achievement';
-import { ValidPath } from '~~/lib/track-wrapper';
 import { logger } from '~~/lib/logger';
 import { notificationService } from '~~/server/trpc/services/notificatoin';
 
@@ -14,88 +12,6 @@ const JudgeCompleteSchema = z.object({
          message: 'recordId must be a positive integer',
       }),
 });
-
-// 计算当前提交与该题历史最高分的差值，如果没有历史记录则返回 -1
-const calculateScoreDiff = async (baseId: number, score: number) => {
-   const highestScore = await prisma.$queryRaw<{ max: number }[]>`
-      SELECT MAX(score) AS max
-      FROM judge_records
-      JOIN problems 
-        ON judge_records."problemId" = problems.pid
-      WHERE problems."baseId" = ${baseId}
-        AND result = 'success'
-   `;
-   if (highestScore.length === 0 || highestScore[0].max === null) {
-      return -1;
-   }
-   return highestScore[0].max - score;
-};
-
-// 更新用户统计信息，包括正确率、通过题数和总分
-const updateUserStatistic = async (
-   userId: String,
-   scoreIncreatment: number,
-) => {
-   await prisma.$executeRaw`
-      WITH stats AS (
-         SELECT 
-            COUNT(DISTINCT "problemId") 
-               FILTER (WHERE result = 'success') 
-               AS pass_problems_count,
-            COUNT(*) 
-               FILTER (WHERE result = 'success') 
-               AS pass_count,
-            COUNT(*) 
-               AS total_count
-         FROM judge_records
-         WHERE type = 'judge'
-           AND "userId" = ${userId}
-      )
-      INSERT INTO user_statistics ("userId", "correctRate", "passCount", score, "createdAt", "updatedAt")
-      SELECT 
-         ${userId},
-         CASE 
-            WHEN stats.total_count = 0 THEN 0
-            ELSE ROUND((stats.pass_count::decimal / stats.total_count) * 100, 2)
-         END,
-         stats.pass_problems_count,
-         ${scoreIncreatment},
-         NOW(),
-         NOW()
-      FROM stats
-      ON CONFLICT ("userId") 
-      DO UPDATE SET 
-         "correctRate" = CASE 
-            WHEN (SELECT COUNT(*) FROM judge_records WHERE type = 'judge' AND "userId" = ${userId}) = 0 THEN 0
-            ELSE ROUND(
-               (SELECT COUNT(*) FILTER (WHERE result = 'success')::decimal 
-                FROM judge_records 
-                WHERE type = 'judge' AND "userId" = ${userId}) 
-               / 
-               (SELECT COUNT(*)::decimal 
-                FROM judge_records 
-                WHERE type = 'judge' AND "userId" = ${userId}) 
-               * 100, 2
-            )
-         END,
-         "passCount" = (
-            SELECT COUNT(DISTINCT "problemId") 
-            FROM judge_records 
-            WHERE type = 'judge' 
-              AND "userId" = ${userId} 
-              AND result = 'success'
-         ),
-         "updatedAt" = NOW(),
-         score = user_statistics.score + ${scoreIncreatment};
-   `;
-
-   const affectedFields = [
-      'user_statistics.correctRate',
-      'user_statistics.passCount',
-      scoreIncreatment > 0 ? 'user_statistics.score' : null,
-   ].filter(Boolean);
-   observer.manualMarkDirty(affectedFields as ValidPath[]);
-};
 
 export default defineEventHandler(async (event) => {
    const query = getQuery(event);
@@ -140,26 +56,47 @@ export default defineEventHandler(async (event) => {
          });
       });
 
-   let scoreDiff = 0;
+   // 分数与统计一律按权威公式整表重算（见 rank.ts 中 recalculateUserStatistics 的说明）。
+   // 原实现用"历史最高分 - 本次得分"当增量，而 webhook 是在记录已入库后才被调用，
+   // 那个 MAX 必然包含本次得分，于是增量恒为 0、仪表盘分数永远是 0。
    if (result === 'success') {
       await rankService.pushToProblemRankings(problem.pid, recordId, score);
-      scoreDiff = await calculateScoreDiff(problem.baseId, score);
-      if (scoreDiff > 0) {
-         await rankService.udpateGlobalRanking(userId, scoreDiff);
-      }
    }
-   await Promise.all([
-      updateUserStatistic(userId, Math.max(scoreDiff, 0)),
-      notificationService.sendNotification({
-         type: 'JUDGE',
-         title: '判题完成通知',
-         content: `您的提交（记录 ID: ${recordId}）已判题完成，结果：${result}，得分：${score} 分。`,
-         userId: userId,
-      }),
-   ]);
+
+   const { score: totalScore } = await rankService.recalculateUserStatistics(userId);
+
+   // 排行榜分数写绝对值（不是增量）：数据库是唯一事实来源，
+   // 用增量会在"缓存被清后重载再累加"的场景里重复计分。
+   await rankService.setUserGlobalRankingScore(userId, totalScore);
+
+   // 抓一次"今日排名快照"，供仪表盘的排名变化（getMyRankingTrends）使用。
+   //
+   // 必须吞掉这里的异常：快照只是展示用的附属数据，
+   // 绝不能因为它的写入失败而让判题结果的处理（分数、排行榜、通知）整体失败。
+   await rankService.captureRankingSnapshot().catch((err) => {
+      logger.warn(
+         { err, userId },
+         'Failed to capture ranking snapshot (不影响判题结果)',
+      );
+   });
+
+   await notificationService.sendNotification({
+      type: 'JUDGE',
+      title: '判题完成通知',
+      content: `您的提交（记录 ID: ${recordId}）已判题完成，结果：${result}，得分：${score} 分。`,
+      userId: userId,
+   });
 
    logger.info(
-      { recordId, userId, problemId: problem.pid, score, result, traceId },
+      {
+         recordId,
+         userId,
+         problemId: problem.pid,
+         score,
+         result,
+         traceId,
+         totalScore,
+      },
       'Judge complete success',
    );
 

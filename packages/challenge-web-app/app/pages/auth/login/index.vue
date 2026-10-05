@@ -93,7 +93,6 @@ const gotoWebAuthnLogin = () => {
                   v-model:value="formdata.password"
                   outer-class="bg-accent-700 border border-transparent focus-within:border-primary"
                   placeholder="请输入密码"
-                  type="password"
                   name="password"
                   password>
                   <template #prefix>

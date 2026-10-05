@@ -8,12 +8,22 @@
       "docker:up": "docker-compose -f docker/docker-compose.yaml up -d",
       "docker:down": "docker-compose -f docker/docker-compose.yaml down",
       "docker:up:dev": "docker-compose -f docker/docker-compose.development.yaml up -d",
-      "docker:down:dev": "docker-compose -f docker/docker-compose.development.yaml down"
+      "docker:down:dev": "docker-compose -f docker/docker-compose.development.yaml down",
+      "typecheck": "pnpm -r --no-bail typecheck",
+      "smoke": "pnpm --filter @challenge/app smoke"
    },
    "peerDependencies": {
       "typescript": "^5.0.0"
    },
    "workspaces": [
       "packages/*"
-   ]
+   ],
+   "pnpm": {
+      "onlyBuiltDependencies": [
+         "@prisma/client",
+         "prisma",
+         "sharp",
+         "esbuild"
+      ]
+   }
 }

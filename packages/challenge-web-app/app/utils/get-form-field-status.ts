@@ -15,7 +15,7 @@ export const getFieldStatus = <Rules extends IRule[]>(
    if (rule.required && (value === undefined || value === '')) {
       return 'default';
    }
-   if (rule.validator && !rule.validator(value)) {
+   if (rule.validator && !rule.validator(value, formdata)) {
       return 'error';
    }
    return 'success';
@@ -35,7 +35,7 @@ export const getFieldSatusAsync = async <Rules extends IRule[]>(
       return 'default';
    }
    if (rule.validator) {
-      const isValid = await rule.validator(value);
+      const isValid = await rule.validator(value, formdata);
       if (!isValid) {
          return 'error';
       }

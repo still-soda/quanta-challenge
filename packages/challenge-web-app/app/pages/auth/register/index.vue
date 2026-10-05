@@ -73,9 +73,29 @@ const status = useAsyncStatus(rules, formdata);
 
 const onVerifyCode = ref(false);
 const codeVerified = ref(false);
+const sendCodeLoading = ref(false);
 const handleSendCode = async () => {
    const otpRef = ref<InstanceType<typeof OneTimePassword> | null>(null);
    const error = ref(false);
+
+   // 原实现只弹出输入框、从不请求发送验证码，导致邮件永远发不出去。
+   // 这里先真正触发发送，成功后再让用户输入。
+   sendCodeLoading.value = true;
+   try {
+      const sent = await $trpc.public.verify.sendVerifyCode.mutate({
+         email: formdata.email,
+      });
+      if (!sent) {
+         message.error('验证码发送失败', '请稍后重试，或联系管理员');
+         return;
+      }
+      message.success('验证码已发送', `请查收 ${formdata.email} 的邮件`);
+   } catch (err: any) {
+      message.error('验证码发送失败', err?.message || '请稍后重试');
+      return;
+   } finally {
+      sendCodeLoading.value = false;
+   }
 
    const showOTP = () => {
       message.custom({
@@ -168,7 +188,7 @@ const handleSendCode = async () => {
                      <SendCodeButton
                         @send="handleSendCode"
                         :verified="codeVerified"
-                        :loading="onVerifyCode"
+                        :loading="onVerifyCode || sendCodeLoading"
                         :disabled="status['email'] !== 'success'"
                         :interval="60" />
                   </template>

@@ -1,9 +1,12 @@
 import path from 'path';
 import { IStore } from './i-store';
 import fs from 'fs/promises';
+import { resolveLocalStorePath } from '@challenge/shared/store';
 
 export class LocalStore implements IStore {
-   private storePath: string = process.env.LOCAL_STORE_PATH || './local_store';
+   // 必须用统一的解析器：相对路径 './local_store' 会按进程 cwd 解析，
+   // 与判题调度器的 cwd 不同，导致调度器写出的封面这里读不到（全部图片 404）。
+   private storePath: string = resolveLocalStorePath();
 
    constructor() {
       fs.mkdir(this.storePath, { recursive: true });

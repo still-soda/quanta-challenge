@@ -2,6 +2,8 @@ import prisma from '~~/lib/prisma';
 import z from 'zod';
 import { publicProcedure, router } from '~~/server/trpc/trpc';
 import { generateTokens } from '~~/server/utils/jwt';
+import { comparePassword } from '~~/server/utils/password';
+import { limitRequest } from '~~/server/trpc/middlewares/limit-request';
 import { protectedProcedure } from '../../protected-trpc';
 import { TRPCError } from '@trpc/server';
 
@@ -11,18 +13,22 @@ const emailLoginInputSchema = z.object({
 });
 
 const emailLoginProcedure = publicProcedure
+   .use(limitRequest(10))
    .input(emailLoginInputSchema)
-   .query(async ({ input, ctx }) => {
+   .mutation(async ({ input, ctx }) => {
       const { email, password } = input;
 
-      const authRecord = await prisma.auth.findFirstOrThrow({
+      // 用 findFirst 而非 findFirstOrThrow：邮箱不存在时返回与密码错误一致的错误，
+      // 避免通过错误差异枚举已注册邮箱。
+      const authRecord = await prisma.auth.findFirst({
          where: {
             provider: 'EMAIL',
             providerId: email,
          },
       });
-      const { password: pwdHash } = authRecord;
-      if (!pwdHash || !comparePassword(password, pwdHash)) {
+      const pwdHash = authRecord?.password;
+      // 必须 await：comparePassword 是异步函数，漏掉 await 会让真值判断恒为通过
+      if (!pwdHash || !(await comparePassword(password, pwdHash))) {
          throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'Invalid email or password',
