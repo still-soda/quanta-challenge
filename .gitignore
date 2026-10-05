@@ -185,3 +185,8 @@ dist
 # 调度器与 Web 应用共用 local_store；两边都忽略，避免把二进制图片写进版本库。
 local_store/
 tmp/
+
+
+# 出题数据的导出产物（压缩包是交付物；解压出来的目录不入库）
+quanta-problems-export/
+quanta-problems-export.zip
